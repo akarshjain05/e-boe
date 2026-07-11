@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from fastapi import HTTPException, status
 from app.models.payment import Payment, Refund
 from app.models.bill import Bill
@@ -16,8 +16,12 @@ class PaymentService:
         return f"RCP-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
 
     async def get_all(self, company_id: UUID, skip: int = 0, limit: int = 100, search: str = None, sort_by: str = None, sort_order: str = "desc", status: str = None, payment_method: str = None):
-        stmt = select(Payment).where(
-            Payment.company_id == company_id,
+        stmt = select(Payment).join(Bill, Payment.bill_id == Bill.id).where(
+            or_(
+                Bill.company_id == company_id,
+                Bill.network_drawee_company_id == company_id,
+                Bill.network_payee_company_id == company_id
+            ),
             Payment.is_deleted == False
         )
         
@@ -51,9 +55,13 @@ class PaymentService:
         return result.scalars().all()
 
     async def get_by_id(self, id: UUID, company_id: UUID) -> Payment:
-        stmt = select(Payment).where(
+        stmt = select(Payment).join(Bill, Payment.bill_id == Bill.id).where(
             Payment.id == id,
-            Payment.company_id == company_id,
+            or_(
+                Bill.company_id == company_id,
+                Bill.network_drawee_company_id == company_id,
+                Bill.network_payee_company_id == company_id
+            ),
             Payment.is_deleted == False
         )
         result = await self.db.execute(stmt)
@@ -63,19 +71,35 @@ class PaymentService:
         return payment
 
     async def get_by_bill(self, bill_id: UUID, company_id: UUID):
+        # We need to verify the user's company is authorized to see this bill
+        stmt_bill = select(Bill).where(
+            Bill.id == bill_id,
+            or_(
+                Bill.company_id == company_id,
+                Bill.network_drawee_company_id == company_id,
+                Bill.network_payee_company_id == company_id
+            )
+        )
+        bill = (await self.db.execute(stmt_bill)).scalar_one_or_none()
+        if not bill:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized for this bill")
+            
         stmt = select(Payment).where(
             Payment.bill_id == bill_id,
-            Payment.company_id == company_id,
             Payment.is_deleted == False
         ).order_by(Payment.payment_date.desc())
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
     async def record_payment(self, company_id: UUID, data: PaymentCreate, user_id: UUID) -> Payment:
-        # Validate bill exists and belongs to the company
+        # Validate bill exists and belongs to the company network
         stmt = select(Bill).where(
             Bill.id == data.bill_id,
-            Bill.company_id == company_id,
+            or_(
+                Bill.company_id == company_id,
+                Bill.network_drawee_company_id == company_id,
+                Bill.network_payee_company_id == company_id
+            ),
             Bill.is_deleted == False
         )
         result = await self.db.execute(stmt)
@@ -83,13 +107,18 @@ class PaymentService:
         if not bill:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bill not found")
 
-        # Enforce that only the drawee (the one who owes) can make a payment
-        if bill.bill_type == "receivable":
+        # Determine if caller is Drawee or Drawer
+        is_drawee = False
+        if bill.bill_type == "payable" and bill.company_id == company_id:
+            is_drawee = True
+        elif bill.bill_type == "receivable" and bill.network_drawee_company_id == company_id:
+            is_drawee = True
+
+        if not is_drawee:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You cannot record a payment for a receivable bill. Only the drawee can initiate payment."
+                detail="Only the drawee can initiate a payment."
             )
-
 
         # Check if amount exceeds outstanding
         if data.amount > float(bill.outstanding_amount):
@@ -113,16 +142,47 @@ class PaymentService:
             cheque_date=data.cheque_date,
             upi_id=data.upi_id,
             transaction_id=data.transaction_id,
-            status="confirmed",
+            status="pending_confirmation",
             notes=data.notes,
-            received_by=user_id,
             created_by=user_id,
             updated_by=user_id
         )
         self.db.add(payment)
 
+        # Do NOT update bill amounts yet. They will be updated when the Drawer confirms the payment.
+
+        await self.db.commit()
+        await self.db.refresh(payment)
+        return payment
+
+    async def confirm_payment(self, payment_id: UUID, company_id: UUID, user_id: UUID) -> Payment:
+        payment = await self.get_by_id(payment_id, company_id)
+        if not payment:
+            raise HTTPException(status_code=404, detail="Payment not found")
+            
+        if payment.status == "confirmed":
+            raise HTTPException(status_code=400, detail="Payment is already confirmed")
+            
+        # Get the associated bill
+        stmt = select(Bill).where(Bill.id == payment.bill_id)
+        bill = (await self.db.execute(stmt)).scalar_one_or_none()
+        
+        # Determine if caller is Drawer
+        is_drawer = False
+        if bill.bill_type == "receivable" and bill.company_id == company_id:
+            is_drawer = True
+        elif bill.bill_type == "payable" and bill.network_payee_company_id == company_id:
+            is_drawer = True
+            
+        if not is_drawer:
+            raise HTTPException(status_code=403, detail="Only the drawer can confirm a payment.")
+            
+        payment.status = "confirmed"
+        payment.received_by = user_id
+        payment.updated_by = user_id
+        
         # Update bill amounts
-        bill.paid_amount = float(bill.paid_amount) + data.amount
+        bill.paid_amount = float(bill.paid_amount) + float(payment.amount)
         bill.outstanding_amount = float(bill.total_amount) - float(bill.paid_amount)
 
         if bill.outstanding_amount <= 0:

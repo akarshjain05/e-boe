@@ -4,12 +4,11 @@ import { Search, ChevronRight, Calendar } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { customerService } from '@/api/services/customers'
 import { billService } from '@/api/services/bills'
-import { paymentService, BulkPaymentCreate } from '@/api/services/payments'
+import { BillPaymentsModal } from '@/components/modals/BillPaymentsModal'
 
 export function ReceivablesTab() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
@@ -95,7 +94,7 @@ export function ReceivablesTab() {
 }
 
 function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => void }) {
-  const [selectedBills, setSelectedBills] = useState<string[]>([])
+  const [selectedBillForPayments, setSelectedBillForPayments] = useState<any>(null)
   
   const { data: bills = [], isLoading, refetch } = useQuery({
     queryKey: ['customer-bills', customer.id],
@@ -103,54 +102,6 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
       res.filter(b => b.customer_id === customer.id || b.payee_customer_id === customer.id)
     )
   })
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedBills(bills.filter(b => Number(b.outstanding_amount) > 0).map(b => b.id))
-    } else {
-      setSelectedBills([])
-    }
-  }
-
-  const handleSelect = (id: string, checked: boolean) => {
-    if (checked) setSelectedBills(prev => [...prev, id])
-    else setSelectedBills(prev => prev.filter(bId => bId !== id))
-  }
-
-  const handlePaySelected = async () => {
-    if (selectedBills.length === 0) return
-    
-    // Calculate totals and format for bulk payment
-    const paymentsToMake = selectedBills.map(id => {
-      const bill = bills.find(b => b.id === id)
-      return {
-        bill_id: id,
-        amount: Number(bill?.outstanding_amount || 0)
-      }
-    })
-
-    const payload: BulkPaymentCreate = {
-      payments: paymentsToMake,
-      payment_method: 'bank_transfer',
-      payment_date: new Date().toISOString().split('T')[0],
-      notes: `Bulk payment to ${customer.name}`
-    }
-
-    try {
-      await paymentService.recordBulkPayment(payload)
-      setSelectedBills([])
-      refetch()
-      alert("Payment successful!")
-    } catch (e) {
-      console.error(e)
-      alert("Payment failed.")
-    }
-  }
-
-  const totalSelectedAmount = selectedBills.reduce((acc, id) => {
-    const bill = bills.find(b => b.id === id)
-    return acc + Number(bill?.outstanding_amount || 0)
-  }, 0)
 
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
@@ -164,25 +115,7 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
 
       <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm sticky top-0 z-10">
         <div className="flex items-center gap-4">
-          <Checkbox 
-            checked={selectedBills.length > 0 && selectedBills.length === bills.filter(b => Number(b.outstanding_amount) > 0).length} 
-            onCheckedChange={handleSelectAll} 
-            id="select-all"
-          />
-          <label htmlFor="select-all" className="text-sm font-medium">Select All Receivable</label>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <span className="text-sm text-zinc-500">Selected Amount: </span>
-            <span className="font-bold text-lg text-indigo-600">{formatCurrency(totalSelectedAmount)}</span>
-          </div>
-          <Button 
-            onClick={handlePaySelected} 
-            disabled={selectedBills.length === 0}
-            className="bg-indigo-600 hover:bg-indigo-700"
-          >
-            Record Receipt ({selectedBills.length})
-          </Button>
+          <label className="text-sm font-medium">Click "View Payments" to confirm pending receipts.</label>
         </div>
       </div>
 
@@ -190,7 +123,6 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
         <table className="w-full text-sm text-left">
           <thead className="text-xs text-zinc-500 uppercase bg-zinc-50 dark:bg-zinc-950/50 border-b border-zinc-200 dark:border-zinc-800">
             <tr>
-              <th className="px-6 py-4 w-12"></th>
               <th className="px-6 py-4 font-semibold">Bill No.</th>
               <th className="px-6 py-4 font-semibold">Date</th>
               <th className="px-6 py-4 font-semibold">Due Date</th>
@@ -210,15 +142,8 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
                 <motion.tr 
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.05 }}
                   key={bill.id}
-                  className={`border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 ${selectedBills.includes(bill.id) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}
+                  className={`border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50`}
                 >
-                  <td className="px-6 py-4">
-                    <Checkbox 
-                      checked={selectedBills.includes(bill.id)} 
-                      onCheckedChange={(c) => handleSelect(bill.id, !!c)}
-                      disabled={!isReceivable}
-                    />
-                  </td>
                   <td className="px-6 py-4 font-medium">{bill.bill_number}</td>
                   <td className="px-6 py-4 text-zinc-600">{formatDate(bill.issue_date)}</td>
                   <td className="px-6 py-4 text-zinc-600">
@@ -234,6 +159,17 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${isReceivable ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
                         {bill.status}
                       </span>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 text-xs border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 ml-2"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedBillForPayments(bill)
+                        }}
+                      >
+                        View Payments
+                      </Button>
                     </div>
                   </td>
                 </motion.tr>
@@ -242,6 +178,13 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
           </tbody>
         </table>
       </div>
+      
+      <BillPaymentsModal 
+        open={!!selectedBillForPayments}
+        onOpenChange={(open) => !open && setSelectedBillForPayments(null)}
+        bill={selectedBillForPayments}
+        onSuccess={() => refetch()}
+      />
     </div>
   )
 }
