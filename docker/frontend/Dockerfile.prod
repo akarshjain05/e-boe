@@ -1,0 +1,22 @@
+FROM node:20-alpine as builder
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source code and build
+COPY . .
+RUN npm run build
+
+# We do not need a final stage here running nginx, because docker-compose.prod.yml
+# will mount this built /app/dist directory to a shared volume,
+# and the main nginx container will serve the static files from there.
+# Alternatively, we could run nginx here, but since the project already has an Nginx container
+# proxying requests to the backend, it's better to let that single Nginx serve the static files too.
+# For this purpose, we can just use a tiny image that copies the files to a shared volume.
+FROM alpine:3.18
+WORKDIR /app
+COPY --from=builder /app/dist /app/dist
+CMD ["sh", "-c", "echo 'Frontend built. Files are in /app/dist. Exiting.'"]
