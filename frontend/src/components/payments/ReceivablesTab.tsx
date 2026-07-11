@@ -18,13 +18,25 @@ export function ReceivablesTab() {
     queryFn: () => customerService.getCustomers()
   })
 
-  if (customersLoading) {
+  const { data: allReceivableBills = [], isLoading: billsLoading } = useQuery({
+    queryKey: ['all-receivable-bills'],
+    queryFn: () => billService.getBills({ bill_type: 'receivable' })
+  })
+
+  if (customersLoading || billsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
       </div>
     )
   }
+
+  // Filter customers to only those who have receivable bills
+  const activeCustomers = customers.map(customer => {
+    const customerBills = allReceivableBills.filter(b => b.customer_id === customer.id || b.network_drawee_company_id === (customer as any).company_id || b.drawee_name === customer.name)
+    const totalOutstanding = customerBills.reduce((sum, b) => sum + Number(b.outstanding_amount || 0), 0)
+    return { ...customer, calculated_outstanding: totalOutstanding, hasBills: customerBills.length > 0 }
+  }).filter(c => c.hasBills)
 
   if (selectedCustomerId) {
     const customer = customers.find(c => c.id === selectedCustomerId)
@@ -47,9 +59,9 @@ export function ReceivablesTab() {
       </div>
 
       <div className="grid gap-4">
-        {customers.length === 0 ? (
-          <div className="text-center py-12 text-zinc-500">No customers found.</div>
-        ) : customers.map((customer: any, idx: number) => (
+        {activeCustomers.length === 0 ? (
+          <div className="text-center py-12 text-zinc-500">No active receivables found.</div>
+        ) : activeCustomers.map((customer: any, idx: number) => (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -76,8 +88,8 @@ export function ReceivablesTab() {
                 <div className="flex items-center gap-6">
                   <div className="text-right">
                     <p className="text-sm text-zinc-500">Outstanding</p>
-                    <p className="font-semibold text-red-600 dark:text-red-400">
-                      {formatCurrency(customer.outstanding_balance || 0)}
+                    <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      {formatCurrency(customer.calculated_outstanding || 0)}
                     </p>
                   </div>
                   <Button variant="ghost" size="icon" className="group-hover:translate-x-1 transition-transform">

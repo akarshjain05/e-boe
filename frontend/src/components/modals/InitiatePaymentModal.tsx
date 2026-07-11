@@ -4,7 +4,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { paymentService } from '@/api/services/payments'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface InitiatePaymentModalProps {
   open: boolean
@@ -15,8 +22,10 @@ interface InitiatePaymentModalProps {
 
 export function InitiatePaymentModal({ open, onOpenChange, bill, onSuccess }: InitiatePaymentModalProps) {
   const [amount, setAmount] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('bank_transfer')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const maxAmount = Number(bill?.outstanding_amount || 0)
+  const today = new Date().toISOString().split('T')[0]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,8 +39,8 @@ export function InitiatePaymentModal({ open, onOpenChange, bill, onSuccess }: In
       await paymentService.recordPayment({
         bill_id: bill.id,
         amount: payAmount,
-        payment_method: 'bank_transfer',
-        payment_date: new Date().toISOString().split('T')[0],
+        payment_method: paymentMethod as any,
+        payment_date: today,
       })
       onSuccess()
       onOpenChange(false)
@@ -56,6 +65,16 @@ export function InitiatePaymentModal({ open, onOpenChange, bill, onSuccess }: In
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Bill Number</Label>
+              <Input value={bill?.bill_number || ''} disabled className="bg-zinc-100 dark:bg-zinc-800 cursor-not-allowed" />
+            </div>
+            <div className="space-y-2">
+              <Label>Date</Label>
+              <Input value={formatDate(today)} disabled className="bg-zinc-100 dark:bg-zinc-800 cursor-not-allowed" />
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="amount">Payment Amount</Label>
             <Input
@@ -69,6 +88,21 @@ export function InitiatePaymentModal({ open, onOpenChange, bill, onSuccess }: In
               placeholder={`Max: ${maxAmount}`}
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Mode of Payment</Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select mode of payment" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="cheque">Cheque</SelectItem>
+                <SelectItem value="upi">UPI</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>

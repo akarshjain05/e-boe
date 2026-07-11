@@ -21,6 +21,22 @@ export interface CompanyUpdate {
   timezone?: string;
 }
 
+export interface Branch {
+  id?: string;
+  name: string;
+  code: string;
+  email?: string;
+  phone?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postal_code?: string;
+  is_active?: boolean;
+  is_head_office?: boolean;
+}
+
 export const companiesService = {
   getMe: async () => {
     const response = await api.get('/companies/me');
@@ -28,6 +44,14 @@ export const companiesService = {
   },
   updateMe: async (data: CompanyUpdate) => {
     const response = await api.put('/companies/me', data);
+    return response.data;
+  },
+  getBranches: async (): Promise<Branch[]> => {
+    const response = await api.get('/companies/me/branches');
+    return response.data;
+  },
+  createBranch: async (data: Branch): Promise<Branch> => {
+    const response = await api.post('/companies/me/branches', data);
     return response.data;
   },
   lookupByGst: async (gstin: string) => {

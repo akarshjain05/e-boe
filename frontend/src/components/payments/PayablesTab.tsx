@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Search, ChevronRight, Calendar } from 'lucide-react'
+import { ChevronRight, Search, Calendar } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,13 +18,25 @@ export function PayablesTab() {
     queryFn: () => creditorService.getCreditors()
   })
 
-  if (creditorsLoading) {
+  const { data: allPayableBills = [], isLoading: billsLoading } = useQuery({
+    queryKey: ['all-payable-bills'],
+    queryFn: () => billService.getBills({ bill_type: 'payable' })
+  })
+
+  if (creditorsLoading || billsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
       </div>
     )
   }
+
+  // Filter creditors to only those who have payable bills
+  const activeCreditors = creditors.map(creditor => {
+    const creditorBills = allPayableBills.filter(b => b.creditor_id === creditor.id || b.network_payee_company_id === (creditor as any).company_id || b.payee_name === creditor.name)
+    const totalOutstanding = creditorBills.reduce((sum, b) => sum + Number(b.outstanding_amount || 0), 0)
+    return { ...creditor, calculated_outstanding: totalOutstanding, hasBills: creditorBills.length > 0 }
+  }).filter(c => c.hasBills)
 
   if (selectedCreditorId) {
     const creditor = creditors.find(c => c.id === selectedCreditorId)
@@ -47,9 +59,9 @@ export function PayablesTab() {
       </div>
 
       <div className="grid gap-4">
-        {creditors.length === 0 ? (
-          <div className="text-center py-12 text-zinc-500">No creditors found.</div>
-        ) : creditors.map((creditor: any, idx: number) => (
+        {activeCreditors.length === 0 ? (
+          <div className="text-center py-12 text-zinc-500">No active payables found.</div>
+        ) : activeCreditors.map((creditor: any, idx: number) => (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -76,8 +88,8 @@ export function PayablesTab() {
                 <div className="flex items-center gap-6">
                   <div className="text-right">
                     <p className="text-sm text-zinc-500">Outstanding</p>
-                    <p className="font-semibold text-red-600 dark:text-red-400">
-                      {formatCurrency(creditor.outstanding_balance || 0)}
+                    <p className="font-semibold text-rose-600 dark:text-rose-400">
+                      {formatCurrency(creditor.calculated_outstanding || 0)}
                     </p>
                   </div>
                   <Button variant="ghost" size="icon" className="group-hover:translate-x-1 transition-transform">

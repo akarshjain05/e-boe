@@ -37,6 +37,7 @@ const ORG_TYPES = [
 import { Plus } from 'lucide-react'
 import { AddOwnerModal } from '@/components/modals/AddOwnerModal'
 import { OwnerDetailsModal } from '@/components/modals/OwnerDetailsModal'
+import { AddAddressModal } from '@/components/modals/AddAddressModal'
 
 function OwnerSettings() {
   const { user } = useAuth()
@@ -221,6 +222,13 @@ function AddressSettings() {
     queryFn: companiesService.getMe
   })
 
+  const { data: branches = [] } = useQuery({
+    queryKey: ['branches'],
+    queryFn: companiesService.getBranches
+  })
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+
   const [formData, setFormData] = useState<CompanyUpdate>({
     name: '',
     address_line1: '',
@@ -265,9 +273,14 @@ function AddressSettings() {
   return (
     <div className="space-y-6">
       <Card className="border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800">
-        <CardHeader>
-          <CardTitle>Address Details</CardTitle>
-          <CardDescription>Your registered primary business address.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Main Company Address</CardTitle>
+            <CardDescription>Configure your primary organizational address details.</CardDescription>
+          </div>
+          <Button onClick={() => setIsAddModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-600/20 gap-2">
+            <Plus className="w-4 h-4" /> Add Address
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -301,6 +314,29 @@ function AddressSettings() {
           </div>
         </CardContent>
       </Card>
+
+      {branches.length > 0 && (
+        <Card className="border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 mt-6">
+          <CardHeader>
+            <CardTitle>Additional Addresses</CardTitle>
+            <CardDescription>Other branches and locations.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              {branches.map((branch: any) => (
+                <div key={branch.id} className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-900/50">
+                  <h4 className="font-medium text-zinc-900 dark:text-zinc-100 mb-1">{branch.name} ({branch.code})</h4>
+                  <p className="text-sm text-zinc-500">{branch.address_line1}</p>
+                  <p className="text-sm text-zinc-500">{branch.city}, {branch.state} {branch.postal_code}</p>
+                  <p className="text-sm text-zinc-500">{branch.country}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <AddAddressModal open={isAddModalOpen} onOpenChange={setIsAddModalOpen} />
     </div>
   )
 }

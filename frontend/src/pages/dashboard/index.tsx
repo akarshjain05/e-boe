@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  ArrowUpRight, ArrowDownRight, IndianRupee, Activity, Clock
+  ArrowUpRight, ArrowDownRight, IndianRupee, Activity
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/utils'
@@ -98,14 +98,7 @@ export default function Dashboard() {
           </Card>
         </motion.div>
 
-        <StatCard 
-          title="Total Collection Pending" 
-          value={formatCurrency(summary.total_outstanding)} 
-          change={0.0} 
-          isPositive={false}
-          icon={Clock}
-          delay={0.2}
-        />
+        {/* Removed Total Collection Pending per request */}
         <StatCard 
           title="Total Collected Payments" 
           value={formatCurrency(summary.total_collected)} 

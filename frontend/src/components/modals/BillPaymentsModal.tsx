@@ -14,11 +14,13 @@ interface BillPaymentsModalProps {
 }
 
 export function BillPaymentsModal({ open, onOpenChange, bill, onSuccess }: BillPaymentsModalProps) {
-  const { data: payments = [], isLoading, refetch } = useQuery({
+  const { data: allPayments = [], isLoading, refetch } = useQuery({
     queryKey: ['bill-payments', bill?.id],
     queryFn: () => paymentService.getPaymentsForBill(bill?.id),
     enabled: !!bill?.id && open
   })
+
+  const payments = allPayments.filter(p => p.status === 'pending_confirmation')
 
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
@@ -51,7 +53,7 @@ export function BillPaymentsModal({ open, onOpenChange, bill, onSuccess }: BillP
               <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
             </div>
           ) : payments.length === 0 ? (
-            <p className="text-center text-zinc-500 py-8">No payments found for this bill.</p>
+            <p className="text-center text-zinc-500 py-8">No pending payments found for this bill.</p>
           ) : (
             <div className="space-y-3">
               {payments.map(payment => (
