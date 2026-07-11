@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { formatCurrency } from '@/lib/utils'
 import { billService } from '@/api/services/bills'
 import { customerService } from '@/api/services/customers'
+import { companiesService } from '@/api/services/companies.service'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/AuthContext'
@@ -60,7 +61,12 @@ export default function CreateBill() {
   })
 
   // Use auth context for defaults
-  const { user } = useAuth()
+  useAuth()
+  
+  const { data: company } = useQuery({
+    queryKey: ['company-details'],
+    queryFn: companiesService.getMe
+  })
   
   // Generate a random bill number on load
   const [defaultBillNumber] = useState(`BOE-${Math.floor(Date.now() / 1000)}`)
@@ -72,13 +78,21 @@ export default function CreateBill() {
       bill_number: defaultBillNumber,
       currency_code: 'INR',
       issue_date: new Date().toISOString().split('T')[0],
-      drawer_name: user ? `${user.first_name} ${user.last_name}` : '',
-      payee_name: user ? `${user.first_name} ${user.last_name}` : '',
+      drawer_name: '',
+      payee_name: '',
       items: [
         { description: '', quantity: 1, unit_price: 0, tax_rate: 18, discount_percent: 0 }
       ]
     }
   })
+
+  // Update default names when company data loads
+  useEffect(() => {
+    if (company && !form.getValues('drawer_name')) {
+      form.setValue('drawer_name', (company as any).name)
+      form.setValue('payee_name', (company as any).name)
+    }
+  }, [company, form])
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,

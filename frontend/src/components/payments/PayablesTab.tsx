@@ -209,7 +209,7 @@ function CreditorBillsView({ creditor, onBack }: { creditor: any, onBack: () => 
                           Accept
                         </Button>
                       )}
-                      {isPayable && (
+                      {bill.status === 'accepted' && isPayable && (
                         <Button 
                           size="sm" 
                           variant="outline" 
