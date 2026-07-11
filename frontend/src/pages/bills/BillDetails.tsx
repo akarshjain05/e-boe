@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, XCircle, Download, Clock, IndianRupee, Loader2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, XCircle, Download, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -67,9 +67,6 @@ export default function BillDetails() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">{bill.bill_number}</h1>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 capitalize">
-                <Clock className="h-3.5 w-3.5" /> {bill.status.replace('_', ' ')}
-              </span>
             </div>
             <p className="text-zinc-500 dark:text-zinc-400 mt-1">Issued to {bill.drawee_name} on {formatDate(bill.issue_date)}</p>
           </div>
@@ -77,9 +74,6 @@ export default function BillDetails() {
         <div className="flex gap-2">
           <Button variant="outline" className="gap-2" onClick={() => window.open(billService.getBillPdfUrl(bill.id), '_blank')}>
             <Download className="h-4 w-4" /> PDF
-          </Button>
-          <Button variant="outline" className="gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 border-indigo-200" onClick={() => setIsPaymentModalOpen(true)}>
-            <IndianRupee className="h-4 w-4" /> Record Payment
           </Button>
         </div>
       </div>
