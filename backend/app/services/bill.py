@@ -315,6 +315,53 @@ class BillService:
         
         await self.db.commit()
         await self.db.refresh(bill)
+        
+        # --- Notifications Logic ---
+        from app.services.notification import NotificationService
+        from app.schemas.notification import NotificationCreate
+        from app.models.user import User
+        
+        notification_service = NotificationService(self.db)
+        
+        target_company_id = None
+        message = ""
+        title = ""
+        n_type = ""
+        
+        if status_val == "pending_acceptance" and bill.network_drawee_company_id:
+            # Drawer is sending to Drawee
+            target_company_id = bill.network_drawee_company_id
+            title = "New Bill Issued"
+            message = f"A new bill ({bill.bill_number}) of ₹{bill.total_amount} has been issued against you by {bill.drawer_name}."
+            n_type = "bill_issued"
+            
+        elif status_val == "accepted" and bill.network_payee_company_id:
+            # Drawee accepted, notify Drawer
+            target_company_id = bill.network_payee_company_id
+            title = "Bill Accepted"
+            message = f"Bill {bill.bill_number} has been accepted by {bill.drawee_name}."
+            n_type = "bill_accepted"
+            
+        elif status_val == "rejected" and bill.network_payee_company_id:
+            # Drawee rejected, notify Drawer
+            target_company_id = bill.network_payee_company_id
+            title = "Bill Rejected"
+            message = f"Bill {bill.bill_number} has been rejected by {bill.drawee_name}."
+            n_type = "bill_rejected"
+            
+        if target_company_id:
+            users_stmt = select(User).where(User.company_id == target_company_id)
+            users_res = await self.db.execute(users_stmt)
+            for target_user in users_res.scalars().all():
+                await notification_service.create(NotificationCreate(
+                    company_id=target_company_id,
+                    user_id=target_user.id,
+                    type=n_type,
+                    title=title,
+                    message=message,
+                    data_json={"bill_id": str(bill.id)}
+                ))
+        
         return bill
 
     async def update(self, id: UUID, company_id: UUID, data: BillUpdate, user_id: UUID) -> Bill:

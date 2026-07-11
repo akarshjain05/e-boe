@@ -153,6 +153,28 @@ class PaymentService:
 
         await self.db.commit()
         await self.db.refresh(payment)
+        
+        # --- Notifications Logic ---
+        from app.services.notification import NotificationService
+        from app.schemas.notification import NotificationCreate
+        from app.models.user import User
+        
+        notification_service = NotificationService(self.db)
+        drawer_company_id = bill.company_id if bill.bill_type == "receivable" else bill.network_payee_company_id
+        
+        if drawer_company_id:
+            users_stmt = select(User).where(User.company_id == drawer_company_id)
+            users_res = await self.db.execute(users_stmt)
+            for target_user in users_res.scalars().all():
+                await notification_service.create(NotificationCreate(
+                    company_id=drawer_company_id,
+                    user_id=target_user.id,
+                    type="payment_recorded",
+                    title="Payment Recorded",
+                    message=f"A payment of ₹{payment.amount} has been recorded for Bill {bill.bill_number}.",
+                    data_json={"bill_id": str(bill.id), "payment_id": str(payment.id)}
+                ))
+        
         return payment
 
     async def confirm_payment(self, payment_id: UUID, company_id: UUID, user_id: UUID) -> Payment:
@@ -194,6 +216,28 @@ class PaymentService:
         bill.updated_by = user_id
         await self.db.commit()
         await self.db.refresh(payment)
+        
+        # --- Notifications Logic ---
+        from app.services.notification import NotificationService
+        from app.schemas.notification import NotificationCreate
+        from app.models.user import User
+        
+        notification_service = NotificationService(self.db)
+        drawee_company_id = bill.network_drawee_company_id if bill.bill_type == "receivable" else bill.company_id
+        
+        if drawee_company_id:
+            users_stmt = select(User).where(User.company_id == drawee_company_id)
+            users_res = await self.db.execute(users_stmt)
+            for target_user in users_res.scalars().all():
+                await notification_service.create(NotificationCreate(
+                    company_id=drawee_company_id,
+                    user_id=target_user.id,
+                    type="payment_confirmed",
+                    title="Payment Confirmed",
+                    message=f"Your payment of ₹{payment.amount} for Bill {bill.bill_number} has been confirmed.",
+                    data_json={"bill_id": str(bill.id), "payment_id": str(payment.id)}
+                ))
+
         return payment
 
     async def record_bulk_payment(self, company_id: UUID, data: BulkPaymentCreate, user_id: UUID) -> list[Payment]:

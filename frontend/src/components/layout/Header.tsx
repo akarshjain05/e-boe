@@ -1,5 +1,6 @@
 import { useTheme } from '@/contexts/ThemeContext'
-import { Bell, Search, Sun, Moon } from 'lucide-react'
+import { Search, Sun, Moon } from 'lucide-react'
+import { NotificationBell } from '../notifications/NotificationBell'
 
 export function Header() {
   const { theme, setTheme } = useTheme()
@@ -25,10 +26,7 @@ export function Header() {
         >
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
-        <button className="relative flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
-          <Bell className="h-4 w-4" />
-          <span className="absolute top-2 right-2.5 flex h-2 w-2 rounded-full bg-indigo-600"></span>
-        </button>
+        <NotificationBell />
       </div>
     </header>
   )
