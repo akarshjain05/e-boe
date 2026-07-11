@@ -83,6 +83,14 @@ class PaymentService:
         if not bill:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bill not found")
 
+        # Enforce that only the drawee (the one who owes) can make a payment
+        if bill.bill_type == "receivable":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You cannot record a payment for a receivable bill. Only the drawee can initiate payment."
+            )
+
+
         # Check if amount exceeds outstanding
         if data.amount > float(bill.outstanding_amount):
             raise HTTPException(
