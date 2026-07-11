@@ -209,7 +209,7 @@ function CreditorBillsView({ creditor, onBack }: { creditor: any, onBack: () => 
                           Accept
                         </Button>
                       )}
-                      {bill.status === 'accepted' && isPayable && (
+                      {['accepted', 'partially_paid'].includes(bill.status) && isPayable && (
                         <Button 
                           size="sm" 
                           variant="outline" 
