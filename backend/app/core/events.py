@@ -9,6 +9,15 @@ from app.core.config import settings
 async def lifespan(app: FastAPI):
     # Startup
     os.makedirs(settings.STORAGE_LOCAL_PATH, exist_ok=True)
+    
+    # Run data migrations / fixes automatically
+    try:
+        from scripts.fix_historical_bills import main as fix_bills
+        await fix_bills()
+        print("Historical bills fix completed successfully.")
+    except Exception as e:
+        print(f"Failed to run historical bills fix: {e}")
+        
     yield
     # Shutdown
     await engine.dispose()
