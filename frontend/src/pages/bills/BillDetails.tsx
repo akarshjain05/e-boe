@@ -23,7 +23,7 @@ export default function BillDetails() {
 
   const statusMutation = useMutation({
     mutationFn: ({ status, notes }: { status: string, notes?: string }) => billService.updateBillStatus(id!, status, notes),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       toast.success('Bill status updated successfully')
       if (variables.status === 'pending_acceptance') {
         navigate('/bills')
@@ -169,15 +169,15 @@ export default function BillDetails() {
                 <div className="w-64 space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-500">Subtotal</span>
-                    <span className="font-medium">{formatCurrency(bill.amount)}</span>
+                    <span className="font-medium">{formatCurrency(bill.subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-500">Tax</span>
-                    <span className="font-medium">{formatCurrency(bill.tax_amount)}</span>
+                    <span className="font-medium">{formatCurrency(bill.tax_total)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-emerald-600">
                     <span>Discount</span>
-                    <span className="font-medium">-{formatCurrency(bill.discount_amount)}</span>
+                    <span className="font-medium">-{formatCurrency(bill.discount_total)}</span>
                   </div>
                   <div className="pt-3 border-t border-zinc-200 flex justify-between">
                     <span className="font-bold text-zinc-900">Total</span>
@@ -222,7 +222,7 @@ export default function BillDetails() {
                 <Button 
                   onClick={() => handleStatusChange('accepted')} 
                   className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2"
-                  disabled={statusMutation.isPending || bill.status === 'accepted'}
+                  disabled={statusMutation.isPending}
                 >
                   {statusMutation.isPending && statusMutation.variables?.status === 'accepted' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                   Accept Bill
@@ -231,7 +231,7 @@ export default function BillDetails() {
                   onClick={() => handleStatusChange('rejected')} 
                   variant="outline" 
                   className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 gap-2"
-                  disabled={statusMutation.isPending || bill.status === 'rejected'}
+                  disabled={statusMutation.isPending}
                 >
                   {statusMutation.isPending && statusMutation.variables?.status === 'rejected' ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
                   Reject Bill
