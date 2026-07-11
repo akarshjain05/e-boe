@@ -13,10 +13,10 @@ export default function Payments() {
         </div>
       </div>
 
-      <Tabs defaultValue="receivables" className="w-full space-y-6">
+      <Tabs defaultValue="payables" className="w-full space-y-6">
         <TabsList className="mb-6 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-          <TabsTrigger value="receivables">Receivables / Receive</TabsTrigger>
           <TabsTrigger value="payables">Payables / Paid</TabsTrigger>
+          <TabsTrigger value="receivables">Receivables / Receive</TabsTrigger>
         </TabsList>
 
       
