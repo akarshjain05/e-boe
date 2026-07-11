@@ -130,8 +130,8 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
   
   const { data: bills = [], isLoading, refetch } = useQuery({
     queryKey: ['customer-bills', customer.id],
-    queryFn: () => billService.getBills({ bill_type: 'receivable', customer_id: customer.id }).then(res => 
-      res.filter(b => b.customer_id === customer.id || b.payee_customer_id === customer.id)
+    queryFn: () => billService.getBills({ bill_type: 'receivable' }).then(res => 
+      res.filter(b => b.customer_id === customer.id || b.network_drawee_company_id === customer.id || (customer as any).company_id === b.network_drawee_company_id || b.drawee_name === customer.name)
     )
   })
 
