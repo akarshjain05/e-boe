@@ -31,15 +31,35 @@ export function PayablesTab() {
     )
   }
 
-  // Filter creditors to only those who have payable bills
-  const activeCreditors = creditors.map(creditor => {
-    const creditorBills = allPayableBills.filter(b => b.creditor_id === creditor.id || b.network_payee_company_id === (creditor as any).company_id || b.payee_name === creditor.name)
-    const totalOutstanding = creditorBills.reduce((sum, b) => sum + Number(b.outstanding_amount || 0), 0)
-    return { ...creditor, calculated_outstanding: totalOutstanding, hasBills: creditorBills.length > 0 }
-  }).filter(c => c.hasBills)
+  // Group all payable bills by their payee/creditor
+  const activeCreditorsMap = new Map();
+  
+  allPayableBills.forEach((bill: any) => {
+    const matchingCreditor = creditors.find(c => c.id === bill.creditor_id || (c as any).company_id === bill.network_payee_company_id || c.name === bill.payee_name);
+    const key = matchingCreditor ? matchingCreditor.id : (bill.network_payee_company_id || bill.payee_name);
+    
+    if (!activeCreditorsMap.has(key)) {
+      activeCreditorsMap.set(key, {
+        ...(matchingCreditor || {
+          id: key,
+          name: bill.payee_name,
+          email: '',
+          phone: '',
+          creditor_code: 'Network',
+        }),
+        calculated_outstanding: 0,
+        hasBills: true
+      });
+    }
+    
+    const entry = activeCreditorsMap.get(key);
+    entry.calculated_outstanding += Number(bill.outstanding_amount || 0);
+  });
+
+  const activeCreditors = Array.from(activeCreditorsMap.values());
 
   if (selectedCreditorId) {
-    const creditor = creditors.find(c => c.id === selectedCreditorId)
+    const creditor = activeCreditors.find(c => c.id === selectedCreditorId) || creditors.find(c => c.id === selectedCreditorId)
     return (
       <CreditorBillsView 
         creditor={creditor} 

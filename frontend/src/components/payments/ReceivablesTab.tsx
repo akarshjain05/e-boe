@@ -31,15 +31,35 @@ export function ReceivablesTab() {
     )
   }
 
-  // Filter customers to only those who have receivable bills
-  const activeCustomers = customers.map(customer => {
-    const customerBills = allReceivableBills.filter(b => b.customer_id === customer.id || b.network_drawee_company_id === (customer as any).company_id || b.drawee_name === customer.name)
-    const totalOutstanding = customerBills.reduce((sum, b) => sum + Number(b.outstanding_amount || 0), 0)
-    return { ...customer, calculated_outstanding: totalOutstanding, hasBills: customerBills.length > 0 }
-  }).filter(c => c.hasBills)
+  // Group all receivable bills by their drawee/customer
+  const activeCustomersMap = new Map();
+
+  allReceivableBills.forEach((bill: any) => {
+    const matchingCustomer = customers.find(c => c.id === bill.customer_id || (c as any).company_id === bill.network_drawee_company_id || c.name === bill.drawee_name);
+    const key = matchingCustomer ? matchingCustomer.id : (bill.network_drawee_company_id || bill.drawee_name);
+    
+    if (!activeCustomersMap.has(key)) {
+      activeCustomersMap.set(key, {
+        ...(matchingCustomer || {
+          id: key,
+          name: bill.drawee_name,
+          email: '',
+          phone: '',
+          customer_code: 'Network',
+        }),
+        calculated_outstanding: 0,
+        hasBills: true
+      });
+    }
+    
+    const entry = activeCustomersMap.get(key);
+    entry.calculated_outstanding += Number(bill.outstanding_amount || 0);
+  });
+
+  const activeCustomers = Array.from(activeCustomersMap.values());
 
   if (selectedCustomerId) {
-    const customer = customers.find(c => c.id === selectedCustomerId)
+    const customer = activeCustomers.find(c => c.id === selectedCustomerId) || customers.find(c => c.id === selectedCustomerId)
     return (
       <CustomerBillsView 
         customer={customer} 
