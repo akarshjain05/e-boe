@@ -59,9 +59,7 @@ export function Sidebar() {
     )}>
       <div className="flex h-16 items-center border-b border-zinc-200 dark:border-zinc-800 px-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
-            <span className="text-sm font-bold text-white">e</span>
-          </div>
+          <img src="/logo.jpg" alt="e-BoE Logo" className="h-10 w-10 rounded-lg object-cover" />
           {!isCollapsed && <span className="text-xl font-bold tracking-tight">e-BoE</span>}
         </div>
         <button 
