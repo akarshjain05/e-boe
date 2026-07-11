@@ -1,0 +1,44 @@
+<svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Vibrant Blue to Purple Gradient -->
+    <linearGradient id="edge1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#A855F7" />
+    </linearGradient>
+    
+    <!-- Vivid Pink to Orange Gradient -->
+    <linearGradient id="edge2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+    
+    <!-- Cyan to Blue Gradient -->
+    <linearGradient id="edge3" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+  </defs>
+
+  <!-- The 3D Isometric Cube / Hexagon -->
+  
+  <!-- Outer Hexagon Perimeter -->
+  <path d="M256 64 L422.4 160 L422.4 352 L256 448 L89.6 352 L89.6 160 Z" 
+        stroke="url(#edge1)" stroke-width="36" stroke-linejoin="round" />
+
+  <!-- Inner Y-Shaped Lines forming the 3D depth -->
+  <path d="M256 64 L256 256 L422.4 352" 
+        stroke="url(#edge2)" stroke-width="36" stroke-linejoin="round" stroke-linecap="round" />
+        
+  <path d="M89.6 352 L256 256 L89.6 160" 
+        stroke="url(#edge3)" stroke-width="36" stroke-linejoin="round" stroke-linecap="round" />
+        
+  <!-- Center Accent Dot -->
+  <circle cx="256" cy="256" r="24" fill="#FFFFFF" />
+  
+  <!-- "e" and "B" floating shapes inside -->
+  <path d="M190 230 C 190 200, 230 200, 230 230 C 230 260, 190 260, 190 230 L 230 230" 
+        stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        
+  <path d="M280 200 L 280 280 M 280 200 C 310 200, 310 240, 280 240 C 310 240, 310 280, 280 280" 
+        stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+</svg>
