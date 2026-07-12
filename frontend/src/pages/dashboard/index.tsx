@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  IndianRupee, Activity, FileCheck, CheckSquare
+  IndianRupee, Activity, Plus
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils'
 import { dashboardService, DashboardSummary } from '@/api/services/dashboard'
+import { BillAcceptanceWidget } from '@/components/dashboard/BillAcceptanceWidget'
+import { PaymentAcceptanceWidget } from '@/components/dashboard/PaymentAcceptanceWidget'
 
 const StatCard = ({ title, value, icon: Icon, delay, textColor, iconBgColor }: any) => (
   <motion.div
@@ -73,25 +76,13 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Dashboard</h1>
         </div>
+        <Button onClick={() => window.location.href = '/bills/create'} className="bg-indigo-600 hover:bg-indigo-700">
+          <Plus className="h-4 w-4 mr-2" />
+          Create bill
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
-          className="cursor-pointer"
-          onClick={() => window.location.href = '/bills/create'}
-        >
-          <Card className="h-full overflow-hidden border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center justify-center p-6 min-h-[140px]">
-            <div className="text-center text-white flex flex-col items-center">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
-                <span className="text-2xl font-bold">+</span>
-              </div>
-              <h3 className="text-xl font-bold">Create bill</h3>
-            </div>
-          </Card>
-        </motion.div>
 
         <StatCard 
           title="Total Receivable" 
@@ -133,39 +124,25 @@ export default function Dashboard() {
           textColor="text-red-400 dark:text-red-300"
           iconBgColor="bg-red-50 dark:bg-red-300/10"
         />
+      </div>
 
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-[400px]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5 }}
-          className="cursor-pointer"
-          onClick={() => window.location.href = '/bill-acceptances'}
+          className="h-full"
         >
-          <Card className="h-full overflow-hidden border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-amber-600 hover:bg-amber-700 transition-colors flex items-center justify-center p-6 min-h-[140px]">
-            <div className="text-center text-white flex flex-col items-center">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
-                <FileCheck className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold">Bill Acceptance</h3>
-            </div>
-          </Card>
+          <BillAcceptanceWidget />
         </motion.div>
-
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.5 }}
-          className="cursor-pointer"
-          onClick={() => window.location.href = '/payment-acceptances'}
+          className="h-full"
         >
-          <Card className="h-full overflow-hidden border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center justify-center p-6 min-h-[140px]">
-            <div className="text-center text-white flex flex-col items-center">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
-                <CheckSquare className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold">Payment Acceptance</h3>
-            </div>
-          </Card>
+          <PaymentAcceptanceWidget />
         </motion.div>
       </div>
 

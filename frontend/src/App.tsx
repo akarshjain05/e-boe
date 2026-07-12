@@ -17,8 +17,6 @@ const BillDetails = lazy(() => import('./pages/bills/BillDetails'));
 const Payments = lazy(() => import('./pages/payments'));
 const Reports = lazy(() => import('./pages/reports'));
 const Settings = lazy(() => import('./pages/settings'));
-const BillAcceptance = lazy(() => import('./pages/acceptances/BillAcceptance'));
-const PaymentAcceptance = lazy(() => import('./pages/acceptances/PaymentAcceptance'));
 const NotFound = lazy(() => import('./pages/errors/NotFound'));
 const ServerError = lazy(() => import('./pages/errors/ServerError'));
 
@@ -67,8 +65,6 @@ function App() {
           </Route>
           <Route path="payments" element={<Payments />} />
           <Route path="reports" element={<Reports />} />
-          <Route path="bill-acceptances" element={<BillAcceptance />} />
-          <Route path="payment-acceptances" element={<PaymentAcceptance />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         
