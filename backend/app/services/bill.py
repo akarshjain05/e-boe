@@ -91,7 +91,8 @@ class BillService:
 
     async def get_all(self, company_id: UUID, skip: int = 0, limit: int = 100, search: str = None, sort_by: str = None, sort_order: str = "desc", bill_type: str = "receivable", status: str = None, from_date: str = None, to_date: str = None, creditor_id: UUID = None, customer_id: UUID = None):
         stmt = select(Bill).options(
-            selectinload(Bill.items)
+            selectinload(Bill.items),
+            selectinload(Bill.payments)
         ).where(
             Bill.is_deleted == False
         )

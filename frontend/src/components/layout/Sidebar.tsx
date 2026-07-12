@@ -60,7 +60,12 @@ export function Sidebar() {
       <div className="flex h-16 items-center border-b border-zinc-200 dark:border-zinc-800 px-4">
         <div className="flex items-center gap-3">
           <img src="/logo.svg" alt="e-BoE Logo" className="h-10 w-10 object-cover" />
-          {!isCollapsed && <span className="text-xl font-bold tracking-tight">e-BoE</span>}
+          {!isCollapsed && (
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold tracking-tight">e-BoE</span>
+              <span className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-sm uppercase tracking-widest shadow-sm border border-amber-300/50">Premium</span>
+            </div>
+          )}
         </div>
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}

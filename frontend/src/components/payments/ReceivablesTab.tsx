@@ -147,8 +147,15 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
 
       <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm sticky top-0 z-10">
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium">Click "View Payments" to confirm pending receipts.</label>
+          <label className="text-sm font-medium">Pending receipts confirmation.</label>
         </div>
+        <Button 
+          variant="outline" 
+          className="gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 border-indigo-200"
+          onClick={() => setSelectedBillForPayments({ isAll: true })}
+        >
+          View All Payments
+        </Button>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
@@ -185,23 +192,12 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right font-medium">{formatCurrency(bill.total_amount)}</td>
-                  <td className="px-6 py-4 text-right font-semibold text-red-600">{formatCurrency(bill.outstanding_amount)}</td>
+                  <td className="px-6 py-4 text-right font-semibold text-emerald-600">{formatCurrency(bill.outstanding_amount)}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${isReceivable ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
                         {bill.status}
                       </span>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="h-7 text-xs border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 ml-2"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedBillForPayments(bill)
-                        }}
-                      >
-                        View Payments
-                      </Button>
                     </div>
                   </td>
                 </motion.tr>
@@ -215,6 +211,7 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
         open={!!selectedBillForPayments}
         onOpenChange={(open) => !open && setSelectedBillForPayments(null)}
         bill={selectedBillForPayments}
+        customerBills={bills}
         onSuccess={() => refetch()}
       />
     </div>

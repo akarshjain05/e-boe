@@ -8,6 +8,7 @@ from app.models.payment import Payment
 from app.models.user import User
 from app.api.dependencies.auth import get_current_user
 from datetime import datetime, timezone, timedelta
+from sqlalchemy import or_, and_
 
 router = APIRouter()
 
@@ -18,22 +19,50 @@ async def get_dashboard_summary(
 ):
     company_id = current_user.company_id
 
-    # Total outstanding
+    # Base conditions
+    receivable_condition = or_(
+        and_(Bill.company_id == company_id, Bill.bill_type == "receivable"),
+        and_(Bill.network_payee_company_id == company_id, Bill.bill_type == "payable")
+    )
+    
+    payable_condition = or_(
+        and_(Bill.company_id == company_id, Bill.bill_type == "payable"),
+        and_(Bill.network_drawee_company_id == company_id, Bill.bill_type == "receivable")
+    )
+
+    # 1. Total Receivable
     stmt = select(func.sum(Bill.outstanding_amount)).where(
-        Bill.company_id == company_id,
+        receivable_condition,
         Bill.is_deleted == False,
-        Bill.status.notin_(["paid", "cancelled", "draft"])
+        Bill.status.notin_(["draft", "cancelled"])
     )
     result = await db.execute(stmt)
-    total_outstanding = result.scalar() or 0
+    total_receivable = result.scalar() or 0
 
-    # Total collected (paid bills)
+    # 2. Total Received
     stmt = select(func.sum(Bill.paid_amount)).where(
-        Bill.company_id == company_id,
+        receivable_condition,
         Bill.is_deleted == False
     )
     result = await db.execute(stmt)
-    total_collected = result.scalar() or 0
+    total_received = result.scalar() or 0
+
+    # 3. Total Payable (Excluding draft, cancelled, and pending_acceptance)
+    stmt = select(func.sum(Bill.outstanding_amount)).where(
+        payable_condition,
+        Bill.is_deleted == False,
+        Bill.status.notin_(["draft", "cancelled", "pending_acceptance"])
+    )
+    result = await db.execute(stmt)
+    total_payable = result.scalar() or 0
+
+    # 4. Total Paid
+    stmt = select(func.sum(Bill.paid_amount)).where(
+        payable_condition,
+        Bill.is_deleted == False
+    )
+    result = await db.execute(stmt)
+    total_paid = result.scalar() or 0
 
     # Active bills count
     stmt = select(func.count(Bill.id)).where(
@@ -54,7 +83,7 @@ async def get_dashboard_summary(
 
     # Overdue bills
     stmt = select(func.count(Bill.id)).where(
-        Bill.company_id == company_id,
+        or_(receivable_condition, payable_condition),
         Bill.is_deleted == False,
         Bill.status == "overdue"
     )
@@ -65,7 +94,7 @@ async def get_dashboard_summary(
     now = datetime.now(timezone.utc).date()
     week_end = now + timedelta(days=7)
     stmt = select(func.count(Bill.id)).where(
-        Bill.company_id == company_id,
+        or_(receivable_condition, payable_condition),
         Bill.is_deleted == False,
         Bill.due_date >= now,
         Bill.due_date <= week_end,
@@ -83,8 +112,10 @@ async def get_dashboard_summary(
     recent_payments = result.scalars().all()
 
     return {
-        "total_outstanding": float(total_outstanding),
-        "total_collected": float(total_collected),
+        "total_receivable": float(total_receivable),
+        "total_received": float(total_received),
+        "total_payable": float(total_payable),
+        "total_paid": float(total_paid),
         "active_bills": active_bills,
         "total_customers": total_customers,
         "overdue_count": overdue_count,

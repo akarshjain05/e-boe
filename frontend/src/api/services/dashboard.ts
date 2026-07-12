@@ -9,8 +9,10 @@ export interface RecentPayment {
 }
 
 export interface DashboardSummary {
-  total_outstanding: number;
-  total_collected: number;
+  total_receivable: number;
+  total_received: number;
+  total_payable: number;
+  total_paid: number;
   active_bills: number;
   total_customers: number;
   overdue_count: number;

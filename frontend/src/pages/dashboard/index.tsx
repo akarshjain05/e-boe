@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  ArrowUpRight, ArrowDownRight, IndianRupee, Activity
+  IndianRupee, Activity
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/utils'
 import { dashboardService, DashboardSummary } from '@/api/services/dashboard'
 
-const StatCard = ({ title, value, change, isPositive, icon: Icon, delay }: any) => (
+const StatCard = ({ title, value, icon: Icon, delay, textColor, iconBgColor }: any) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -18,18 +18,11 @@ const StatCard = ({ title, value, change, isPositive, icon: Icon, delay }: any) 
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{title}</p>
-            <p className="text-3xl font-bold tracking-tight mt-2">{value}</p>
+            <p className={`text-3xl font-bold tracking-tight mt-2 ${textColor}`}>{value}</p>
           </div>
-          <div className={`p-4 rounded-2xl ${isPositive ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' : 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'}`}>
+          <div className={`p-4 rounded-2xl ${iconBgColor} ${textColor}`}>
             <Icon className="w-6 h-6" />
           </div>
-        </div>
-        <div className="mt-4 flex items-center text-sm">
-          <span className={`flex items-center font-medium ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-            {isPositive ? <ArrowUpRight className="w-4 h-4 mr-1" /> : <ArrowDownRight className="w-4 h-4 mr-1" />}
-            {change}%
-          </span>
-          <span className="text-zinc-500 dark:text-zinc-400 ml-2">vs last month</span>
         </div>
       </CardContent>
     </Card>
@@ -63,8 +56,10 @@ export default function Dashboard() {
   }
 
   const summary = data || {
-    total_outstanding: 0,
-    total_collected: 0,
+    total_receivable: 0,
+    total_received: 0,
+    total_payable: 0,
+    total_paid: 0,
     active_bills: 0,
     total_customers: 0,
     overdue_count: 0,
@@ -98,22 +93,45 @@ export default function Dashboard() {
           </Card>
         </motion.div>
 
-        {/* Removed Total Collection Pending per request */}
         <StatCard 
-          title="Total Collected Payments" 
-          value={formatCurrency(summary.total_collected)} 
+          title="Total Receivable" 
+          value={formatCurrency(summary.total_receivable)} 
+          change={0.0} 
+          isPositive={true}
+          icon={Activity}
+          delay={0.2}
+          textColor="text-green-700 dark:text-green-500"
+          iconBgColor="bg-green-100 dark:bg-green-500/10"
+        />
+        <StatCard 
+          title="Total Received" 
+          value={formatCurrency(summary.total_received)} 
           change={0.0} 
           isPositive={true}
           icon={Activity}
           delay={0.3}
+          textColor="text-green-500 dark:text-green-400"
+          iconBgColor="bg-green-50 dark:bg-green-400/10"
         />
         <StatCard 
-          title="Total Outstanding" 
-          value={formatCurrency(summary.total_outstanding)} 
+          title="Total Payable" 
+          value={formatCurrency(summary.total_payable)} 
           change={0.0} 
           isPositive={false}
           icon={IndianRupee}
           delay={0.4}
+          textColor="text-red-700 dark:text-red-500"
+          iconBgColor="bg-red-100 dark:bg-red-500/10"
+        />
+        <StatCard 
+          title="Total Paid" 
+          value={formatCurrency(summary.total_paid)} 
+          change={0.0} 
+          isPositive={false}
+          icon={IndianRupee}
+          delay={0.5}
+          textColor="text-red-400 dark:text-red-300"
+          iconBgColor="bg-red-50 dark:bg-red-300/10"
         />
       </div>
 

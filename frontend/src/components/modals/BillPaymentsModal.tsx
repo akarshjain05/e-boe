@@ -10,19 +10,39 @@ interface BillPaymentsModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   bill: any
+  customerBills?: any[]
   onSuccess: () => void
 }
 
-export function BillPaymentsModal({ open, onOpenChange, bill, onSuccess }: BillPaymentsModalProps) {
+export function BillPaymentsModal({ open, onOpenChange, bill, customerBills, onSuccess }: BillPaymentsModalProps) {
+  const isAll = bill?.isAll;
+
   const { data: allPayments = [], isLoading, refetch } = useQuery({
-    queryKey: ['bill-payments', bill?.id],
-    queryFn: () => paymentService.getPaymentsForBill(bill?.id),
-    enabled: !!bill?.id && open
+    queryKey: ['bill-payments', isAll ? 'all' : bill?.id],
+    queryFn: async () => {
+      if (isAll && customerBills) {
+        const promises = customerBills.map(b => paymentService.getPaymentsForBill(b.id).catch(() => []));
+        const results = await Promise.all(promises);
+        return results.flat();
+      }
+      return paymentService.getPaymentsForBill(bill?.id);
+    },
+    enabled: (!!bill?.id || !!isAll) && open
   })
 
+  // We only care about pending_confirmation for the confirmation flow
   const payments = allPayments.filter(p => p.status === 'pending_confirmation')
 
+  // Create a map to look up bill numbers
+  const billMap = new Map();
+  if (isAll && customerBills) {
+    customerBills.forEach(b => billMap.set(b.id, b.bill_number));
+  } else if (bill) {
+    billMap.set(bill.id, bill.bill_number);
+  }
+
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
+  const [rejectingId, setRejectingId] = useState<string | null>(null)
 
   const handleConfirm = async (paymentId: string) => {
     setConfirmingId(paymentId)
@@ -37,14 +57,31 @@ export function BillPaymentsModal({ open, onOpenChange, bill, onSuccess }: BillP
     }
   }
 
+  const handleReject = async (paymentId: string) => {
+    setRejectingId(paymentId)
+    try {
+      await paymentService.rejectPayment(paymentId)
+      refetch()
+      onSuccess()
+    } catch (error) {
+      console.error('Failed to reject payment', error)
+    } finally {
+      setRejectingId(null)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Payments for Bill {bill?.bill_number}</DialogTitle>
-          <DialogDescription>
-            Outstanding Balance: {formatCurrency(bill?.outstanding_amount || 0)}
-          </DialogDescription>
+          <DialogTitle>
+            {isAll ? 'All Pending Payments' : `Payments for Bill ${bill?.bill_number}`}
+          </DialogTitle>
+          {!isAll && (
+            <DialogDescription>
+              Outstanding Balance: {formatCurrency(bill?.outstanding_amount || 0)}
+            </DialogDescription>
+          )}
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto pr-2 space-y-4 mt-4">
@@ -63,26 +100,39 @@ export function BillPaymentsModal({ open, onOpenChange, bill, onSuccess }: BillP
                       {formatCurrency(payment.amount)}
                     </div>
                     <div className="text-sm text-zinc-500 mt-1">
+                      {isAll ? <span className="font-semibold text-indigo-600 dark:text-indigo-400 mr-2">Bill: {billMap.get(payment.bill_id)}</span> : null}
                       {formatDate(payment.payment_date)} &middot; {payment.receipt_number}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     {payment.status === 'pending_confirmation' && (
-                      <Button 
-                        size="sm" 
-                        className="bg-indigo-600 hover:bg-indigo-700"
-                        disabled={confirmingId === payment.id}
-                        onClick={() => handleConfirm(payment.id)}
-                      >
-                        {confirmingId === payment.id ? 'Confirming...' : 'Confirm Receipt'}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          className="bg-indigo-600 hover:bg-indigo-700"
+                          disabled={confirmingId === payment.id || rejectingId === payment.id}
+                          onClick={() => handleConfirm(payment.id)}
+                        >
+                          {confirmingId === payment.id ? 'Confirming...' : 'Accept'}
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800"
+                          disabled={confirmingId === payment.id || rejectingId === payment.id}
+                          onClick={() => handleReject(payment.id)}
+                        >
+                          {rejectingId === payment.id ? 'Rejecting...' : 'Reject'}
+                        </Button>
+                      </div>
                     )}
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${
                       payment.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : 
+                      payment.status === 'rejected' ? 'bg-rose-100 text-rose-700' : 
                       payment.status === 'pending_confirmation' ? 'bg-amber-100 text-amber-700' : 
                       'bg-zinc-100 text-zinc-700'
                     }`}>
-                      {payment.status === 'pending_confirmation' ? 'Pending' : payment.status}
+                      {payment.status.replace('_', ' ')}
                     </span>
                   </div>
                 </div>

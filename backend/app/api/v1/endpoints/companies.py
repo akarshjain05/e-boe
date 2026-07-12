@@ -115,6 +115,16 @@ async def lookup_company_by_gstin(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # First check if the requested GSTIN belongs to the current user's company
+    stmt_curr = select(Company).where(Company.id == current_user.company_id)
+    current_company = (await db.execute(stmt_curr)).scalar_one_or_none()
+    
+    if current_company and current_company.gst_number == gstin:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Not Applicable"
+        )
+
     stmt = select(Company).where(Company.gst_number == gstin, Company.is_active == True)
     result = await db.execute(stmt)
     company = result.scalar_one_or_none()

@@ -177,6 +177,57 @@ class PaymentService:
         
         return payment
 
+    async def reject_payment(self, payment_id: UUID, company_id: UUID, user_id: UUID) -> Payment:
+        payment = await self.get_by_id(payment_id, company_id)
+        if not payment:
+            raise HTTPException(status_code=404, detail="Payment not found")
+            
+        if payment.status != "pending_confirmation":
+            raise HTTPException(status_code=400, detail="Only pending payments can be rejected")
+            
+        # Get the associated bill
+        stmt = select(Bill).where(Bill.id == payment.bill_id)
+        bill = (await self.db.execute(stmt)).scalar_one_or_none()
+        
+        # Determine if caller is Drawer
+        is_drawer = False
+        if bill.bill_type == "receivable" and bill.company_id == company_id:
+            is_drawer = True
+        elif bill.bill_type == "payable" and bill.network_payee_company_id == company_id:
+            is_drawer = True
+            
+        if not is_drawer:
+            raise HTTPException(status_code=403, detail="Only the drawer can reject a payment.")
+            
+        payment.status = "rejected"
+        payment.updated_by = user_id
+        
+        await self.db.commit()
+        await self.db.refresh(payment)
+        
+        # --- Notifications Logic ---
+        from app.services.notification import NotificationService
+        from app.schemas.notification import NotificationCreate
+        from app.models.user import User
+        
+        notification_service = NotificationService(self.db)
+        drawee_company_id = bill.company_id if bill.bill_type == "payable" else bill.network_drawee_company_id
+        
+        if drawee_company_id:
+            users_stmt = select(User).where(User.company_id == drawee_company_id)
+            users_res = await self.db.execute(users_stmt)
+            for target_user in users_res.scalars().all():
+                await notification_service.create(NotificationCreate(
+                    company_id=drawee_company_id,
+                    user_id=target_user.id,
+                    type="payment_rejected",
+                    title="Payment Rejected",
+                    message=f"Your payment of ₹{payment.amount} for Bill {bill.bill_number} was rejected.",
+                    data_json={"bill_id": str(bill.id), "payment_id": str(payment.id)}
+                ))
+        
+        return payment
+
     async def confirm_payment(self, payment_id: UUID, company_id: UUID, user_id: UUID) -> Payment:
         payment = await self.get_by_id(payment_id, company_id)
         if not payment:

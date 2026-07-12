@@ -53,7 +53,9 @@ export function PayablesTab() {
     }
     
     const entry = activeCreditorsMap.get(key);
-    entry.calculated_outstanding += Number(bill.outstanding_amount || 0);
+    if (bill.status !== 'pending_acceptance') {
+      entry.calculated_outstanding += Number(bill.outstanding_amount || 0);
+    }
   });
 
   const activeCreditors = Array.from(activeCreditorsMap.values());
@@ -169,7 +171,13 @@ function CreditorBillsView({ creditor, onBack }: { creditor: any, onBack: () => 
             ) : bills.length === 0 ? (
               <tr><td colSpan={7} className="text-center py-8 text-zinc-500">No bills found for this creditor.</td></tr>
             ) : bills.map((bill: any, idx: number) => {
-              const isPayable = Number(bill.outstanding_amount) > 0
+              const pendingPaymentsTotal = (bill.payments || [])
+                .filter((p: any) => p.status === 'pending_confirmation')
+                .reduce((sum: number, p: any) => sum + Number(p.amount), 0)
+              const actualOutstanding = Number(bill.outstanding_amount) - pendingPaymentsTotal
+              const isPayable = actualOutstanding > 0
+              const hasPendingPayments = pendingPaymentsTotal > 0
+
               return (
                 <motion.tr 
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.05 }}
@@ -185,30 +193,57 @@ function CreditorBillsView({ creditor, onBack }: { creditor: any, onBack: () => 
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right font-medium">{formatCurrency(bill.total_amount)}</td>
-                  <td className="px-6 py-4 text-right font-semibold text-red-600">{formatCurrency(bill.outstanding_amount)}</td>
+                  <td className="px-6 py-4 text-right font-semibold text-red-600">
+                    {bill.status === 'pending_acceptance' ? '-' : formatCurrency(bill.outstanding_amount)}
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${isPayable ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                        {bill.status}
-                      </span>
-                      {bill.status === 'pending_acceptance' && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="h-7 text-xs border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
-                          onClick={async (e) => {
-                            e.stopPropagation()
-                            try {
-                              await billService.updateBillStatus(bill.id, 'accepted')
-                              refetch()
-                            } catch (error) {
-                              console.error('Failed to accept bill:', error)
-                            }
-                          }}
-                        >
-                          Accept
-                        </Button>
+                      {bill.status === 'pending_acceptance' ? (
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-7 text-xs border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
+                            onClick={async (e) => {
+                              e.stopPropagation()
+                              try {
+                                await billService.updateBillStatus(bill.id, 'accepted')
+                                refetch()
+                              } catch (error) {
+                                console.error('Failed to accept bill:', error)
+                              }
+                            }}
+                          >
+                            Accept
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-7 text-xs border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800"
+                            onClick={async (e) => {
+                              e.stopPropagation()
+                              try {
+                                await billService.updateBillStatus(bill.id, 'rejected')
+                                refetch()
+                              } catch (error) {
+                                console.error('Failed to reject bill:', error)
+                              }
+                            }}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                          ['paid', 'accepted'].includes(bill.status) ? 'bg-emerald-100 text-emerald-700' :
+                          hasPendingPayments && !isPayable ? 'bg-amber-100 text-amber-700' :
+                          bill.status === 'rejected' ? 'bg-rose-100 text-rose-700' :
+                          'bg-zinc-100 text-zinc-700'
+                        }`}>
+                          {hasPendingPayments && !isPayable ? 'Processing' : bill.status.replace('_', ' ')}
+                        </span>
                       )}
+                      
                       {['accepted', 'partially_paid'].includes(bill.status) && isPayable && (
                         <Button 
                           size="sm" 
@@ -216,7 +251,8 @@ function CreditorBillsView({ creditor, onBack }: { creditor: any, onBack: () => 
                           className="h-7 text-xs border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 ml-2"
                           onClick={(e) => {
                             e.stopPropagation()
-                            setSelectedBillForPayment(bill)
+                            // Pass the actual remaining balance so the modal limits the payment amount correctly
+                            setSelectedBillForPayment({ ...bill, outstanding_amount: actualOutstanding })
                           }}
                         >
                           Pay

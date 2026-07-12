@@ -134,6 +134,7 @@ class BillResponse(BillBase):
     updated_at: datetime
     
     items: List[BillItemResponse] = []
+    payments: List[Any] = []
 
     class Config:
         from_attributes = True

@@ -54,6 +54,15 @@ async def confirm_payment(
     payment_service = PaymentService(db)
     return await payment_service.confirm_payment(payment_id, current_user.company_id, current_user.id)
 
+@router.post("/{payment_id}/reject", response_model=PaymentResponse)
+async def reject_payment(
+    payment_id: UUID = Path(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    payment_service = PaymentService(db)
+    return await payment_service.reject_payment(payment_id, current_user.company_id, current_user.id)
+
 @router.get("/{payment_id}", response_model=PaymentResponse)
 async def get_payment(
     payment_id: UUID = Path(...),

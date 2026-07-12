@@ -66,6 +66,11 @@ export const paymentService = {
     return response.data;
   },
 
+  rejectPayment: async (paymentId: string): Promise<Payment> => {
+    const response = await api.post(`/payments/${paymentId}/reject`);
+    return response.data;
+  },
+
   recordBulkPayment: async (data: BulkPaymentCreate): Promise<Payment[]> => {
     const response = await api.post('/payments/bulk', data);
     return response.data;
