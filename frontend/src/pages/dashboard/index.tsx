@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  IndianRupee, Activity
+  IndianRupee, Activity, FileCheck, CheckSquare
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/utils'
@@ -133,6 +133,40 @@ export default function Dashboard() {
           textColor="text-red-400 dark:text-red-300"
           iconBgColor="bg-red-50 dark:bg-red-300/10"
         />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="cursor-pointer"
+          onClick={() => window.location.href = '/bill-acceptances'}
+        >
+          <Card className="h-full overflow-hidden border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-amber-600 hover:bg-amber-700 transition-colors flex items-center justify-center p-6 min-h-[140px]">
+            <div className="text-center text-white flex flex-col items-center">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
+                <FileCheck className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-bold">Bill Acceptance</h3>
+            </div>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+          className="cursor-pointer"
+          onClick={() => window.location.href = '/payment-acceptances'}
+        >
+          <Card className="h-full overflow-hidden border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center justify-center p-6 min-h-[140px]">
+            <div className="text-center text-white flex flex-col items-center">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
+                <CheckSquare className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-bold">Payment Acceptance</h3>
+            </div>
+          </Card>
+        </motion.div>
       </div>
 
 
