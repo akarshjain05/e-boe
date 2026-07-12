@@ -82,6 +82,7 @@ export function InitiatePaymentModal({ open, onOpenChange, bill, onSuccess }: In
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="full_payment" 
+                  checked={Number(amount) === maxAmount && maxAmount > 0}
                   onCheckedChange={(checked) => {
                     if (checked) {
                       setAmount(maxAmount.toString())
