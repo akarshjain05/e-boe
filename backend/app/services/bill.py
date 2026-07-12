@@ -159,7 +159,8 @@ class BillService:
 
     async def get_by_id(self, id: UUID, company_id: UUID) -> Bill:
         stmt = select(Bill).options(
-            selectinload(Bill.items)
+            selectinload(Bill.items),
+            selectinload(Bill.payments)
         ).where(
             Bill.id == id,
             or_(

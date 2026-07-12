@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
+from app.schemas.payment import PaymentResponse
 from uuid import UUID
 from datetime import date, datetime
 
@@ -134,7 +135,7 @@ class BillResponse(BillBase):
     updated_at: datetime
     
     items: List[BillItemResponse] = []
-    payments: List[Any] = []
+    payments: List[PaymentResponse] = []
 
     class Config:
         from_attributes = True
