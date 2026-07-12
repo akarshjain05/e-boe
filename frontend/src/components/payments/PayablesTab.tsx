@@ -53,7 +53,7 @@ export function PayablesTab() {
     }
     
     const entry = activeCreditorsMap.get(key);
-    if (bill.status !== 'pending_acceptance') {
+    if (!['pending_acceptance', 'rejected', 'cancelled'].includes(bill.status)) {
       entry.calculated_outstanding += Number(bill.outstanding_amount || 0);
     }
   });
@@ -194,7 +194,7 @@ function CreditorBillsView({ creditor, onBack }: { creditor: any, onBack: () => 
                   </td>
                   <td className="px-6 py-4 text-right font-medium">{formatCurrency(bill.total_amount)}</td>
                   <td className="px-6 py-4 text-right font-semibold text-red-600">
-                    {bill.status === 'pending_acceptance' ? '-' : formatCurrency(bill.outstanding_amount)}
+                    {['pending_acceptance', 'rejected', 'cancelled'].includes(bill.status) ? '-' : formatCurrency(bill.outstanding_amount)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">

@@ -34,7 +34,7 @@ async def get_dashboard_summary(
     stmt = select(func.sum(Bill.outstanding_amount)).where(
         receivable_condition,
         Bill.is_deleted == False,
-        Bill.status.notin_(["draft", "cancelled"])
+        Bill.status.notin_(["draft", "cancelled", "rejected"])
     )
     result = await db.execute(stmt)
     total_receivable = result.scalar() or 0
@@ -51,7 +51,7 @@ async def get_dashboard_summary(
     stmt = select(func.sum(Bill.outstanding_amount)).where(
         payable_condition,
         Bill.is_deleted == False,
-        Bill.status.notin_(["draft", "cancelled", "pending_acceptance"])
+        Bill.status.notin_(["draft", "cancelled", "pending_acceptance", "rejected"])
     )
     result = await db.execute(stmt)
     total_payable = result.scalar() or 0
