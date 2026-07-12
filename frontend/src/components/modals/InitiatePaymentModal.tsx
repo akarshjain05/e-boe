@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { paymentService } from '@/api/services/payments'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import {
@@ -76,7 +77,27 @@ export function InitiatePaymentModal({ open, onOpenChange, bill, onSuccess }: In
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">Payment Amount</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="amount">Payment Amount</Label>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="full_payment" 
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setAmount(maxAmount.toString())
+                    } else {
+                      setAmount('')
+                    }
+                  }}
+                />
+                <label
+                  htmlFor="full_payment"
+                  className="text-sm font-medium leading-none text-zinc-500 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Do full payment
+                </label>
+              </div>
+            </div>
             <Input
               id="amount"
               type="number"

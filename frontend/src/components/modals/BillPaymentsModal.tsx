@@ -90,7 +90,9 @@ export function BillPaymentsModal({ open, onOpenChange, bill, customerBills, onS
               <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
             </div>
           ) : payments.length === 0 ? (
-            <p className="text-center text-zinc-500 py-8">No pending payments found for this bill.</p>
+            <p className="text-center text-zinc-500 py-8">
+              {isAll ? 'No pending payments found for this customer.' : 'No pending payments found for this bill.'}
+            </p>
           ) : (
             <div className="space-y-3">
               {payments.map(payment => (
@@ -126,14 +128,6 @@ export function BillPaymentsModal({ open, onOpenChange, bill, customerBills, onS
                         </Button>
                       </div>
                     )}
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${
-                      payment.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : 
-                      payment.status === 'rejected' ? 'bg-rose-100 text-rose-700' : 
-                      payment.status === 'pending_confirmation' ? 'bg-amber-100 text-amber-700' : 
-                      'bg-zinc-100 text-zinc-700'
-                    }`}>
-                      {payment.status.replace('_', ' ')}
-                    </span>
                   </div>
                 </div>
               ))}
