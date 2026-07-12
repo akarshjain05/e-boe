@@ -163,15 +163,15 @@ export default function BillDetails() {
                 <div className="w-64 space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-500">Subtotal</span>
-                    <span className="font-medium">{formatCurrency(bill.subtotal)}</span>
+                    <span className="font-medium">{formatCurrency(bill.amount)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-500">Tax</span>
-                    <span className="font-medium">{formatCurrency(bill.tax_total)}</span>
+                    <span className="font-medium">{formatCurrency(bill.tax_amount)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-emerald-600">
                     <span>Discount</span>
-                    <span className="font-medium">-{formatCurrency(bill.discount_total)}</span>
+                    <span className="font-medium">-{formatCurrency(bill.discount_amount)}</span>
                   </div>
                   <div className="pt-3 border-t border-zinc-200 flex justify-between">
                     <span className="font-bold text-zinc-900">Total</span>

@@ -32,9 +32,9 @@ export interface Bill {
   drawee_state?: string;
   drawee_account?: string;
   payee_name: string;
-  subtotal: number;
-  tax_total: number;
-  discount_total: number;
+  amount: number;
+  tax_amount: number;
+  discount_amount: number;
   total_amount: number;
   paid_amount: number;
   outstanding_amount: number;
