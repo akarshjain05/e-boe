@@ -9,7 +9,9 @@ import {
   Settings, 
   BarChart3, 
   LogOut,
-  ChevronRight
+  ChevronRight,
+  FileCheck,
+  CheckSquare
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
@@ -39,6 +41,16 @@ const sidebarNavItems = [
     title: "Reports",
     href: "/reports",
     icon: BarChart3,
+  },
+  {
+    title: "Bill Acceptance",
+    href: "/bill-acceptances",
+    icon: FileCheck,
+  },
+  {
+    title: "Payment Acceptance",
+    href: "/payment-acceptances",
+    icon: CheckSquare,
   },
   {
     title: "Settings",
