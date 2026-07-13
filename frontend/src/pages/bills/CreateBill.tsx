@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 import { AddCustomerModal } from '@/components/modals/AddCustomerModal'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/utils'
@@ -59,6 +61,7 @@ export default function CreateBill() {
   const [openCustomerCombobox, setOpenCustomerCombobox] = useState(false)
   const [customerSearchQuery, setCustomerSearchQuery] = useState('')
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
+  const [searchCustomerType, setSearchCustomerType] = useState<'B2B' | 'B2C'>('B2B')
 
   const queryClient = useQueryClient()
 
@@ -242,7 +245,33 @@ export default function CreateBill() {
                 <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField control={form.control} name="customer_id" render={({ field }) => (
                     <FormItem className="flex flex-col mt-2">
-                      <FormLabel>Customer (Drawee)</FormLabel>
+                      <div className="flex items-center justify-between mb-2">
+                        <FormLabel>Customer (Drawee)</FormLabel>
+                        <RadioGroup
+                          defaultValue="B2B"
+                          value={searchCustomerType}
+                          onValueChange={(val: 'B2B' | 'B2C') => {
+                            setSearchCustomerType(val)
+                            setCustomerSearchQuery('')
+                            // Clear selected customer if it doesn't match the new type
+                            const current = customers.find(c => c.id === field.value)
+                            if (current && current.customer_type !== val) {
+                              field.onChange('')
+                              form.setValue('drawee_name', '')
+                            }
+                          }}
+                          className="flex items-center gap-4"
+                        >
+                          <div className="flex items-center space-x-1.5">
+                            <RadioGroupItem value="B2B" id="type-b2b" />
+                            <Label htmlFor="type-b2b" className="text-xs font-normal">B2B</Label>
+                          </div>
+                          <div className="flex items-center space-x-1.5">
+                            <RadioGroupItem value="B2C" id="type-b2c" />
+                            <Label htmlFor="type-b2c" className="text-xs font-normal">B2C</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
                       <Popover open={openCustomerCombobox} onOpenChange={setOpenCustomerCombobox}>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -272,7 +301,7 @@ export default function CreateBill() {
                         <PopoverContent className="w-[300px] p-0" align="start">
                           <Command>
                             <CommandInput 
-                              placeholder="Search by name or GST..." 
+                              placeholder={searchCustomerType === 'B2B' ? "Search by org name or GST..." : "Search by name or phone..."}
                               value={customerSearchQuery}
                               onValueChange={setCustomerSearchQuery}
                             />
@@ -293,10 +322,12 @@ export default function CreateBill() {
                                 </Button>
                               </CommandEmpty>
                               <CommandGroup>
-                                {customers.map((customer) => {
-                                  const displayLabel = customer.customer_type === 'B2C' && customer.gst_number
-                                    ? `${customer.name} (GST: ${customer.gst_number})`
-                                    : customer.name;
+                                {customers.filter(c => c.customer_type === searchCustomerType).map((customer) => {
+                                  const displayLabel = customer.customer_type === 'B2C' && customer.phone
+                                    ? `${customer.name} (Mobile: ${customer.phone})`
+                                    : customer.customer_type === 'B2B' && customer.gst_number 
+                                      ? `${customer.name} (GST: ${customer.gst_number})`
+                                      : customer.name;
                                   return (
                                     <CommandItem
                                       key={customer.id}
@@ -564,6 +595,7 @@ export default function CreateBill() {
         open={isAddCustomerModalOpen} 
         onOpenChange={setIsAddCustomerModalOpen}
         initialSearchTerm={customerSearchQuery}
+        initialCustomerType={searchCustomerType}
         onSuccessAction={(customerId) => {
           form.setValue('customer_id', customerId, { shouldValidate: true })
           const selectedCustomer = customers.find(c => c.id === customerId)

@@ -29,7 +29,9 @@ class CustomerService:
             stmt = stmt.where(
                 Customer.name.ilike(search_term) | 
                 Customer.email.ilike(search_term) |
-                Customer.customer_code.ilike(search_term)
+                Customer.customer_code.ilike(search_term) |
+                Customer.gst_number.ilike(search_term) |
+                Customer.phone.ilike(search_term)
             )
             
         if sort_by:

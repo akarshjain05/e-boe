@@ -45,17 +45,18 @@ interface AddCustomerModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   initialSearchTerm?: string
+  initialCustomerType?: 'B2B' | 'B2C'
   onSuccessAction?: (customerId: string) => void
 }
 
-export function AddCustomerModal({ open, onOpenChange, initialSearchTerm, onSuccessAction }: AddCustomerModalProps) {
+export function AddCustomerModal({ open, onOpenChange, initialSearchTerm, initialCustomerType, onSuccessAction }: AddCustomerModalProps) {
   const queryClient = useQueryClient()
   const [step, setStep] = useState<1 | 2>(1)
   
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema) as any,
     defaultValues: {
-      customer_type: 'B2B',
+      customer_type: initialCustomerType || 'B2B',
       name: '',
       email: '',
       phone: '',
@@ -67,16 +68,27 @@ export function AddCustomerModal({ open, onOpenChange, initialSearchTerm, onSucc
   // Auto-fill logic when modal opens with a search term
   useEffect(() => {
     if (open && initialSearchTerm) {
-      const isGst = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i.test(initialSearchTerm.trim())
-      if (isGst) {
-        form.setValue('gst_number', initialSearchTerm.trim().toUpperCase())
-        form.setValue('customer_type', 'B2B')
-        setStep(2)
+      if (initialCustomerType === 'B2C') {
+        form.setValue('customer_type', 'B2C')
+        const isPhone = /^\+?[\d\s-]{8,15}$/.test(initialSearchTerm.trim())
+        if (isPhone) {
+          form.setValue('phone', initialSearchTerm.trim())
+          setStep(2)
+        } else {
+          form.setValue('name', initialSearchTerm)
+        }
       } else {
-        form.setValue('name', initialSearchTerm)
+        form.setValue('customer_type', 'B2B')
+        const isGst = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i.test(initialSearchTerm.trim())
+        if (isGst) {
+          form.setValue('gst_number', initialSearchTerm.trim().toUpperCase())
+          setStep(2)
+        } else {
+          form.setValue('name', initialSearchTerm)
+        }
       }
     }
-  }, [open, initialSearchTerm, form])
+  }, [open, initialSearchTerm, initialCustomerType, form])
 
   const customerType = form.watch('customer_type')
 
