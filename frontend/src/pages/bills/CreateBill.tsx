@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Plus, Trash2, Loader2, Save, FileText, Check, ChevronsUpDown } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Loader2, Save, FileText, Check } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -280,7 +280,7 @@ export default function CreateBill() {
                               role="combobox"
                               aria-expanded={openCustomerCombobox}
                               className={cn(
-                                "w-full justify-between bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800",
+                                "w-full justify-start font-normal bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800",
                                 !field.value && "text-muted-foreground"
                               )}
                               disabled={isLoadingCustomers}
@@ -288,13 +288,14 @@ export default function CreateBill() {
                               {field.value
                                 ? (() => {
                                     const c = customers.find((c) => c.id === field.value);
-                                    if (!c) return "Select a customer";
-                                    return c.customer_type === 'B2C' && c.gst_number
-                                      ? `${c.name} (GST: ${c.gst_number})`
-                                      : c.name;
+                                    if (!c) return searchCustomerType === 'B2B' ? "Search by org name or GST..." : "Search by name or phone...";
+                                    return c.customer_type === 'B2C' && c.phone
+                                      ? `${c.name} - ${c.phone}`
+                                      : c.customer_type === 'B2B' && c.gst_number
+                                        ? `${c.name} - ${c.gst_number}`
+                                        : c.name;
                                   })()
-                                : "Select a customer"}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                : (searchCustomerType === 'B2B' ? "Search by org name or GST..." : "Search by name or phone...")}
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
@@ -323,28 +324,41 @@ export default function CreateBill() {
                               </CommandEmpty>
                               <CommandGroup>
                                 {customers.filter(c => c.customer_type === searchCustomerType).map((customer) => {
-                                  const displayLabel = customer.customer_type === 'B2C' && customer.phone
-                                    ? `${customer.name} (Mobile: ${customer.phone})`
+                                  // We use this value for search filtering internally
+                                  const searchValue = customer.customer_type === 'B2C' && customer.phone
+                                    ? `${customer.name} ${customer.phone}`
                                     : customer.customer_type === 'B2B' && customer.gst_number 
-                                      ? `${customer.name} (GST: ${customer.gst_number})`
+                                      ? `${customer.name} ${customer.gst_number}`
                                       : customer.name;
+                                      
+                                  const subText = customer.customer_type === 'B2B' ? customer.gst_number : customer.phone;
+
                                   return (
                                     <CommandItem
                                       key={customer.id}
-                                      value={displayLabel}
+                                      value={searchValue}
                                       onSelect={() => {
                                         field.onChange(customer.id);
                                         form.setValue('drawee_name', customer.name, { shouldValidate: true });
                                         setOpenCustomerCombobox(false);
                                       }}
                                     >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          customer.id === field.value ? "opacity-100" : "opacity-0"
+                                      <div className="flex w-full items-center justify-between">
+                                        <div className="flex items-center">
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              customer.id === field.value ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                          <span>{customer.name}</span>
+                                        </div>
+                                        {subText && (
+                                          <span className="text-xs italic text-zinc-400 dark:text-zinc-500 ml-4">
+                                            {subText}
+                                          </span>
                                         )}
-                                      />
-                                      {displayLabel}
+                                      </div>
                                     </CommandItem>
                                   );
                                 })}
