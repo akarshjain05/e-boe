@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen, Search, Filter, ArrowUpDown, FileText, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react'
+import { BookOpen, Search, Filter, ArrowUpDown, FileText, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -159,7 +159,6 @@ export default function Passbook() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className={`font-bold flex items-center justify-end gap-1.5 ${isReceived ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {isReceived ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
                             {isReceived ? '+' : '-'}{formatCurrency(payment.amount)}
                           </div>
                         </td>
