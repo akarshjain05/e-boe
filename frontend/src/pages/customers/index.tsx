@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function Customers() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -26,6 +27,7 @@ export default function Customers() {
   const [editingCustomer, setEditingCustomer] = useState<any>(null)
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterHasOutstanding, setFilterHasOutstanding] = useState<boolean | undefined>(undefined)
+  const [customerType, setCustomerType] = useState<'B2B' | 'B2C'>('B2B')
   const queryClient = useQueryClient()
 
   const deleteMutation = useMutation({
@@ -53,8 +55,9 @@ export default function Customers() {
   }, [searchTerm])
 
   const { data: customers = [], isLoading } = useQuery({
-    queryKey: ['customers', debouncedSearch, sortField, sortOrder, filterStatus, filterHasOutstanding],
+    queryKey: ['customers', customerType, debouncedSearch, sortField, sortOrder, filterStatus, filterHasOutstanding],
     queryFn: () => customerService.getCustomers({ 
+      customer_type: customerType,
       search: debouncedSearch || undefined, 
       sort_by: sortField, 
       sort_order: sortOrder,
@@ -80,14 +83,21 @@ export default function Customers() {
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Customers</h1>
           <p className="text-zinc-500 dark:text-zinc-400 mt-1">Manage your drawees and monitor credit limits.</p>
         </div>
-        <Button onClick={() => setIsAddModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-600/20 gap-2">
-          <Plus className="h-4 w-4" />
+        <Button onClick={() => setIsAddModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
+          <Plus className="h-4 w-4 mr-2" />
           Add Customer
         </Button>
       </div>
 
-      <Card className="border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-white dark:bg-zinc-900">
-        <CardContent className="p-0">
+      <Tabs defaultValue="B2B" value={customerType} onValueChange={(v) => setCustomerType(v as 'B2B' | 'B2C')} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="B2B">B2B Customers</TabsTrigger>
+          <TabsTrigger value="B2C">B2C Customers</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="B2B" className="mt-4 space-y-4">
+          <Card className="border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl">
+            <CardContent className="p-0">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b border-zinc-200 dark:border-zinc-800">
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
@@ -241,11 +251,158 @@ export default function Customers() {
               <Button variant="outline" size="sm" disabled>Previous</Button>
               <Button variant="outline" size="sm" disabled>Next</Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+        </TabsContent>
 
-      <AddCustomerModal open={isAddModalOpen} onOpenChange={setIsAddModalOpen} />
+        <TabsContent value="BC" className="mt-4 space-y-4">
+          <Card className="border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl">
+            {/* Same content layout */}
+            <CardContent className="p-0">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b border-zinc-200 dark:border-zinc-800">
+                <div className="relative w-full sm:w-72">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+                  <Input 
+                    placeholder="Search customers..." 
+                    className="pl-9 h-10 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full sm:w-auto h-10 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800">
+                        <Filter className="h-4 w-4 mr-2" />
+                        Filter
+                        <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => { setFilterStatus(''); setFilterHasOutstanding(undefined) }}>All Customers</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setFilterStatus('active'); setFilterHasOutstanding(undefined) }}>Active</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setFilterStatus('inactive'); setFilterHasOutstanding(undefined) }}>Inactive</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setFilterStatus(''); setFilterHasOutstanding(true) }}>Has Outstanding Balance</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button variant="outline" className="w-full sm:w-auto h-10 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 hidden sm:flex">
+                    Export <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                  </Button>
+                </div>
+              </div>
+      
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-zinc-500 uppercase bg-zinc-50 dark:bg-zinc-950/50 border-b border-zinc-200 dark:border-zinc-800">
+                    <tr>
+                      <th className="px-6 py-4 font-semibold cursor-pointer group" onClick={() => handleSort('name')}>
+                        <div className="flex items-center gap-2">
+                          Customer Details
+                          <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 font-semibold cursor-pointer group" onClick={() => handleSort('outstanding_balance')}>
+                        <div className="flex items-center gap-2">
+                          Outstanding Balance
+                          <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 font-semibold cursor-pointer group" onClick={() => handleSort('credit_limit')}>
+                        <div className="flex items-center gap-2">
+                          Credit Limit
+                          <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 font-semibold cursor-pointer group" onClick={() => handleSort('status')}>
+                        <div className="flex items-center gap-2">
+                          Status
+                          <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 bg-white dark:bg-transparent">
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center">
+                          <Loader2 className="h-6 w-6 animate-spin text-zinc-400 mx-auto" />
+                        </td>
+                      </tr>
+                    ) : customers.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
+                          <AlertCircle className="h-6 w-6 text-zinc-400 mx-auto mb-2" />
+                          <p>No customers found matching your criteria.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      customers.map((customer: any, idx: number) => (
+                        <motion.tr 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          key={customer.id} 
+                          className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="font-semibold text-zinc-900 dark:text-zinc-100">{customer.name}</div>
+                            <div className="text-zinc-500 text-xs mt-0.5">{customer.email || 'No email provided'}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-semibold text-zinc-900 dark:text-zinc-100">{formatCurrency(customer.outstanding_balance)}</div>
+                          </td>
+                          <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400">
+                            {formatCurrency(customer.credit_limit)}
+                          </td>
+                          <td className="px-6 py-4">
+                            {customer.status === 'active' ? (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                                <CheckCircle2 className="h-3 w-3" /> Active
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                                Inactive
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full">
+                                  <MoreHorizontal className="h-4 w-4 text-zinc-500" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem onClick={() => setEditingCustomer(customer)}>Edit Customer</DropdownMenuItem>
+                                <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950" onClick={() => handleDelete(customer.id)}>
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </motion.tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-zinc-500 bg-zinc-50/50 dark:bg-zinc-900/50 rounded-b-xl">
+                <span className="text-sm">Showing <span className="font-medium text-zinc-900 dark:text-zinc-100">{customers.length > 0 ? 1 : 0}</span> to <span className="font-medium text-zinc-900 dark:text-zinc-100">{customers.length}</span> results</span>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled className="border-zinc-200 dark:border-zinc-800">Previous</Button>
+                  <Button variant="outline" size="sm" disabled className="border-zinc-200 dark:border-zinc-800">Next</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      <AddCustomerModal 
+        open={isAddModalOpen} 
+        onOpenChange={setIsAddModalOpen} />
       {editingCustomer && (
         <EditCustomerModal 
           open={!!editingCustomer} 

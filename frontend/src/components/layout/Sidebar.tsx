@@ -9,7 +9,8 @@ import {
   Settings, 
   BarChart3, 
   LogOut,
-  ChevronRight
+  ChevronRight,
+  BookOpen
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
@@ -34,6 +35,11 @@ const sidebarNavItems = [
     title: "Payments",
     href: "/payments",
     icon: CreditCard,
+  },
+  {
+    title: "Passbook",
+    href: "/passbook",
+    icon: BookOpen,
   },
   {
     title: "Reports",

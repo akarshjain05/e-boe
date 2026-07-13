@@ -42,6 +42,9 @@ class PaymentResponse(PaymentBase):
     transaction_number: Optional[str] = None
     status: str
     received_by: Optional[UUID] = None
+    bill_number: Optional[str] = None
+    bill_type: Optional[str] = None
+    participant_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

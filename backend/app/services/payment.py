@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
+from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
 from app.models.payment import Payment, Refund
 from app.models.bill import Bill
@@ -16,7 +17,7 @@ class PaymentService:
         return f"RCP-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
 
     async def get_all(self, company_id: UUID, skip: int = 0, limit: int = 100, search: str = None, sort_by: str = None, sort_order: str = "desc", status: str = None, payment_method: str = None):
-        stmt = select(Payment).join(Bill, Payment.bill_id == Bill.id).where(
+        stmt = select(Payment).join(Bill, Payment.bill_id == Bill.id).options(selectinload(Payment.bill)).where(
             or_(
                 Bill.company_id == company_id,
                 Bill.network_drawee_company_id == company_id,
@@ -52,7 +53,29 @@ class PaymentService:
         stmt = stmt.offset(skip).limit(limit)
         
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        payments = result.scalars().all()
+        
+        for p in payments:
+            if getattr(p, "bill", None):
+                p.bill_number = p.bill.bill_number
+                
+                # Determine bill type relative to current company
+                if p.bill.company_id == company_id:
+                    p.bill_type = p.bill.bill_type
+                elif p.bill.network_drawee_company_id == company_id:
+                    p.bill_type = "payable"
+                elif p.bill.network_payee_company_id == company_id:
+                    p.bill_type = "receivable"
+                else:
+                    p.bill_type = p.bill.bill_type
+                    
+                # Determine participant name based on bill type
+                if p.bill_type == "receivable":
+                    p.participant_name = p.bill.drawee_name
+                else:
+                    p.participant_name = p.bill.drawer_name
+                    
+        return payments
 
     async def get_by_id(self, id: UUID, company_id: UUID) -> Payment:
         stmt = select(Payment).join(Bill, Payment.bill_id == Bill.id).where(

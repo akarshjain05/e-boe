@@ -15,6 +15,7 @@ const CreateBill = lazy(() => import('./pages/bills/CreateBill'));
 const EditBill = lazy(() => import('./pages/bills/EditBill'));
 const BillDetails = lazy(() => import('./pages/bills/BillDetails'));
 const Payments = lazy(() => import('./pages/payments'));
+const Passbook = lazy(() => import('./pages/passbook'));
 const Reports = lazy(() => import('./pages/reports'));
 const Settings = lazy(() => import('./pages/settings'));
 const NotFound = lazy(() => import('./pages/errors/NotFound'));
@@ -64,6 +65,7 @@ function App() {
             <Route path=":id/edit" element={<EditBill />} />
           </Route>
           <Route path="payments" element={<Payments />} />
+          <Route path="passbook" element={<Passbook />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
         </Route>

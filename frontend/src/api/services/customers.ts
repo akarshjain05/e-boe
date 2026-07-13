@@ -11,6 +11,7 @@ export interface Customer {
   credit_used: number;
   is_active: boolean;
   status: string;
+  customer_type: string;
 }
 
 export interface CustomerCreate {
@@ -26,7 +27,7 @@ export interface CustomerCreate {
 }
 
 export const customerService = {
-  getCustomers: async (params?: { search?: string; sort_by?: string; sort_order?: 'asc' | 'desc'; status?: string; has_outstanding?: boolean }): Promise<Customer[]> => {
+  getCustomers: async (params?: { search?: string; sort_by?: string; sort_order?: 'asc' | 'desc'; status?: string; has_outstanding?: boolean; customer_type?: string }): Promise<Customer[]> => {
     const response = await api.get('/customers', { params });
     return response.data;
   },

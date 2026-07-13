@@ -9,7 +9,7 @@ class CustomerService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_all(self, company_id: UUID, skip: int = 0, limit: int = 100, search: str = None, sort_by: str = None, sort_order: str = "asc", status: str = None, has_outstanding: bool = None):
+    async def get_all(self, company_id: UUID, skip: int = 0, limit: int = 100, search: str = None, sort_by: str = None, sort_order: str = "asc", status: str = None, has_outstanding: bool = None, customer_type: str = None):
         stmt = select(Customer).where(
             Customer.company_id == company_id,
             Customer.is_deleted == False
@@ -20,6 +20,9 @@ class CustomerService:
             
         if has_outstanding:
             stmt = stmt.where(Customer.outstanding_balance > 0)
+            
+        if customer_type:
+            stmt = stmt.where(Customer.customer_type == customer_type)
         
         if search:
             search_term = f"%{search}%"

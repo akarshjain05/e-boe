@@ -20,11 +20,12 @@ async def get_customers(
     sort_order: str = Query("asc"),
     status: Optional[str] = Query(None),
     has_outstanding: Optional[bool] = Query(None),
+    customer_type: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     customer_service = CustomerService(db)
-    return await customer_service.get_all(current_user.company_id, skip, limit, search, sort_by, sort_order, status, has_outstanding)
+    return await customer_service.get_all(current_user.company_id, skip, limit, search, sort_by, sort_order, status, has_outstanding, customer_type)
 
 @router.post("/", response_model=CustomerResponse)
 async def create_customer(

@@ -11,6 +11,9 @@ export interface Payment {
   notes: string | null;
   receipt_number: string;
   created_at: string;
+  bill_number?: string;
+  bill_type?: string;
+  participant_name?: string;
 }
 
 export interface PaymentCreate {
