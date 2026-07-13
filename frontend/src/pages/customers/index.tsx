@@ -256,7 +256,7 @@ export default function Customers() {
         </Card>
         </TabsContent>
 
-        <TabsContent value="BC" className="mt-4 space-y-4">
+        <TabsContent value="B2C" className="mt-4 space-y-4">
           <Card className="border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl">
             {/* Same content layout */}
             <CardContent className="p-0">
