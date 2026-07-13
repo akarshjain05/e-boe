@@ -76,7 +76,7 @@ export interface BillCreate {
 }
 
 export const billService = {
-  getBills: async (params?: { search?: string; sort_by?: string; sort_order?: 'asc' | 'desc'; bill_type?: 'receivable' | 'payable'; status?: string; from_date?: string; to_date?: string; creditor_id?: string; customer_id?: string }): Promise<Bill[]> => {
+  getBills: async (params?: { limit?: number; search?: string; sort_by?: string; sort_order?: 'asc' | 'desc'; bill_type?: 'receivable' | 'payable'; status?: string; from_date?: string; to_date?: string; creditor_id?: string; customer_id?: string }): Promise<Bill[]> => {
     const response = await api.get('/bills', { params });
     return response.data;
   },

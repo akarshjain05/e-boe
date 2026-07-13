@@ -67,24 +67,29 @@ export function AddCustomerModal({ open, onOpenChange, initialSearchTerm, initia
 
   // Auto-fill logic when modal opens with a search term
   useEffect(() => {
-    if (open && initialSearchTerm) {
-      if (initialCustomerType === 'B2C') {
-        form.setValue('customer_type', 'B2C')
-        const isPhone = /^\+?[\d\s-]{8,15}$/.test(initialSearchTerm.trim())
-        if (isPhone) {
-          form.setValue('phone', initialSearchTerm.trim())
-          setStep(2)
+    if (open) {
+      if (initialCustomerType) {
+        // Skip step 1 if we already know the customer type
+        setStep(2)
+      }
+      
+      if (initialSearchTerm) {
+        if (initialCustomerType === 'B2C') {
+          form.setValue('customer_type', 'B2C')
+          const isPhone = /^\+?[\d\s-]{8,15}$/.test(initialSearchTerm.trim())
+          if (isPhone) {
+            form.setValue('phone', initialSearchTerm.trim())
+          } else {
+            form.setValue('name', initialSearchTerm)
+          }
         } else {
-          form.setValue('name', initialSearchTerm)
-        }
-      } else {
-        form.setValue('customer_type', 'B2B')
-        const isGst = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i.test(initialSearchTerm.trim())
-        if (isGst) {
-          form.setValue('gst_number', initialSearchTerm.trim().toUpperCase())
-          setStep(2)
-        } else {
-          form.setValue('name', initialSearchTerm)
+          form.setValue('customer_type', 'B2B')
+          const isGst = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i.test(initialSearchTerm.trim())
+          if (isGst) {
+            form.setValue('gst_number', initialSearchTerm.trim().toUpperCase())
+          } else {
+            form.setValue('name', initialSearchTerm)
+          }
         }
       }
     }

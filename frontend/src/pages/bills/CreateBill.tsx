@@ -70,6 +70,14 @@ export default function CreateBill() {
     queryFn: () => customerService.getCustomers({})
   })
 
+  // Fetch recent bills to know which customers were recently billed
+  const { data: recentBills = [] } = useQuery({
+    queryKey: ['recent-bills-customers'],
+    queryFn: () => billService.getBills({ limit: 50, sort_order: 'desc' })
+  })
+  
+  const recentBilledCustomerIds = Array.from(new Set(recentBills.map(b => b.customer_id))).slice(0, 5)
+
   // Use auth context for defaults
   useAuth()
   
@@ -309,27 +317,20 @@ export default function CreateBill() {
                             <CommandList>
                               <CommandEmpty className="py-2 px-2 text-sm text-center">
                                 <p className="mb-2 text-zinc-500">No customer found.</p>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="w-full gap-2"
-                                  onClick={() => {
-                                    setOpenCustomerCombobox(false);
-                                    setIsAddCustomerModalOpen(true);
-                                  }}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  Add Customer
-                                </Button>
                               </CommandEmpty>
                               <CommandGroup>
-                                {customers.filter(c => c.customer_type === searchCustomerType).map((customer) => {
-                                  // We use this value for search filtering internally
-                                  const searchValue = customer.customer_type === 'B2C' && customer.phone
-                                    ? `${customer.name} ${customer.phone}`
-                                    : customer.customer_type === 'B2B' && customer.gst_number 
-                                      ? `${customer.name} ${customer.gst_number}`
-                                      : customer.name;
+                                {(() => {
+                                  let filtered = customers.filter(c => c.customer_type === searchCustomerType);
+                                  if (!customerSearchQuery) {
+                                    filtered = filtered.filter(c => recentBilledCustomerIds.includes(c.id));
+                                  }
+                                  return filtered.map((customer) => {
+                                    // We use this value for search filtering internally
+                                    const searchValue = customer.customer_type === 'B2C' && customer.phone
+                                      ? `${customer.name} ${customer.phone}`
+                                      : customer.customer_type === 'B2B' && customer.gst_number 
+                                        ? `${customer.name} ${customer.gst_number}`
+                                        : customer.name;
                                       
                                   const subText = customer.customer_type === 'B2B' ? customer.gst_number : customer.phone;
 
@@ -361,8 +362,24 @@ export default function CreateBill() {
                                       </div>
                                     </CommandItem>
                                   );
-                                })}
+                                })
+                                })()}
                               </CommandGroup>
+                              <div className="p-1 border-t border-zinc-200 dark:border-zinc-800">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="w-full gap-2 justify-start text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setOpenCustomerCombobox(false);
+                                    setIsAddCustomerModalOpen(true);
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  Add Customer
+                                </Button>
+                              </div>
                             </CommandList>
                           </Command>
                         </PopoverContent>
