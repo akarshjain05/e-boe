@@ -7,6 +7,7 @@ export interface Customer {
   phone: string | null;
   address: string | null;
   tax_id: string | null;
+  gst_number: string | null;
   credit_limit: number;
   credit_used: number;
   is_active: boolean;

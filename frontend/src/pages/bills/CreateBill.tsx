@@ -3,12 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Plus, Trash2, Loader2, Save, FileText } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Loader2, Save, FileText, Check, ChevronsUpDown } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { AddCustomerModal } from '@/components/modals/AddCustomerModal'
+import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/utils'
 import { billService } from '@/api/services/bills'
 import { customerService } from '@/api/services/customers'
@@ -52,6 +56,9 @@ type CreateBillValues = z.infer<typeof createBillSchema>
 export default function CreateBill() {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [openCustomerCombobox, setOpenCustomerCombobox] = useState(false)
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('')
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
 
   const queryClient = useQueryClient()
 
@@ -234,27 +241,87 @@ export default function CreateBill() {
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField control={form.control} name="customer_id" render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col mt-2">
                       <FormLabel>Customer (Drawee)</FormLabel>
-                        <select 
-                          className="flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:focus-visible:ring-zinc-300"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e)
-                            const selectedCustomer = customers.find(c => c.id === e.target.value)
-                            if (selectedCustomer) {
-                              form.setValue('drawee_name', selectedCustomer.name, { shouldValidate: true })
-                            }
-                          }}
-                          disabled={isLoadingCustomers}
-                        >
-                          <option value="">Select a customer</option>
-                          {customers.map(customer => (
-                            <option key={customer.id} value={customer.id}>
-                              {customer.name}
-                            </option>
-                          ))}
-                        </select>
+                      <Popover open={openCustomerCombobox} onOpenChange={setOpenCustomerCombobox}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openCustomerCombobox}
+                              className={cn(
+                                "w-full justify-between bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              disabled={isLoadingCustomers}
+                            >
+                              {field.value
+                                ? (() => {
+                                    const c = customers.find((c) => c.id === field.value);
+                                    if (!c) return "Select a customer";
+                                    return c.customer_type === 'B2C' && c.gst_number
+                                      ? `${c.name} (GST: ${c.gst_number})`
+                                      : c.name;
+                                  })()
+                                : "Select a customer"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0" align="start">
+                          <Command>
+                            <CommandInput 
+                              placeholder="Search by name or GST..." 
+                              value={customerSearchQuery}
+                              onValueChange={setCustomerSearchQuery}
+                            />
+                            <CommandList>
+                              <CommandEmpty className="py-2 px-2 text-sm text-center">
+                                <p className="mb-2 text-zinc-500">No customer found.</p>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="w-full gap-2"
+                                  onClick={() => {
+                                    setOpenCustomerCombobox(false);
+                                    setIsAddCustomerModalOpen(true);
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  Add Customer
+                                </Button>
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {customers.map((customer) => {
+                                  const displayLabel = customer.customer_type === 'B2C' && customer.gst_number
+                                    ? `${customer.name} (GST: ${customer.gst_number})`
+                                    : customer.name;
+                                  return (
+                                    <CommandItem
+                                      key={customer.id}
+                                      value={displayLabel}
+                                      onSelect={() => {
+                                        field.onChange(customer.id);
+                                        form.setValue('drawee_name', customer.name, { shouldValidate: true });
+                                        setOpenCustomerCombobox(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          customer.id === field.value ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {displayLabel}
+                                    </CommandItem>
+                                  );
+                                })}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -492,6 +559,22 @@ export default function CreateBill() {
           </div>
         </form>
       </Form>
+      
+      <AddCustomerModal 
+        open={isAddCustomerModalOpen} 
+        onOpenChange={setIsAddCustomerModalOpen}
+        initialSearchTerm={customerSearchQuery}
+        onSuccessAction={(customerId) => {
+          form.setValue('customer_id', customerId, { shouldValidate: true })
+          const selectedCustomer = customers.find(c => c.id === customerId)
+          if (selectedCustomer) {
+            form.setValue('drawee_name', selectedCustomer.name, { shouldValidate: true })
+          } else {
+            // Refetch or invalidation usually handles this, but since React Query will refetch 'customers-dropdown' when 'customers' invalidates
+            // It might take a moment. We'll wait for the new list, or we could just set it and the label will update when data arrives.
+          }
+        }}
+      />
     </div>
   )
 }

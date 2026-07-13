@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -44,9 +44,11 @@ type CustomerFormValues = z.infer<typeof customerSchema>
 interface AddCustomerModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  initialSearchTerm?: string
+  onSuccessAction?: (customerId: string) => void
 }
 
-export function AddCustomerModal({ open, onOpenChange }: AddCustomerModalProps) {
+export function AddCustomerModal({ open, onOpenChange, initialSearchTerm, onSuccessAction }: AddCustomerModalProps) {
   const queryClient = useQueryClient()
   const [step, setStep] = useState<1 | 2>(1)
   
@@ -62,13 +64,28 @@ export function AddCustomerModal({ open, onOpenChange }: AddCustomerModalProps) 
     }
   })
 
+  // Auto-fill logic when modal opens with a search term
+  useEffect(() => {
+    if (open && initialSearchTerm) {
+      const isGst = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i.test(initialSearchTerm.trim())
+      if (isGst) {
+        form.setValue('gst_number', initialSearchTerm.trim().toUpperCase())
+        form.setValue('customer_type', 'B2B')
+        setStep(2)
+      } else {
+        form.setValue('name', initialSearchTerm)
+      }
+    }
+  }, [open, initialSearchTerm, form])
+
   const customerType = form.watch('customer_type')
 
   const mutation = useMutation({
     mutationFn: customerService.createCustomer,
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success('Customer added successfully')
       queryClient.invalidateQueries({ queryKey: ['customers'] })
+      if (onSuccessAction) onSuccessAction(data.id)
       handleClose()
     },
     onError: () => {
