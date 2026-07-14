@@ -70,12 +70,12 @@ export function AddCustomerModal({ open, onOpenChange, initialSearchTerm, initia
     if (open) {
       if (initialCustomerType) {
         // Skip step 1 if we already know the customer type
+        form.setValue('customer_type', initialCustomerType)
         setStep(2)
       }
       
       if (initialSearchTerm) {
         if (initialCustomerType === 'B2C') {
-          form.setValue('customer_type', 'B2C')
           const isPhone = /^\+?[\d\s-]{8,15}$/.test(initialSearchTerm.trim())
           if (isPhone) {
             form.setValue('phone', initialSearchTerm.trim())
@@ -83,7 +83,6 @@ export function AddCustomerModal({ open, onOpenChange, initialSearchTerm, initia
             form.setValue('name', initialSearchTerm)
           }
         } else {
-          form.setValue('customer_type', 'B2B')
           const isGst = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i.test(initialSearchTerm.trim())
           if (isGst) {
             form.setValue('gst_number', initialSearchTerm.trim().toUpperCase())
