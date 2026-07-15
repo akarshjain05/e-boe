@@ -49,6 +49,7 @@ export interface Bill {
   transaction_type: string;
   credit_period_months?: number;
   customer?: Customer;
+  creditor?: any;
   items: BillItem[];
 }
 

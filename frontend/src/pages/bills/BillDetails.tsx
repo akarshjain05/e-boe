@@ -21,6 +21,8 @@ export default function BillDetails() {
     enabled: !!id
   })
 
+  const isB2B = bill?.customer?.customer_type === 'B2B' || bill?.creditor?.creditor_type === 'B2B' || !!bill?.customer?.gst_number || bill?.bill_type === 'payable';
+
   const statusMutation = useMutation({
     mutationFn: ({ status, notes }: { status: string, notes?: string }) => billService.updateBillStatus(id!, status, notes),
     onSuccess: (_data, variables) => {
@@ -93,17 +95,17 @@ export default function BillDetails() {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
-                      {bill.customer?.customer_type === 'B2B' ? '[Your company name]' : '[Your business name]'}
+                      {isB2B ? '[Your company name]' : '[Your business name]'}
                     </h2>
                     <p className="text-sm text-zinc-600 mt-1">[Address, city, state - pin]</p>
                     <p className="text-sm text-zinc-600 mt-0.5">
-                      GSTIN: [seller gstin] {bill.customer?.customer_type === 'B2B' ? 'PAN: [seller pan]' : 'Phone: [phone]'}
+                      GSTIN: [seller gstin] {isB2B ? 'PAN: [seller pan]' : 'Phone: [phone]'}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <h2 className="text-2xl font-bold text-zinc-900 tracking-tight mb-2">
-                    {bill.customer?.customer_type === 'B2B' ? 'Tax invoice' : 'Retail invoice'}
+                    {isB2B ? 'Tax invoice' : 'Retail invoice'}
                   </h2>
                   <p className="text-sm text-zinc-600">
                     Invoice no: {bill.bill_number}
@@ -121,7 +123,7 @@ export default function BillDetails() {
               </div>
 
               {/* Customer Details Section */}
-              {bill.customer?.customer_type === 'B2B' ? (
+              {isB2B ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-zinc-50 rounded-lg p-5 border border-zinc-200">
                     <p className="text-xs text-zinc-500 font-medium uppercase mb-2">Bill to</p>
@@ -168,14 +170,14 @@ export default function BillDetails() {
                   <thead className="text-xs text-zinc-900 font-bold border-b-2 border-zinc-900">
                     <tr>
                       <th className="py-3 px-2 w-8">#</th>
-                      <th className="py-3 px-2">{bill.customer?.customer_type === 'B2B' ? 'Description' : 'Item / service'}</th>
+                      <th className="py-3 px-2">{isB2B ? 'Description' : 'Item / service'}</th>
                       <th className="py-3 px-2">HSN/SAC</th>
                       <th className="py-3 px-2 text-right">Qty</th>
-                      <th className="py-3 px-2 text-right">{bill.customer?.customer_type === 'B2B' ? 'Rate' : 'MRP/Rate'}</th>
-                      {bill.customer?.customer_type === 'B2C' && <th className="py-3 px-2 text-right">Discount</th>}
+                      <th className="py-3 px-2 text-right">{isB2B ? 'Rate' : 'MRP/Rate'}</th>
+                      {!isB2B && <th className="py-3 px-2 text-right">Discount</th>}
                       <th className="py-3 px-2 text-right">Taxable</th>
                       <th className="py-3 px-2 text-right">GST%</th>
-                      {bill.customer?.customer_type === 'B2B' && <th className="py-3 px-2 text-right">CGST+SGST/IGST</th>}
+                      {isB2B && <th className="py-3 px-2 text-right">CGST+SGST/IGST</th>}
                       <th className="py-3 px-2 text-right">Total</th>
                     </tr>
                   </thead>
@@ -187,12 +189,12 @@ export default function BillDetails() {
                         <td className="py-3 px-2 text-zinc-600">{item.hsn_code || '-'}</td>
                         <td className="py-3 px-2 text-right">{item.quantity}</td>
                         <td className="py-3 px-2 text-right">{formatCurrency(item.unit_price)}</td>
-                        {bill.customer?.customer_type === 'B2C' && (
+                        {!isB2B && (
                           <td className="py-3 px-2 text-right">{item.discount_percent ? `${item.discount_percent}%` : '-'}</td>
                         )}
                         <td className="py-3 px-2 text-right">{formatCurrency(item.amount)}</td>
                         <td className="py-3 px-2 text-right">{item.tax_rate}%</td>
-                        {bill.customer?.customer_type === 'B2B' && (
+                        {isB2B && (
                           <td className="py-3 px-2 text-right">{formatCurrency(item.tax_amount)}</td>
                         )}
                         <td className="py-3 px-2 text-right font-medium">
@@ -202,19 +204,19 @@ export default function BillDetails() {
                     ))}
                   </tbody>
                 </table>
-                <p className="text-xs text-zinc-500 mt-3 px-2">... add more rows{bill.customer?.customer_type === 'B2B' ? ', each row can carry its own GST slab (5/12/18/28%)' : ' — mixed GST slabs (5/12/18/28%) allowed on one bill'}</p>
+                <p className="text-xs text-zinc-500 mt-3 px-2">... add more rows{isB2B ? ', each row can carry its own GST slab (5/12/18/28%)' : ' — mixed GST slabs (5/12/18/28%) allowed on one bill'}</p>
               </div>
 
               {/* Summary Section */}
               <div className="flex justify-end pt-4 border-t border-zinc-200 mt-6">
                 <div className="w-80 space-y-3">
-                  {bill.customer?.customer_type === 'B2C' && (
+                  {!isB2B && (
                     <div className="flex justify-between text-sm">
                       <span className="text-zinc-600">Gross amount</span>
                       <span className="font-medium text-zinc-900">{formatCurrency(bill.amount + (bill.discount_amount || 0))}</span>
                     </div>
                   )}
-                  {bill.customer?.customer_type === 'B2C' && (
+                  {!isB2B && (
                     <div className="flex justify-between text-sm">
                       <span className="text-zinc-600">Discount</span>
                       <span className="font-medium text-zinc-900">{formatCurrency(bill.discount_amount || 0)}</span>
@@ -226,7 +228,7 @@ export default function BillDetails() {
                     <span className="font-medium text-zinc-900">{formatCurrency(bill.amount)}</span>
                   </div>
                   
-                  {bill.customer?.customer_type === 'B2B' && bill.discount_amount > 0 && (
+                  {isB2B && bill.discount_amount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-zinc-600">Discount</span>
                       <span className="font-medium text-zinc-900">{formatCurrency(bill.discount_amount)}</span>
@@ -235,12 +237,12 @@ export default function BillDetails() {
 
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-600">
-                      {bill.customer?.customer_type === 'B2B' ? 'Total tax (CGST+SGST/IGST)' : 'CGST + SGST (or IGST)'}
+                      {isB2B ? 'Total tax (CGST+SGST/IGST)' : 'CGST + SGST (or IGST)'}
                     </span>
                     <span className="font-medium text-zinc-900">{formatCurrency(bill.tax_amount)}</span>
                   </div>
 
-                  {bill.customer?.customer_type === 'B2C' && (
+                  {!isB2B && (
                     <div className="flex justify-between text-sm">
                       <span className="text-zinc-600">Round off</span>
                       <span className="font-medium text-zinc-900">₹0.00</span>
@@ -258,7 +260,7 @@ export default function BillDetails() {
               <div className="flex justify-between items-end pt-12 border-t border-zinc-200 mt-12">
                 <div>
                   <p className="text-sm text-zinc-600">
-                    {bill.customer?.customer_type === 'B2B' ? 'Amount in words: [rupees ... only]' : 'Payment mode: Cash / UPI / Card'}
+                    {isB2B ? 'Amount in words: [rupees ... only]' : 'Payment mode: Cash / UPI / Card'}
                   </p>
                 </div>
                 <div className="text-right">

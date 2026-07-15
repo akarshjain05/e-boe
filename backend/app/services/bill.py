@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from app.models.bill import Bill, BillItem
 from app.models.customer import Customer
 from app.models.creditor import Creditor
-from app.schemas.bill import BillCreate, BillUpdate
+from app.schemas.bill import BillCreate, BillUpdate, BillResponse
 from app.models.company import Company
 from uuid import UUID, uuid4
 from sqlalchemy import select, func, or_, and_
@@ -160,7 +160,9 @@ class BillService:
     async def get_by_id(self, id: UUID, company_id: UUID) -> Bill:
         stmt = select(Bill).options(
             selectinload(Bill.items),
-            selectinload(Bill.payments)
+            selectinload(Bill.payments),
+            selectinload(Bill.customer),
+            selectinload(Bill.creditor)
         ).where(
             Bill.id == id,
             or_(
