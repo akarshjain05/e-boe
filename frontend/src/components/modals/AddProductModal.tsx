@@ -134,24 +134,10 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                 name="unit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="NOS" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="NOS">NOS</SelectItem>
-                        <SelectItem value="PCS">PCS</SelectItem>
-                        <SelectItem value="KG">KG</SelectItem>
-                        <SelectItem value="LTR">LTR</SelectItem>
-                        <SelectItem value="MTR">MTR</SelectItem>
-                        <SelectItem value="BOX">BOX</SelectItem>
-                        <SelectItem value="PAC">PAC</SelectItem>
-                        <SelectItem value="DOZ">DOZ</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Quantity</FormLabel>
+                    <FormControl>
+                      <Input placeholder="NOS" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
