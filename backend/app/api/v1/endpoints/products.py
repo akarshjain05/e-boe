@@ -22,6 +22,31 @@ async def read_products(
     """
     Retrieve products.
     """
+    try:
+        from sqlalchemy import text
+        await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS products (
+            id UUID PRIMARY KEY,
+            company_id UUID REFERENCES companies(id),
+            name VARCHAR(255) NOT NULL,
+            description VARCHAR(500),
+            hsn_code VARCHAR(50),
+            unit VARCHAR(50),
+            unit_price NUMERIC(15, 2) DEFAULT 0.0,
+            tax_rate NUMERIC(5, 2) DEFAULT 0.0,
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            deleted_at TIMESTAMP WITH TIME ZONE,
+            created_by UUID,
+            updated_by UUID,
+            is_deleted BOOLEAN DEFAULT FALSE
+        );
+        """))
+        await db.commit()
+    except Exception:
+        await db.rollback()
+
     products = await product_service.get_multi(
         db, company_id=current_user.company_id, skip=skip, limit=limit, search=search
     )
