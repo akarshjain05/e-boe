@@ -97,7 +97,7 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
           open={isAddProductModalOpen} 
           onOpenChange={setIsAddProductModalOpen}
           initialSearchTerm={search}
-          onSuccessAction={(productId, product) => {
+          onSuccessAction={(_productId, product) => {
             if (product) {
               onSelect(product);
             }
