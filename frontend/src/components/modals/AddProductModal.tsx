@@ -16,6 +16,13 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { productService } from '@/api/services/products'
 
@@ -128,9 +135,23 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Unit</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. PCS, KG" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="NOS" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="NOS">NOS</SelectItem>
+                        <SelectItem value="PCS">PCS</SelectItem>
+                        <SelectItem value="KG">KG</SelectItem>
+                        <SelectItem value="LTR">LTR</SelectItem>
+                        <SelectItem value="MTR">MTR</SelectItem>
+                        <SelectItem value="BOX">BOX</SelectItem>
+                        <SelectItem value="PAC">PAC</SelectItem>
+                        <SelectItem value="DOZ">DOZ</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -143,7 +164,7 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                 name="unit_price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Default Rate</FormLabel>
+                    <FormLabel>Price Per Unit</FormLabel>
                     <FormControl>
                       <Input type="number" min="0" step="0.01" placeholder="0.00" {...field} />
                     </FormControl>
@@ -156,10 +177,24 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                 name="tax_rate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Default GST %</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" max="100" step="0.1" placeholder="18" {...field} />
-                    </FormControl>
+                    <FormLabel>GST</FormLabel>
+                    <Select onValueChange={(v) => field.onChange(parseFloat(v))} defaultValue={field.value?.toString()}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select GST %" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="0">0%</SelectItem>
+                        <SelectItem value="0.1">0.1%</SelectItem>
+                        <SelectItem value="0.25">0.25%</SelectItem>
+                        <SelectItem value="3">3%</SelectItem>
+                        <SelectItem value="5">5%</SelectItem>
+                        <SelectItem value="12">12%</SelectItem>
+                        <SelectItem value="18">18%</SelectItem>
+                        <SelectItem value="28">28%</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
