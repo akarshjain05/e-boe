@@ -73,8 +73,14 @@ export default function Bills() {
             Accepted
           </span>
         )
-      case 'pending_acceptance':
       case 'draft':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+            <FileText className="h-3.5 w-3.5" />
+            Draft
+          </span>
+        )
+      case 'pending_acceptance':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">
             <Clock className="h-3.5 w-3.5" />
