@@ -17,7 +17,9 @@ class PaymentService:
         return f"RCP-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
 
     async def get_all(self, company_id: UUID, skip: int = 0, limit: int = 100, search: str = None, sort_by: str = None, sort_order: str = "desc", status: str = None, payment_method: str = None):
-        stmt = select(Payment).join(Bill, Payment.bill_id == Bill.id).options(selectinload(Payment.bill)).where(
+        stmt = select(Payment).join(Bill, Payment.bill_id == Bill.id).options(
+            selectinload(Payment.bill).selectinload(Bill.creator_company)
+        ).where(
             or_(
                 Bill.company_id == company_id,
                 Bill.network_drawee_company_id == company_id,
@@ -73,7 +75,10 @@ class PaymentService:
                 if p.bill_type == "receivable":
                     p.participant_name = p.bill.drawee_name
                 else:
-                    p.participant_name = p.bill.drawer_name
+                    if getattr(p.bill, "creator_company", None):
+                        p.participant_name = p.bill.creator_company.name
+                    else:
+                        p.participant_name = p.bill.drawer_name
                     
         return payments
 

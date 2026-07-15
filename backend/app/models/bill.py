@@ -90,6 +90,7 @@ class Bill(Base, AuditMixin):
     comments = relationship("BillComment", back_populates="bill", cascade="all, delete-orphan")
     reminders = relationship("BillReminder", back_populates="bill", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="bill")
+    creator_company = relationship("Company", foreign_keys="[Bill.company_id]")
 
 class BillItem(Base, AuditMixin):
     __tablename__ = "bill_items"
