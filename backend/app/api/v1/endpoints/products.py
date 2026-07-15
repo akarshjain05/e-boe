@@ -43,6 +43,13 @@ async def read_products(
             is_deleted BOOLEAN DEFAULT FALSE
         );
         """))
+        await db.execute(text("""
+        ALTER TABLE products 
+        ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE,
+        ADD COLUMN IF NOT EXISTS created_by UUID,
+        ADD COLUMN IF NOT EXISTS updated_by UUID,
+        ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+        """))
         await db.commit()
     except Exception:
         await db.rollback()
