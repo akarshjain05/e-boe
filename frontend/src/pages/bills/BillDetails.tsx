@@ -81,102 +81,188 @@ export default function BillDetails() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Main Bill Preview Card */}
-          <Card className="border-none shadow-xl ring-1 ring-zinc-200 dark:ring-zinc-800 bg-white">
-            <div className="h-2 w-full bg-indigo-600 rounded-t-xl" />
-            <CardContent className="p-8 md:p-12 space-y-10 text-zinc-900">
-              {/* Header */}
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-3xl font-bold text-indigo-950 uppercase tracking-tight">Bill of Exchange</h2>
-                  <p className="text-zinc-500 mt-1 font-medium">{bill.bill_number}</p>
+          {/* Main Bill Preview Card */}
+          <Card className="border-none shadow-xl ring-1 ring-zinc-200 bg-white text-zinc-900">
+            <CardContent className="p-8 md:p-12 space-y-8">
+              
+              {/* Header Section */}
+              <div className="flex justify-between items-start pb-6 border-b border-zinc-200">
+                <div className="flex items-center gap-6">
+                  <div className="h-20 w-20 bg-zinc-100 border border-zinc-200 rounded flex items-center justify-center text-zinc-400 text-sm">
+                    logo
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
+                      {bill.customer?.customer_type === 'B2B' ? '[Your company name]' : '[Your business name]'}
+                    </h2>
+                    <p className="text-sm text-zinc-600 mt-1">[Address, city, state - pin]</p>
+                    <p className="text-sm text-zinc-600 mt-0.5">
+                      GSTIN: [seller gstin] {bill.customer?.customer_type === 'B2B' ? 'PAN: [seller pan]' : 'Phone: [phone]'}
+                    </p>
+                  </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-zinc-500 font-medium">Amount</p>
-                  <p className="text-3xl font-bold text-indigo-600">{formatCurrency(bill.total_amount)}</p>
+                  <h2 className="text-2xl font-bold text-zinc-900 tracking-tight mb-2">
+                    {bill.customer?.customer_type === 'B2B' ? 'Tax invoice' : 'Retail invoice'}
+                  </h2>
+                  <p className="text-sm text-zinc-600">
+                    Invoice no: {bill.bill_number}
+                  </p>
+                  <p className="text-sm text-zinc-600">
+                    Date: {formatDate(bill.issue_date)}
+                  </p>
                 </div>
               </div>
 
-              {/* Dates */}
-              <div className="flex gap-12 border-y border-zinc-100 py-6">
-                <div>
-                  <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Date of Issue</p>
-                  <p className="font-medium mt-1">{formatDate(bill.issue_date)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Due Date</p>
-                  <p className="font-medium mt-1">{formatDate(bill.due_date)}</p>
-                </div>
+              {/* Total Amount Payable Bar */}
+              <div className="bg-indigo-950 text-white rounded-lg p-4 flex justify-between items-center">
+                <span className="text-lg font-medium text-indigo-100">Total amount payable</span>
+                <span className="text-3xl font-semibold tracking-tight">{formatCurrency(bill.total_amount)}</span>
               </div>
 
-              {/* Parties */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider mb-2">Drawer (Creator)</p>
-                  <p className="font-bold text-zinc-900">{bill.drawer_name}</p>
+              {/* Customer Details Section */}
+              {bill.customer?.customer_type === 'B2B' ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-zinc-50 rounded-lg p-5 border border-zinc-200">
+                    <p className="text-xs text-zinc-500 font-medium uppercase mb-2">Bill to</p>
+                    <p className="font-bold text-zinc-900 text-lg">{bill.customer?.name || bill.drawee_name}</p>
+                    {bill.customer?.address ? (
+                      <p className="text-sm text-zinc-600 mt-1">{bill.customer.address}</p>
+                    ) : (
+                      <p className="text-sm text-zinc-600 mt-1">[Buyer address, state]</p>
+                    )}
+                    <p className="text-sm text-zinc-600 mt-2">GSTIN: {bill.customer?.gst_number || '[buyer gstin]'}</p>
+                  </div>
+                  <div className="bg-zinc-50 rounded-lg p-5 border border-zinc-200">
+                    <p className="text-xs text-zinc-500 font-medium uppercase mb-2">Ship to</p>
+                    <p className="font-medium text-zinc-900">Same as billing address</p>
+                    <p className="text-sm text-zinc-600 mt-1">Place of supply: [state, code]</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider mb-2">Drawee (Payer)</p>
-                  <p className="font-bold text-zinc-900">{bill.customer?.name || bill.drawee_name}</p>
-                  {bill.customer?.address && <p className="text-sm text-zinc-600 whitespace-pre-wrap">{bill.customer.address}</p>}
+              ) : (
+                <div className="bg-zinc-50 rounded-lg p-5 border border-zinc-200">
+                  <p className="text-xs text-zinc-500 font-medium mb-3">Customer details</p>
+                  <div className="grid grid-cols-2 gap-8">
+                    <div>
+                      <p className="font-bold text-zinc-900 text-base mb-1">Name: {bill.customer?.name || bill.drawee_name}</p>
+                      <p className="text-sm text-zinc-600 mb-2">
+                        Address: {bill.customer?.address || '[address, if delivery needed]'}
+                      </p>
+                      <p className="text-xs text-zinc-500">GSTIN not required for an unregistered / walk-in customer</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-zinc-900 text-base mb-1">
+                        Phone: {bill.customer?.phone || '[phone, optional]'}
+                      </p>
+                      <p className="text-sm text-zinc-600">
+                        State / place of supply: [state]
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Items Table */}
               <div>
                 <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-zinc-500 uppercase bg-zinc-50 border-b border-zinc-200">
+                  <thead className="text-xs text-zinc-900 font-bold border-b-2 border-zinc-900">
                     <tr>
-                      <th className="px-4 py-3 font-semibold rounded-tl-lg">Description</th>
-                      <th className="px-4 py-3 font-semibold">Qty</th>
-                      <th className="px-4 py-3 font-semibold">Price</th>
-                      <th className="px-4 py-3 font-semibold">Tax</th>
-                      <th className="px-4 py-3 font-semibold text-right rounded-tr-lg">Amount</th>
+                      <th className="py-3 px-2 w-8">#</th>
+                      <th className="py-3 px-2">{bill.customer?.customer_type === 'B2B' ? 'Description' : 'Item / service'}</th>
+                      <th className="py-3 px-2">HSN/SAC</th>
+                      <th className="py-3 px-2 text-right">Qty</th>
+                      <th className="py-3 px-2 text-right">{bill.customer?.customer_type === 'B2B' ? 'Rate' : 'MRP/Rate'}</th>
+                      {bill.customer?.customer_type === 'B2C' && <th className="py-3 px-2 text-right">Discount</th>}
+                      <th className="py-3 px-2 text-right">Taxable</th>
+                      <th className="py-3 px-2 text-right">GST%</th>
+                      {bill.customer?.customer_type === 'B2B' && <th className="py-3 px-2 text-right">CGST+SGST/IGST</th>}
+                      <th className="py-3 px-2 text-right">Total</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {bill.items.map(item => (
-                      <tr key={item.id} className="border-b border-zinc-100 last:border-0">
-                        <td className="px-4 py-4">
-                          <div className="font-medium text-zinc-900">{item.description}</div>
-                          {item.hsn_code && <div className="text-xs text-zinc-500 mt-1">HSN: {item.hsn_code}</div>}
+                    {bill.items.map((item, idx) => (
+                      <tr key={item.id} className="border-b border-zinc-200 text-zinc-800">
+                        <td className="py-3 px-2">{idx + 1}</td>
+                        <td className="py-3 px-2 font-medium">{item.description}</td>
+                        <td className="py-3 px-2 text-zinc-600">{item.hsn_code || '-'}</td>
+                        <td className="py-3 px-2 text-right">{item.quantity}</td>
+                        <td className="py-3 px-2 text-right">{formatCurrency(item.unit_price)}</td>
+                        {bill.customer?.customer_type === 'B2C' && (
+                          <td className="py-3 px-2 text-right">{item.discount_percent ? `${item.discount_percent}%` : '-'}</td>
+                        )}
+                        <td className="py-3 px-2 text-right">{formatCurrency(item.amount)}</td>
+                        <td className="py-3 px-2 text-right">{item.tax_rate}%</td>
+                        {bill.customer?.customer_type === 'B2B' && (
+                          <td className="py-3 px-2 text-right">{formatCurrency(item.tax_amount)}</td>
+                        )}
+                        <td className="py-3 px-2 text-right font-medium">
+                          {formatCurrency(item.amount + item.tax_amount)}
                         </td>
-                        <td className="px-4 py-4">{item.quantity}</td>
-                        <td className="px-4 py-4">{formatCurrency(item.unit_price)}</td>
-                        <td className="px-4 py-4">{item.tax_rate}%</td>
-                        <td className="px-4 py-4 text-right font-medium">{formatCurrency(item.amount)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                <p className="text-xs text-zinc-500 mt-3 px-2">... add more rows{bill.customer?.customer_type === 'B2B' ? ', each row can carry its own GST slab (5/12/18/28%)' : ' — mixed GST slabs (5/12/18/28%) allowed on one bill'}</p>
               </div>
 
-              {/* Totals & Signature */}
-              <div className="flex flex-col md:flex-row justify-between gap-8 pt-4 border-t border-zinc-200">
-                <div className="flex-1 max-w-sm">
-                  <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider mb-2">Terms & Conditions</p>
-                  <p className="text-xs text-zinc-600 leading-relaxed">{bill.terms_and_conditions || 'None'}</p>
+              {/* Summary Section */}
+              <div className="flex justify-end pt-4 border-t border-zinc-200 mt-6">
+                <div className="w-80 space-y-3">
+                  {bill.customer?.customer_type === 'B2C' && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-zinc-600">Gross amount</span>
+                      <span className="font-medium text-zinc-900">{formatCurrency(bill.amount + (bill.discount_amount || 0))}</span>
+                    </div>
+                  )}
+                  {bill.customer?.customer_type === 'B2C' && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-zinc-600">Discount</span>
+                      <span className="font-medium text-zinc-900">{formatCurrency(bill.discount_amount || 0)}</span>
+                    </div>
+                  )}
                   
-                  <div className="mt-8 border-t-2 border-zinc-300 border-dashed w-48 pt-2">
-                    <p className="text-xs text-zinc-500 font-medium text-center">Authorized Signature</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-zinc-600">Taxable amount</span>
+                    <span className="font-medium text-zinc-900">{formatCurrency(bill.amount)}</span>
+                  </div>
+                  
+                  {bill.customer?.customer_type === 'B2B' && bill.discount_amount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-zinc-600">Discount</span>
+                      <span className="font-medium text-zinc-900">{formatCurrency(bill.discount_amount)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between text-sm">
+                    <span className="text-zinc-600">
+                      {bill.customer?.customer_type === 'B2B' ? 'Total tax (CGST+SGST/IGST)' : 'CGST + SGST (or IGST)'}
+                    </span>
+                    <span className="font-medium text-zinc-900">{formatCurrency(bill.tax_amount)}</span>
+                  </div>
+
+                  {bill.customer?.customer_type === 'B2C' && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-zinc-600">Round off</span>
+                      <span className="font-medium text-zinc-900">₹0.00</span>
+                    </div>
+                  )}
+
+                  <div className="pt-3 border-t border-zinc-900 flex justify-between items-center mt-2">
+                    <span className="font-bold text-lg text-zinc-900">Amount payable</span>
+                    <span className="font-bold text-xl text-zinc-900">{formatCurrency(bill.total_amount)}</span>
                   </div>
                 </div>
-                <div className="w-64 space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">Subtotal</span>
-                    <span className="font-medium">{formatCurrency(bill.amount)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-zinc-500">Tax</span>
-                    <span className="font-medium">{formatCurrency(bill.tax_amount)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-emerald-600">
-                    <span>Discount</span>
-                    <span className="font-medium">-{formatCurrency(bill.discount_amount)}</span>
-                  </div>
-                  <div className="pt-3 border-t border-zinc-200 flex justify-between">
-                    <span className="font-bold text-zinc-900">Total</span>
-                    <span className="font-bold text-lg text-indigo-600">{formatCurrency(bill.total_amount)}</span>
-                  </div>
+              </div>
+
+              {/* Footer Section */}
+              <div className="flex justify-between items-end pt-12 border-t border-zinc-200 mt-12">
+                <div>
+                  <p className="text-sm text-zinc-600">
+                    {bill.customer?.customer_type === 'B2B' ? 'Amount in words: [rupees ... only]' : 'Payment mode: Cash / UPI / Card'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-zinc-600">Authorised signatory</p>
                 </div>
               </div>
             </CardContent>

@@ -297,11 +297,7 @@ export default function CreateBill() {
                                 ? (() => {
                                     const c = customers.find((c) => c.id === field.value);
                                     if (!c) return searchCustomerType === 'B2B' ? "Search by org name or GST..." : "Search by name or phone...";
-                                    return c.customer_type === 'B2C' && c.phone
-                                      ? `${c.name} - ${c.phone}`
-                                      : c.customer_type === 'B2B' && c.gst_number
-                                        ? `${c.name} - ${c.gst_number}`
-                                        : c.name;
+                                    return c.name;
                                   })()
                                 : (searchCustomerType === 'B2B' ? "Search by org name or GST..." : "Search by name or phone...")}
                             </Button>

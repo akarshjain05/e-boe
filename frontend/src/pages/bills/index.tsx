@@ -244,7 +244,15 @@ export default function Bills() {
                     onClick={() => navigate(`/bills/${bill.id}`)}
                   >
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-zinc-900 dark:text-zinc-100">{bill.bill_number}</div>
+                      <div 
+                        className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigate(`/bills/${bill.id}`)
+                        }}
+                      >
+                        {bill.bill_number}
+                      </div>
                       <div className="text-xs text-zinc-500 mt-1">{bill.currency_code}</div>
                     </td>
                     <td className="px-6 py-4 font-medium">
@@ -274,20 +282,25 @@ export default function Bills() {
                           }}>
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => {
-                            e.stopPropagation()
-                            navigate(`/bills/${bill.id}/edit`)
-                          }}>
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600" onClick={(e) => {
-                            e.stopPropagation()
-                            if (window.confirm('Are you sure you want to delete this bill?')) {
-                              deleteMutation.mutate(bill.id)
-                            }
-                          }}>
-                            Delete
-                          </DropdownMenuItem>
+                          
+                          {(bill.status === 'draft' || bill.status === 'pending_acceptance') && (
+                            <>
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation()
+                                navigate(`/bills/${bill.id}/edit`)
+                              }}>
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600" onClick={(e) => {
+                                e.stopPropagation()
+                                if (window.confirm('Are you sure you want to delete this bill?')) {
+                                  deleteMutation.mutate(bill.id)
+                                }
+                              }}>
+                                Delete
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
