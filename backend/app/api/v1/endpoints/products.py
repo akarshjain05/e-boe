@@ -3,7 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api import deps
+from app.api.dependencies.auth import get_current_user
+from app.core.database import get_db
 from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse
 from app.services.product import product_service
 from app.models.user import User
@@ -12,11 +13,11 @@ router = APIRouter()
 
 @router.get("/", response_model=List[ProductResponse])
 async def read_products(
-    db: AsyncSession = Depends(deps.get_db),
+    db: AsyncSession = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
     search: str = None,
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Retrieve products.
@@ -29,9 +30,9 @@ async def read_products(
 @router.post("/", response_model=ProductResponse)
 async def create_product(
     *,
-    db: AsyncSession = Depends(deps.get_db),
+    db: AsyncSession = Depends(get_db),
     product_in: ProductCreate,
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Create new product.
@@ -44,9 +45,9 @@ async def create_product(
 @router.get("/{id}", response_model=ProductResponse)
 async def read_product(
     *,
-    db: AsyncSession = Depends(deps.get_db),
+    db: AsyncSession = Depends(get_db),
     id: UUID,
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Get product by ID.
@@ -59,10 +60,10 @@ async def read_product(
 @router.put("/{id}", response_model=ProductResponse)
 async def update_product(
     *,
-    db: AsyncSession = Depends(deps.get_db),
+    db: AsyncSession = Depends(get_db),
     id: UUID,
     product_in: ProductUpdate,
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Update a product.
@@ -76,9 +77,9 @@ async def update_product(
 @router.delete("/{id}", response_model=ProductResponse)
 async def delete_product(
     *,
-    db: AsyncSession = Depends(deps.get_db),
+    db: AsyncSession = Depends(get_db),
     id: UUID,
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Delete a product.
