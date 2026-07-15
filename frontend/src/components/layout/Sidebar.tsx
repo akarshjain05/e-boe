@@ -10,7 +10,8 @@ import {
   BarChart3, 
   LogOut,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  Package
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
@@ -25,6 +26,11 @@ const sidebarNavItems = [
     title: "Customers",
     href: "/customers",
     icon: Users,
+  },
+  {
+    title: "Inventory",
+    href: "/inventory",
+    icon: Package,
   },
   {
     title: "Bills",

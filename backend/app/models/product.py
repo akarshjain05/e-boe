@@ -1,0 +1,18 @@
+from sqlalchemy import String, ForeignKey, Numeric, Boolean
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.models.base import Base, AuditMixin
+from uuid import UUID
+
+class Product(Base, AuditMixin):
+    __tablename__ = "products"
+    
+    company_id: Mapped[UUID] = mapped_column(ForeignKey("companies.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    hsn_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    unit: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    unit_price: Mapped[float] = mapped_column(Numeric(15, 2), default=0.0)
+    tax_rate: Mapped[float] = mapped_column(Numeric(5, 2), default=0.0)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    company = relationship("Company")

@@ -10,6 +10,7 @@ const AppLayout = lazy(() => import('./components/layout/AppLayout').then(module
 // Main Feature Pages
 const Dashboard = lazy(() => import('./pages/dashboard'));
 const Customers = lazy(() => import('./pages/customers'));
+const Inventory = lazy(() => import('./pages/inventory'));
 const Bills = lazy(() => import('./pages/bills'));
 const CreateBill = lazy(() => import('./pages/bills/CreateBill'));
 const EditBill = lazy(() => import('./pages/bills/EditBill'));
@@ -58,6 +59,7 @@ function App() {
         <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
           <Route path="customers" element={<Customers />} />
+          <Route path="inventory" element={<Inventory />} />
           <Route path="bills">
             <Route index element={<Bills />} />
             <Route path="create" element={<CreateBill />} />

@@ -14,6 +14,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { AddCustomerModal } from '@/components/modals/AddCustomerModal'
+import { ProductSearch } from '@/components/shared/ProductSearch'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/utils'
 import { billService } from '@/api/services/bills'
@@ -469,6 +470,18 @@ export default function CreateBill() {
                       </div>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 pr-10">
+                        <div className="sm:col-span-12 mb-2">
+                          <ProductSearch 
+                            onSelect={(product) => {
+                              form.setValue(`items.${index}.description`, product.name)
+                              if (product.hsn_code) form.setValue(`items.${index}.hsn_code`, product.hsn_code)
+                              if (product.unit_price) form.setValue(`items.${index}.unit_price`, product.unit_price)
+                              if (product.tax_rate !== undefined) form.setValue(`items.${index}.tax_rate`, product.tax_rate)
+                              form.setValue(`items.${index}.quantity`, 1)
+                              form.setValue(`items.${index}.discount_percent`, 0)
+                            }}
+                          />
+                        </div>
                         <FormField control={form.control} name={`items.${index}.description`} render={({ field }) => (
                           <FormItem className="sm:col-span-12">
                             <FormLabel>Description</FormLabel>

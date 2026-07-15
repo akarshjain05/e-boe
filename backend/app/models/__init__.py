@@ -23,3 +23,4 @@ __all__ = [
     "AuditLog",
     "SystemSetting", "Currency", "TaxConfig", "EmailTemplate", "ApiKey", "Webhook", "WebhookLog", "Announcement", "Bookmark", "RecycleBin", "CustomField", "CustomFieldValue", "Holiday", "ScheduledReport"
 ]
+from app.models.product import Product
