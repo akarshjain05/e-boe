@@ -7,7 +7,9 @@ class ProductBase(BaseModel):
     name: str = Field(..., max_length=255)
     description: Optional[str] = Field(None, max_length=500)
     hsn_code: Optional[str] = Field(None, max_length=50)
+    type: str = Field('goods', max_length=50)
     unit: Optional[str] = Field(None, max_length=50)
+    quantity_in_stock: float = Field(0.0, ge=0)
     unit_price: float = Field(0.0, ge=0)
     tax_rate: float = Field(0.0, ge=0, le=100)
     is_active: bool = True
@@ -19,7 +21,9 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=255)
     description: Optional[str] = Field(None, max_length=500)
     hsn_code: Optional[str] = Field(None, max_length=50)
+    type: Optional[str] = Field(None, max_length=50)
     unit: Optional[str] = Field(None, max_length=50)
+    quantity_in_stock: Optional[float] = Field(None, ge=0)
     unit_price: Optional[float] = Field(None, ge=0)
     tax_rate: Optional[float] = Field(None, ge=0, le=100)
     is_active: Optional[bool] = None

@@ -27,9 +27,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { productService } from '@/api/services/products'
 
 const productSchema = z.object({
+  type: z.enum(['goods', 'service']).default('goods'),
   name: z.string().min(1, 'Name is required'),
   hsn_code: z.string().optional().or(z.literal('')),
   unit: z.string().optional().or(z.literal('')),
+  quantity_in_stock: z.coerce.number().min(0, 'Quantity must be non-negative').default(0),
   unit_price: z.coerce.number().min(0, 'Price must be non-negative'),
   tax_rate: z.coerce.number().min(0).max(100, 'Tax rate must be between 0 and 100'),
 })
@@ -49,9 +51,11 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema) as any,
     defaultValues: {
+      type: 'goods',
       name: '',
       hsn_code: '',
       unit: '',
+      quantity_in_stock: 0,
       unit_price: 0,
       tax_rate: 0,
     }
@@ -118,10 +122,31 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="goods">Goods</SelectItem>
+                        <SelectItem value="service">Service</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="hsn_code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>HSN / SAC</FormLabel>
+                    <FormLabel>{form.watch('type') === 'service' ? 'SAC Code' : 'HSN Number'}</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. 1234" {...field} />
                     </FormControl>
@@ -129,14 +154,40 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="unit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantity</FormLabel>
+                    <FormLabel>Magnitude</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="NOS">Pieces (NOS)</SelectItem>
+                        <SelectItem value="KG">Kg (KG)</SelectItem>
+                        <SelectItem value="LTR">Liters (LTR)</SelectItem>
+                        <SelectItem value="MTR">Meters (MTR)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="quantity_in_stock"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity (in stock)</FormLabel>
                     <FormControl>
-                      <Input placeholder="NOS" {...field} />
+                      <Input type="number" min="0" step="any" placeholder="in stock" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -172,13 +223,9 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="0">0%</SelectItem>
-                        <SelectItem value="0.1">0.1%</SelectItem>
-                        <SelectItem value="0.25">0.25%</SelectItem>
-                        <SelectItem value="3">3%</SelectItem>
                         <SelectItem value="5">5%</SelectItem>
-                        <SelectItem value="12">12%</SelectItem>
                         <SelectItem value="18">18%</SelectItem>
-                        <SelectItem value="28">28%</SelectItem>
+                        <SelectItem value="40">40%</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

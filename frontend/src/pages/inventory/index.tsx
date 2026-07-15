@@ -88,6 +88,7 @@ export default function Inventory() {
                   <th className="px-6 py-4 font-semibold">Product Details</th>
                   <th className="px-6 py-4 font-semibold">HSN / SAC</th>
                   <th className="px-6 py-4 font-semibold">Unit Price</th>
+                  <th className="px-6 py-4 font-semibold">Quantity (in stock)</th>
                   <th className="px-6 py-4 font-semibold">Tax Rate</th>
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
@@ -95,13 +96,13 @@ export default function Inventory() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center">
+                    <td colSpan={6} className="px-6 py-8 text-center">
                       <Loader2 className="h-6 w-6 animate-spin text-indigo-600 mx-auto" />
                     </td>
                   </tr>
                 ) : products.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
                       <Package className="h-6 w-6 text-zinc-400 mx-auto mb-2" />
                       <p>No products found in catalogue.</p>
                     </td>
@@ -122,7 +123,12 @@ export default function Inventory() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-medium text-zinc-900 dark:text-zinc-100">
-                        {formatCurrency(product.unit_price || 0)} {product.unit ? `/ ${product.unit}` : ''}
+                        {formatCurrency(product.unit_price || 0)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                        {product.quantity_in_stock || 0} {product.unit ? `${product.unit}` : ''}
                       </div>
                     </td>
                     <td className="px-6 py-4">

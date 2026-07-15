@@ -31,7 +31,9 @@ async def read_products(
             name VARCHAR(255) NOT NULL,
             description VARCHAR(500),
             hsn_code VARCHAR(50),
+            type VARCHAR(50) DEFAULT 'goods',
             unit VARCHAR(50),
+            quantity_in_stock NUMERIC(15, 2) DEFAULT 0.0,
             unit_price NUMERIC(15, 2) DEFAULT 0.0,
             tax_rate NUMERIC(5, 2) DEFAULT 0.0,
             is_active BOOLEAN DEFAULT TRUE,
@@ -48,7 +50,9 @@ async def read_products(
         ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE,
         ADD COLUMN IF NOT EXISTS created_by UUID,
         ADD COLUMN IF NOT EXISTS updated_by UUID,
-        ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+        ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE,
+        ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'goods',
+        ADD COLUMN IF NOT EXISTS quantity_in_stock NUMERIC(15, 2) DEFAULT 0.0;
         """))
         await db.commit()
     except Exception:
