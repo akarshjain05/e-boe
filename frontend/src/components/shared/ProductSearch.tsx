@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Plus } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Button } from '@/components/ui/button'
 import { useQuery } from '@tanstack/react-query'
 import { productService } from '@/api/services/products'
 import { Product } from '@/api/services/products'
+import { AddProductModal } from '@/components/modals/AddProductModal'
 
 interface ProductSearchProps {
   onSelect: (product: Product) => void
@@ -14,6 +15,7 @@ interface ProductSearchProps {
 export function ProductSearch({ onSelect }: ProductSearchProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false)
   
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products-search', search],
@@ -41,8 +43,10 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
             onValueChange={setSearch}
           />
           <CommandList>
-            <CommandEmpty>
-              {isLoading ? 'Searching...' : 'No products found.'}
+            <CommandEmpty className="py-2 px-2 text-sm text-center">
+              <p className="mb-2 text-zinc-500">
+                {isLoading ? 'Searching...' : 'No products found.'}
+              </p>
             </CommandEmpty>
             <CommandGroup>
               {products.map((product: Product) => (
@@ -70,9 +74,36 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
                 </CommandItem>
               ))}
             </CommandGroup>
+            <div className="p-1 border-t border-zinc-200 dark:border-zinc-800">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full gap-2 justify-start text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setOpen(false);
+                  setIsAddProductModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Add Product
+              </Button>
+            </div>
           </CommandList>
         </Command>
       </PopoverContent>
+      {isAddProductModalOpen && (
+        <AddProductModal 
+          open={isAddProductModalOpen} 
+          onOpenChange={setIsAddProductModalOpen}
+          initialSearchTerm={search}
+          onSuccessAction={(productId, product) => {
+            if (product) {
+              onSelect(product);
+            }
+          }}
+        />
+      )}
     </Popover>
   )
 }

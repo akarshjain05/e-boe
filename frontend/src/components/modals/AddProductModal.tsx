@@ -43,7 +43,7 @@ interface AddProductModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   initialSearchTerm?: string
-  onSuccessAction?: (productId: string) => void
+  onSuccessAction?: (productId: string, product?: any) => void
 }
 
 export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSuccessAction }: AddProductModalProps) {
@@ -74,7 +74,7 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
     onSuccess: (data) => {
       toast.success('Product added successfully')
       queryClient.invalidateQueries({ queryKey: ['products'] })
-      if (onSuccessAction) onSuccessAction(data.id)
+      if (onSuccessAction) onSuccessAction(data.id, data)
       handleClose()
     },
     onError: () => {
