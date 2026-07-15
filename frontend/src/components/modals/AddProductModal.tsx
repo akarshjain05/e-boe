@@ -105,20 +105,6 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name / Description *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Product or service name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -155,6 +141,20 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name / Description *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Product or service name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

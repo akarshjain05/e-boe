@@ -128,7 +128,9 @@ export default function Inventory() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-medium text-zinc-900 dark:text-zinc-100">
-                        {product.quantity_in_stock || 0} {product.unit ? `${product.unit}` : ''}
+                        {(!product.unit || ['NOS', 'KG', 'LTR', 'MTR'].includes(product.unit)) 
+                          ? `${product.quantity_in_stock || 0} ${product.unit || ''}`
+                          : product.unit}
                       </div>
                     </td>
                     <td className="px-6 py-4">
