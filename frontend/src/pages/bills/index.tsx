@@ -244,16 +244,7 @@ export default function Bills() {
                     onClick={() => navigate(`/bills/${bill.id}`)}
                   >
                     <td className="px-6 py-4">
-                      <div 
-                        className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          navigate(`/bills/${bill.id}`)
-                        }}
-                      >
-                        {bill.bill_number}
-                      </div>
-                      <div className="text-xs text-zinc-500 mt-1">{bill.currency_code}</div>
+                      <div className="font-semibold text-zinc-900 dark:text-zinc-100">{bill.bill_number}</div>
                     </td>
                     <td className="px-6 py-4 font-medium">
                       {bill.drawee_name}
@@ -405,11 +396,11 @@ export default function Bills() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.05 }}
                           key={bill.id} 
-                          className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 transition-colors"
+                          className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/bills/${bill.id}`)}
                         >
                           <td className="px-6 py-4">
                             <div className="font-semibold text-zinc-900 dark:text-zinc-100">{bill.bill_number}</div>
-                            <div className="text-xs text-zinc-500 uppercase tracking-wider">{bill.currency_code}</div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="font-medium text-zinc-900 dark:text-zinc-100">{bill.drawer_name}</div>
