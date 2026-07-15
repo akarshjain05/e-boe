@@ -9,10 +9,11 @@ import { Product } from '@/api/services/products'
 import { AddProductModal } from '@/components/modals/AddProductModal'
 
 interface ProductSearchProps {
+  value?: string
   onSelect: (product: Product) => void
 }
 
-export function ProductSearch({ onSelect }: ProductSearchProps) {
+export function ProductSearch({ value, onSelect }: ProductSearchProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false)
@@ -32,7 +33,7 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
           className="w-full justify-start font-normal text-muted-foreground bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800"
         >
           <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-          Select from inventory...
+          {value || 'Search products...'}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] sm:w-[400px] p-0" align="start">
@@ -65,10 +66,10 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
                       ₹{product.unit_price}
                     </span>
                   </div>
-                  {(product.hsn_code || product.tax_rate) && (
+                  {(Boolean(product.hsn_code) || product.tax_rate != null) && (
                     <div className="flex w-full items-center gap-3 mt-1 text-xs text-zinc-500">
                       {product.hsn_code && <span>HSN: {product.hsn_code}</span>}
-                      <span>GST: {product.tax_rate}%</span>
+                      {product.tax_rate != null && <span>GST: {product.tax_rate}%</span>}
                     </div>
                   )}
                 </CommandItem>

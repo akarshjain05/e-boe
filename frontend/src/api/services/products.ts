@@ -33,7 +33,7 @@ export interface ProductUpdate {
 }
 
 class ProductService {
-  async getProducts(params?: { skip?: number; limit?: number; search?: string }) {
+  async getProducts(params?: { skip?: number; limit?: number; search?: string; type?: string }) {
     const response = await api.get<Product[]>('/products/', { params });
     return response.data;
   }

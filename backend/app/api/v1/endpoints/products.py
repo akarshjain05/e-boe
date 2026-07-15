@@ -17,6 +17,7 @@ async def read_products(
     skip: int = 0,
     limit: int = 100,
     search: str = None,
+    type: str = None,
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """
@@ -59,7 +60,7 @@ async def read_products(
         await db.rollback()
 
     products = await product_service.get_multi(
-        db, company_id=current_user.company_id, skip=skip, limit=limit, search=search
+        db, company_id=current_user.company_id, skip=skip, limit=limit, search=search, type=type
     )
     return products
 

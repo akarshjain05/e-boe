@@ -16,9 +16,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterType, setFilterType] = useState<string>('all')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -47,9 +50,10 @@ export default function Inventory() {
   }, [searchTerm])
 
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ['products', debouncedSearch],
+    queryKey: ['products', debouncedSearch, filterType],
     queryFn: () => productService.getProducts({ 
       search: debouncedSearch || undefined, 
+      type: filterType !== 'all' ? filterType : undefined
     }),
     placeholderData: keepPreviousData
   })
@@ -79,6 +83,26 @@ export default function Inventory() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            
+            <RadioGroup
+              defaultValue="all"
+              value={filterType}
+              onValueChange={setFilterType}
+              className="flex items-center gap-4 mt-4 sm:mt-0"
+            >
+              <div className="flex items-center space-x-1.5">
+                <RadioGroupItem value="all" id="filter-all" />
+                <Label htmlFor="filter-all" className="text-xs font-normal">All</Label>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <RadioGroupItem value="goods" id="filter-goods" />
+                <Label htmlFor="filter-goods" className="text-xs font-normal">Goods</Label>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <RadioGroupItem value="service" id="filter-service" />
+                <Label htmlFor="filter-service" className="text-xs font-normal">Service</Label>
+              </div>
+            </RadioGroup>
           </div>
 
           <div className="overflow-x-auto">

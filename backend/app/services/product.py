@@ -24,7 +24,8 @@ class ProductService:
         company_id: UUID,
         skip: int = 0,
         limit: int = 100,
-        search: Optional[str] = None
+        search: Optional[str] = None,
+        type: Optional[str] = None
     ) -> List[Product]:
         query = select(Product).filter(Product.company_id == company_id)
         
@@ -34,6 +35,9 @@ class ProductService:
                 Product.hsn_code.ilike(f"%{search}%")
             )
             query = query.filter(search_filter)
+            
+        if type:
+            query = query.filter(Product.type == type)
             
         query = query.offset(skip).limit(limit)
         result = await db.execute(query)
