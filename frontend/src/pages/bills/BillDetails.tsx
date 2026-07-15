@@ -60,7 +60,7 @@ export default function BillDetails() {
   }
 
   return (
-    <div className="space-y-6 pb-8 max-w-5xl mx-auto">
+    <div className="space-y-6 pb-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={() => navigate('/bills')} className="rounded-full">
@@ -80,8 +80,8 @@ export default function BillDetails() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-3 gap-6">
+        <div className="xl:col-span-3 lg:col-span-2 space-y-6">
           {/* Main Bill Preview Card */}
           {/* Main Bill Preview Card */}
           <Card className="border-none shadow-xl ring-1 ring-zinc-200 bg-white text-zinc-900">
@@ -165,9 +165,9 @@ export default function BillDetails() {
               )}
 
               {/* Items Table */}
-              <div>
+              <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-zinc-900 font-bold border-b-2 border-zinc-900">
+                  <thead className="text-xs text-zinc-900 font-bold border-b-2 border-zinc-900 whitespace-nowrap">
                     <tr>
                       <th className="py-3 px-2 w-8">#</th>
                       <th className="py-3 px-2">{isB2B ? 'Description' : 'Item / service'}</th>
@@ -272,7 +272,7 @@ export default function BillDetails() {
         </div>
 
         {/* Sidebar Actions */}
-        <div className="space-y-6">
+        <div className="xl:col-span-1 lg:col-span-1 space-y-6">
           {/* Drawer Actions */}
           {(bill.bill_type === 'receivable' && bill.status === 'draft') && (
             <Card className="border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800">
