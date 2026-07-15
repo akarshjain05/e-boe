@@ -22,6 +22,7 @@ export default function BillDetails() {
   })
 
   const isB2B = bill?.customer?.customer_type === 'B2B' || bill?.creditor?.creditor_type === 'B2B' || !!bill?.customer?.gst_number || bill?.bill_type === 'payable';
+  const taxLabel = bill?.transaction_type === 'intra_state' ? 'CGST + SGST' : 'IGST';
 
   const statusMutation = useMutation({
     mutationFn: ({ status, notes }: { status: string, notes?: string }) => billService.updateBillStatus(id!, status, notes),
@@ -177,7 +178,7 @@ export default function BillDetails() {
                       {!isB2B && <th className="py-3 px-2 text-right">Discount</th>}
                       <th className="py-3 px-2 text-right">Taxable</th>
                       <th className="py-3 px-2 text-right">GST%</th>
-                      {isB2B && <th className="py-3 px-2 text-right">CGST+SGST/IGST</th>}
+                      {isB2B && <th className="py-3 px-2 text-right">{taxLabel}</th>}
                       <th className="py-3 px-2 text-right">Total</th>
                     </tr>
                   </thead>
@@ -237,7 +238,7 @@ export default function BillDetails() {
 
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-600">
-                      {isB2B ? 'Total tax (CGST+SGST/IGST)' : 'CGST + SGST (or IGST)'}
+                      {isB2B ? `Total tax (${taxLabel})` : taxLabel}
                     </span>
                     <span className="font-medium text-zinc-900">{formatCurrency(bill.tax_amount)}</span>
                   </div>
