@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { productService } from '@/api/services/products'
 
@@ -110,19 +111,32 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                 control={form.control}
                 name="type"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-3">
                     <FormLabel>Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="goods">Goods</SelectItem>
-                        <SelectItem value="service">Service</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex items-center space-x-3"
+                      >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="goods" />
+                          </FormControl>
+                          <FormLabel className="font-normal text-sm cursor-pointer">
+                            Goods
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="service" />
+                          </FormControl>
+                          <FormLabel className="font-normal text-sm cursor-pointer">
+                            Service
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -159,6 +173,19 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
+                name="quantity_in_stock"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity (in stock)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="any" placeholder="in stock" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="unit"
                 render={({ field }) => (
                   <FormItem>
@@ -176,19 +203,6 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                         <SelectItem value="MTR">Meters (MTR)</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="quantity_in_stock"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity (in stock)</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" step="any" placeholder="in stock" {...field} />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

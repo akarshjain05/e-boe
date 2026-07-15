@@ -88,7 +88,7 @@ export default function Inventory() {
                   <th className="px-6 py-4 font-semibold">Product Details</th>
                   <th className="px-6 py-4 font-semibold">HSN / SAC</th>
                   <th className="px-6 py-4 font-semibold">Unit Price</th>
-                  <th className="px-6 py-4 font-semibold">Quantity (in stock)</th>
+                  <th className="px-6 py-4 font-semibold text-center">Quantity (in stock)</th>
                   <th className="px-6 py-4 font-semibold">Tax Rate</th>
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
@@ -126,7 +126,7 @@ export default function Inventory() {
                         {formatCurrency(product.unit_price || 0)}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-center">
                       <div className="font-medium text-zinc-900 dark:text-zinc-100">
                         {(!product.unit || ['NOS', 'KG', 'LTR', 'MTR'].includes(product.unit)) 
                           ? `${product.quantity_in_stock || 0} ${product.unit || ''}`
