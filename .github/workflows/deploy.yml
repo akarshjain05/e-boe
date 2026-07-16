@@ -15,6 +15,7 @@ jobs:
           host: ${{ secrets.AWS_HOST }}
           username: ubuntu
           key: ${{ secrets.AWS_SSH_KEY }}
+          command_timeout: 10m
           script: |
             cd ~/e-boe
             git pull origin main
