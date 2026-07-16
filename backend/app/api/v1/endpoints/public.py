@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.models.bill import Bill
 from app.schemas.bill import BillResponse
-from app.services.pdf_generator import BillPDFGenerator
+from app.utils.pdf_generator import BillPDFGenerator
 from fastapi.responses import Response
 from uuid import UUID
 
