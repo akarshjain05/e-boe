@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, ForeignKey, DateTime, Boolean, Text, Numeric, UniqueConstraint, Date
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.types import JSON
 from datetime import datetime, date
 from app.models.base import Base, AuditMixin
 from uuid import UUID
@@ -43,7 +44,7 @@ class EmailTemplate(Base, AuditMixin):
     subject: Mapped[str] = mapped_column(String(255))
     body_html: Mapped[str] = mapped_column(Text)
     body_text: Mapped[str | None] = mapped_column(Text, nullable=True)
-    variables: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    variables: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     category: Mapped[str] = mapped_column(String(50))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     
@@ -55,7 +56,7 @@ class ApiKey(Base, AuditMixin):
     name: Mapped[str] = mapped_column(String(100))
     key_prefix: Mapped[str] = mapped_column(String(8))
     key_hash: Mapped[str] = mapped_column(String(255))
-    permissions: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    permissions: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -66,7 +67,7 @@ class Webhook(Base, AuditMixin):
     name: Mapped[str] = mapped_column(String(100))
     url: Mapped[str] = mapped_column(String(1000))
     secret_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    events: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    events: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_triggered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     failure_count: Mapped[int] = mapped_column(default=0)
@@ -75,7 +76,7 @@ class WebhookLog(Base, AuditMixin):
     __tablename__ = "webhook_logs"
     webhook_id: Mapped[UUID] = mapped_column(ForeignKey("webhooks.id"))
     event: Mapped[str] = mapped_column(String(100))
-    payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    payload: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     response_status: Mapped[int | None] = mapped_column(nullable=True)
     response_body: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_success: Mapped[bool] = mapped_column(Boolean)
@@ -106,7 +107,7 @@ class RecycleBin(Base, AuditMixin):
     company_id: Mapped[UUID] = mapped_column(ForeignKey("companies.id"))
     resource_type: Mapped[str] = mapped_column(String(100))
     resource_id: Mapped[UUID] = mapped_column()
-    resource_data: Mapped[dict] = mapped_column(JSONB)
+    resource_data: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
     deleted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
@@ -117,7 +118,7 @@ class CustomField(Base, AuditMixin):
     field_name: Mapped[str] = mapped_column(String(100))
     field_label: Mapped[str] = mapped_column(String(100))
     field_type: Mapped[str] = mapped_column(String(50))
-    options: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    options: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     is_required: Mapped[bool] = mapped_column(Boolean, default=False)
     sort_order: Mapped[int] = mapped_column(default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -142,8 +143,8 @@ class ScheduledReport(Base, AuditMixin):
     name: Mapped[str] = mapped_column(String(100))
     report_type: Mapped[str] = mapped_column(String(50))
     schedule_cron: Mapped[str] = mapped_column(String(100))
-    recipients: Mapped[dict] = mapped_column(JSONB)
-    config: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    recipients: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
+    config: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     next_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

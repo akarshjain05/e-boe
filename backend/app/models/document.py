@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, ForeignKey, Boolean, BigInteger
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.types import JSON
 from app.models.base import Base, AuditMixin
 from uuid import UUID
 
@@ -19,5 +20,5 @@ class Document(Base, AuditMixin):
     
     uploaded_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
-    metadata_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    metadata_json: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     checksum: Mapped[str | None] = mapped_column(String(255), nullable=True)

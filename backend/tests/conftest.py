@@ -3,7 +3,8 @@ import asyncio
 from typing import AsyncGenerator
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from app.core.database import Base, get_db
+from app.core.database import get_db
+from app.models.base import Base
 from app.main import app
 from app.core.security import create_access_token
 from app.models.user import User
@@ -46,34 +47,42 @@ def client(db: AsyncSession):
         yield c
     app.dependency_overrides.clear()
 
+from sqlalchemy import select
+
 @pytest.fixture
 async def test_company(db: AsyncSession):
-    company = Company(
-        id=uuid4(),
-        name="Test Company",
-        registration_number="TEST1234",
-        address="Test Address"
-    )
-    db.add(company)
-    await db.commit()
-    await db.refresh(company)
+    company = await db.scalar(select(Company).where(Company.registration_number == "TEST1234"))
+    if not company:
+        company = Company(
+            id=uuid4(),
+            name="Test Company",
+            registration_number="TEST1234",
+            email="test@company.com",
+            phone="1234567890",
+            address_line1="Test Address"
+        )
+        db.add(company)
+        await db.commit()
+        await db.refresh(company)
     return company
 
 @pytest.fixture
 async def test_user(db: AsyncSession, test_company: Company):
-    user = User(
-        id=uuid4(),
-        email="test@example.com",
-        first_name="Test",
-        last_name="User",
-        company_id=test_company.id,
-        hashed_password="hashedpassword",
-        is_active=True,
-        is_superuser=False
-    )
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
+    user = await db.scalar(select(User).where(User.email == "test@example.com"))
+    if not user:
+        user = User(
+            id=uuid4(),
+            email="test@example.com",
+            first_name="Test",
+            last_name="User",
+            company_id=test_company.id,
+            password_hash="testhash",
+            is_active=True,
+            is_superuser=False
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
     return user
 
 @pytest.fixture

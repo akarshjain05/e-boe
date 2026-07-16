@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, ForeignKey, DateTime, Boolean, Text, Numeric, Date
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.types import JSON
 from datetime import datetime, date
 from app.models.base import Base, AuditMixin
 from uuid import UUID
@@ -78,8 +79,8 @@ class Bill(Base, AuditMixin):
     version_number: Mapped[int] = mapped_column(default=1)
     approval_chain_id: Mapped[UUID | None] = mapped_column(nullable=True)
     priority: Mapped[str] = mapped_column(String(50), default="normal")
-    tags: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    custom_fields: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    tags: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
+    custom_fields: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     
     customer = relationship("Customer", back_populates="bills", foreign_keys="[Bill.customer_id]")
     creditor = relationship("Creditor", back_populates="bills", foreign_keys="[Bill.creditor_id]")
@@ -146,7 +147,7 @@ class BillVersion(Base, AuditMixin):
     __tablename__ = "bill_versions"
     bill_id: Mapped[UUID] = mapped_column(ForeignKey("bills.id"))
     version_number: Mapped[int] = mapped_column()
-    data_snapshot: Mapped[dict] = mapped_column(JSONB)
+    data_snapshot: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
     created_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     change_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -158,7 +159,7 @@ class BillComment(Base, AuditMixin):
     bill_id: Mapped[UUID] = mapped_column(ForeignKey("bills.id"))
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
     content: Mapped[str] = mapped_column(Text)
-    mentioned_user_ids: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    mentioned_user_ids: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     is_internal: Mapped[bool] = mapped_column(Boolean, default=True)
     parent_comment_id: Mapped[UUID | None] = mapped_column(ForeignKey("bill_comments.id"), nullable=True)
     

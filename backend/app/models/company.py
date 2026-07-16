@@ -3,6 +3,7 @@ from sqlalchemy import String, ForeignKey, DateTime, Boolean, Text
 from datetime import datetime
 from app.models.base import Base, AuditMixin
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.types import JSON
 from uuid import UUID
 
 class Company(Base, AuditMixin):
@@ -28,7 +29,7 @@ class Company(Base, AuditMixin):
     
     currency_code: Mapped[str] = mapped_column(String(3), default="INR")
     timezone: Mapped[str] = mapped_column(String(50), default="Asia/Kolkata")
-    settings_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    settings_json: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     subscription_plan: Mapped[str | None] = mapped_column(String(50), nullable=True)
