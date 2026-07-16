@@ -32,3 +32,6 @@ uploads/
 
 # Logs
 *.log
+
+# Celery
+celerybeat-schedule*
