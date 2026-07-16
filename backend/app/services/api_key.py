@@ -36,7 +36,7 @@ class ApiKeyService:
             company_id=company_id,
             name=data.name,
             key_prefix=key_prefix,
-            hashed_key=hashed_key,
+            key_hash=hashed_key,
             expires_at=expires_at,
             created_by=user_id
         )
@@ -91,10 +91,11 @@ class ApiKeyService:
             if db_key.expires_at and db_key.expires_at < datetime.now(UTC):
                 continue
                 
-            if verify_password(raw_key, db_key.hashed_key):
+            if verify_password(raw_key, db_key.key_hash):
                 # Update last used
                 db_key.last_used_at = datetime.now(UTC)
                 await self.db.commit()
+                await self.db.refresh(db_key)
                 return db_key
                 
         return None

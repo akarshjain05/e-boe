@@ -30,21 +30,29 @@ async def get_current_user(
         if not api_key:
             raise HTTPException(status_code=401, detail="Invalid or expired API Key")
         
-        # Return a synthetic user bound to the company_id for downstream dependencies
-        return User(id=api_key.created_by, company_id=api_key.company_id, is_active=True, is_superuser=False)
+        # Return the actual user who created the API key
+        stmt = select(User).where(User.id == api_key.created_by, User.is_deleted == False)
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=401, detail="API Key owner not found")
+        return user
 
     if not token:
         raise credentials_exception
 
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        user_id_str: str = payload.get("sub")
+        if user_id_str is None:
             raise credentials_exception
-    except JWTError:
+            
+        import uuid
+        user_uuid = uuid.UUID(user_id_str)
+    except (JWTError, ValueError):
         raise credentials_exception
 
-    stmt = select(User).where(User.id == user_id)
+    stmt = select(User).where(User.id == user_uuid, User.is_deleted == False)
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
