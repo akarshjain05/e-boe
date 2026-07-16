@@ -313,11 +313,27 @@ class BillService:
         bill = await self.get_by_id(id, company_id)
         
         valid_statuses = ["draft", "pending_acceptance", "accepted", "rejected", "overdue", "paid", "discounted"]
+        old_status = bill.status
         if status_val not in valid_statuses:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid status")
             
         bill.status = status_val
         bill.updated_by = user_id
+        
+        # Update outstanding balance if transitioning to 'accepted'
+        if old_status != "accepted" and status_val == "accepted":
+            if bill.bill_type == "receivable" and bill.customer_id:
+                from app.models.customer import Customer
+                stmt_cust = select(Customer).where(Customer.id == bill.customer_id)
+                customer = (await self.db.execute(stmt_cust)).scalar_one_or_none()
+                if customer:
+                    customer.outstanding_balance = float(customer.outstanding_balance) + float(bill.outstanding_amount)
+            elif bill.bill_type == "payable" and bill.creditor_id:
+                from app.models.creditor import Creditor
+                stmt_cred = select(Creditor).where(Creditor.id == bill.creditor_id)
+                creditor = (await self.db.execute(stmt_cred)).scalar_one_or_none()
+                if creditor:
+                    creditor.outstanding_balance = float(creditor.outstanding_balance) + float(bill.outstanding_amount)
         
         await self.db.commit()
         await self.db.refresh(bill)
@@ -372,6 +388,8 @@ class BillService:
 
     async def update(self, id: UUID, company_id: UUID, data: BillUpdate, user_id: UUID) -> Bill:
         bill = await self.get_by_id(id, company_id)
+        
+        old_outstanding = float(bill.outstanding_amount) if bill.outstanding_amount else 0.0
             
         # Update bill fields
         update_data = data.model_dump(exclude={"items"}, exclude_unset=True)
@@ -440,7 +458,23 @@ class BillService:
             bill.discount_amount = total_discount
             bill.tax_amount = total_tax
             bill.total_amount = total_amount
-            bill.outstanding_amount = total_amount
+            bill.outstanding_amount = total_amount - float(bill.paid_amount)
+            
+            if bill.status == "accepted":
+                diff = float(bill.outstanding_amount) - old_outstanding
+                if diff != 0:
+                    if bill.bill_type == "receivable" and bill.customer_id:
+                        from app.models.customer import Customer
+                        stmt_cust = select(Customer).where(Customer.id == bill.customer_id)
+                        customer = (await self.db.execute(stmt_cust)).scalar_one_or_none()
+                        if customer:
+                            customer.outstanding_balance = float(customer.outstanding_balance) + diff
+                    elif bill.bill_type == "payable" and bill.creditor_id:
+                        from app.models.creditor import Creditor
+                        stmt_cred = select(Creditor).where(Creditor.id == bill.creditor_id)
+                        creditor = (await self.db.execute(stmt_cred)).scalar_one_or_none()
+                        if creditor:
+                            creditor.outstanding_balance = float(creditor.outstanding_balance) + diff
 
         bill.updated_by = user_id
         await self.db.commit()
@@ -451,6 +485,20 @@ class BillService:
     async def delete(self, id: UUID, company_id: UUID, user_id: UUID):
         bill = await self.get_by_id(id, company_id)
             
+        if bill.status == "accepted":
+            if bill.bill_type == "receivable" and bill.customer_id:
+                from app.models.customer import Customer
+                stmt_cust = select(Customer).where(Customer.id == bill.customer_id)
+                customer = (await self.db.execute(stmt_cust)).scalar_one_or_none()
+                if customer:
+                    customer.outstanding_balance = float(customer.outstanding_balance) - float(bill.outstanding_amount)
+            elif bill.bill_type == "payable" and bill.creditor_id:
+                from app.models.creditor import Creditor
+                stmt_cred = select(Creditor).where(Creditor.id == bill.creditor_id)
+                creditor = (await self.db.execute(stmt_cred)).scalar_one_or_none()
+                if creditor:
+                    creditor.outstanding_balance = float(creditor.outstanding_balance) - float(bill.outstanding_amount)
+                    
         bill.is_deleted = True
         bill.updated_by = user_id
         await self.db.commit()

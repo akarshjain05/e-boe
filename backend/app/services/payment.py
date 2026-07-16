@@ -286,6 +286,20 @@ class PaymentService:
         bill.paid_amount = float(bill.paid_amount) + float(payment.amount)
         bill.outstanding_amount = float(bill.total_amount) - float(bill.paid_amount)
 
+        # Update Customer/Creditor balances
+        if bill.bill_type == "receivable" and bill.customer_id:
+            from app.models.customer import Customer
+            stmt_cust = select(Customer).where(Customer.id == bill.customer_id)
+            customer = (await self.db.execute(stmt_cust)).scalar_one_or_none()
+            if customer:
+                customer.outstanding_balance = float(customer.outstanding_balance) - float(payment.amount)
+        elif bill.bill_type == "payable" and bill.creditor_id:
+            from app.models.creditor import Creditor
+            stmt_cred = select(Creditor).where(Creditor.id == bill.creditor_id)
+            creditor = (await self.db.execute(stmt_cred)).scalar_one_or_none()
+            if creditor:
+                creditor.outstanding_balance = float(creditor.outstanding_balance) - float(payment.amount)
+
         if bill.outstanding_amount <= 0:
             bill.status = "paid"
             bill.paid_at = datetime.now(timezone.utc)
