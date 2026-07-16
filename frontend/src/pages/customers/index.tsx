@@ -193,7 +193,7 @@ export default function Customers() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className={`font-medium ${(customer.outstanding_balance || 0) > (customer.credit_limit || 0) ? 'text-red-600 dark:text-red-400' : ''}`}>
+                      <div className={`font-medium ${(customer.credit_limit > 0 && (customer.outstanding_balance || 0) > customer.credit_limit) ? 'text-red-600 dark:text-red-400' : ''}`}>
                         {formatCurrency(customer.outstanding_balance || 0)}
                       </div>
                     </td>
