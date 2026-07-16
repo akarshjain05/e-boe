@@ -16,12 +16,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterType, setFilterType] = useState<string>('all')
+  const [filterType, setFilterType] = useState<string>('goods')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -53,7 +52,7 @@ export default function Inventory() {
     queryKey: ['products', debouncedSearch, filterType],
     queryFn: () => productService.getProducts({ 
       search: debouncedSearch || undefined, 
-      type: filterType !== 'all' ? filterType : undefined
+      type: filterType
     }),
     placeholderData: keepPreviousData
   })
@@ -71,6 +70,13 @@ export default function Inventory() {
         </Button>
       </div>
 
+      <Tabs defaultValue="goods" value={filterType} onValueChange={setFilterType} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="goods">Goods</TabsTrigger>
+          <TabsTrigger value="service">Services</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <Card className="border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl mt-4">
         <CardContent className="p-0">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b border-zinc-200 dark:border-zinc-800">
@@ -83,26 +89,6 @@ export default function Inventory() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
-            <RadioGroup
-              defaultValue="all"
-              value={filterType}
-              onValueChange={setFilterType}
-              className="flex items-center gap-4 mt-4 sm:mt-0"
-            >
-              <div className="flex items-center space-x-1.5">
-                <RadioGroupItem value="all" id="filter-all" />
-                <Label htmlFor="filter-all" className="text-xs font-normal">All</Label>
-              </div>
-              <div className="flex items-center space-x-1.5">
-                <RadioGroupItem value="goods" id="filter-goods" />
-                <Label htmlFor="filter-goods" className="text-xs font-normal">Goods</Label>
-              </div>
-              <div className="flex items-center space-x-1.5">
-                <RadioGroupItem value="service" id="filter-service" />
-                <Label htmlFor="filter-service" className="text-xs font-normal">Service</Label>
-              </div>
-            </RadioGroup>
           </div>
 
           <div className="overflow-x-auto">
