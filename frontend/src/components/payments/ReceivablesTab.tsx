@@ -53,7 +53,7 @@ export function ReceivablesTab() {
     }
     
     const entry = activeCustomersMap.get(key);
-    if (!['rejected', 'cancelled'].includes(bill.status)) {
+    if (!['draft', 'pending_acceptance', 'rejected', 'cancelled'].includes(bill.status)) {
       entry.calculated_outstanding += Number(bill.outstanding_amount || 0);
     }
   });
@@ -194,8 +194,10 @@ function CustomerBillsView({ customer, onBack }: { customer: any, onBack: () => 
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right font-medium">{formatCurrency(bill.total_amount)}</td>
-                  <td className="px-6 py-4 text-right font-semibold text-emerald-600">
-                    {['rejected', 'cancelled'].includes(bill.status) ? '-' : formatCurrency(bill.outstanding_amount)}
+                  <td className="px-6 py-4 text-right">
+                    <span className={`font-medium ${bill.outstanding_amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
+                      {['draft', 'pending_acceptance', 'rejected', 'cancelled'].includes(bill.status) ? '-' : formatCurrency(bill.outstanding_amount)}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
