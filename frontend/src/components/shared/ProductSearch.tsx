@@ -3,6 +3,8 @@ import { Search, Plus } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Button } from '@/components/ui/button'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 import { useQuery } from '@tanstack/react-query'
 import { productService } from '@/api/services/products'
 import { Product } from '@/api/services/products'
@@ -16,11 +18,15 @@ interface ProductSearchProps {
 export function ProductSearch({ value, onSelect }: ProductSearchProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [filterType, setFilterType] = useState<string>('all')
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false)
   
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ['products-search', search],
-    queryFn: () => productService.getProducts({ search: search || undefined })
+    queryKey: ['products-search', search, filterType],
+    queryFn: () => productService.getProducts({ 
+      search: search || undefined,
+      type: filterType !== 'all' ? filterType : undefined
+    })
   })
 
   return (
@@ -43,6 +49,27 @@ export function ProductSearch({ value, onSelect }: ProductSearchProps) {
             value={search}
             onValueChange={setSearch}
           />
+          <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+            <RadioGroup
+              defaultValue="all"
+              value={filterType}
+              onValueChange={setFilterType}
+              className="flex items-center gap-4"
+            >
+              <div className="flex items-center space-x-1.5">
+                <RadioGroupItem value="all" id="prod-filter-all" />
+                <Label htmlFor="prod-filter-all" className="text-xs font-normal">All</Label>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <RadioGroupItem value="goods" id="prod-filter-goods" />
+                <Label htmlFor="prod-filter-goods" className="text-xs font-normal">Goods</Label>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <RadioGroupItem value="service" id="prod-filter-service" />
+                <Label htmlFor="prod-filter-service" className="text-xs font-normal">Service</Label>
+              </div>
+            </RadioGroup>
+          </div>
           <CommandList>
             <CommandEmpty className="py-2 px-2 text-sm text-center">
               <p className="mb-2 text-zinc-500">
