@@ -9,7 +9,7 @@ export interface Customer {
   tax_id: string | null;
   gst_number: string | null;
   credit_limit: number;
-  credit_used: number;
+  outstanding_balance: number;
   is_active: boolean;
   status: string;
   customer_type: string;

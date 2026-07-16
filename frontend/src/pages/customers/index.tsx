@@ -144,7 +144,7 @@ export default function Customers() {
                       <ArrowUpDown className="h-3 w-3" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 font-semibold" onClick={() => handleSort('credit_used')}>
+                  <th className="px-6 py-4 font-semibold" onClick={() => handleSort('outstanding_balance')}>
                     <div className="flex items-center gap-1 cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100">
                       Outstanding Balance
                       <ArrowUpDown className="h-3 w-3" />
@@ -193,8 +193,8 @@ export default function Customers() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className={`font-medium ${(customer.credit_used || 0) > (customer.credit_limit || 0) ? 'text-red-600 dark:text-red-400' : ''}`}>
-                        {formatCurrency(customer.credit_used || 0)}
+                      <div className={`font-medium ${(customer.outstanding_balance || 0) > (customer.credit_limit || 0) ? 'text-red-600 dark:text-red-400' : ''}`}>
+                        {formatCurrency(customer.outstanding_balance || 0)}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400">
