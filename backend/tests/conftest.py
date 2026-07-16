@@ -1,16 +1,18 @@
-import pytest
 import asyncio
-from typing import AsyncGenerator
-from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from app.core.database import get_db
-from app.models.base import Base
-from app.main import app
-from app.core.security import create_access_token
-from app.models.user import User
-from app.models.company import Company
-from uuid import uuid4
 import os
+from collections.abc import AsyncGenerator
+from uuid import uuid4
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from app.core.database import get_db
+from app.core.security import create_access_token
+from app.main import app
+from app.models.base import Base
+from app.models.company import Company
+from app.models.user import User
 
 # SQLite in-memory for testing
 TEST_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
@@ -34,7 +36,7 @@ async def setup_db():
         await conn.run_sync(Base.metadata.drop_all)
 
 @pytest.fixture
-async def db() -> AsyncGenerator[AsyncSession, None]:
+async def db() -> AsyncGenerator[AsyncSession]:
     async with TestingSessionLocal() as session:
         yield session
 
@@ -48,6 +50,7 @@ def client(db: AsyncSession):
     app.dependency_overrides.clear()
 
 from sqlalchemy import select
+
 
 @pytest.fixture
 async def test_company(db: AsyncSession):

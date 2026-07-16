@@ -1,22 +1,25 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
-from sqlalchemy.orm import selectinload
-from fastapi import HTTPException, status
-from app.models.payment import Payment, Refund
-from app.models.bill import Bill
-from app.schemas.payment import PaymentCreate, RefundCreate, BulkPaymentCreate
-from uuid import UUID, uuid4
-from datetime import datetime, timezone
 import secrets
-from app.tasks.email_tasks import send_bill_notification_email
+from datetime import UTC, datetime
+from uuid import UUID, uuid4
+
+from fastapi import HTTPException, status
+from sqlalchemy import or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from app.core.config import settings
+from app.models.bill import Bill
+from app.models.payment import Payment, Refund
+from app.schemas.payment import BulkPaymentCreate, PaymentCreate, RefundCreate
+from app.tasks.email_tasks import send_bill_notification_email
+
 
 class PaymentService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
     def _generate_receipt_number(self) -> str:
-        return f"RCP-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
+        return f"RCP-{datetime.now(UTC).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
 
     async def get_all(self, company_id: UUID, skip: int = 0, limit: int = 100, search: str = None, sort_by: str = None, sort_order: str = "desc", status: str = None, payment_method: str = None):
         stmt = select(Payment).join(Bill, Payment.bill_id == Bill.id).options(
@@ -185,9 +188,9 @@ class PaymentService:
         await self.db.refresh(payment)
         
         # --- Notifications Logic ---
-        from app.services.notification import NotificationService
-        from app.schemas.notification import NotificationCreate
         from app.models.user import User
+        from app.schemas.notification import NotificationCreate
+        from app.services.notification import NotificationService
         
         notification_service = NotificationService(self.db)
         drawer_company_id = bill.company_id if bill.bill_type == "receivable" else bill.network_payee_company_id
@@ -236,9 +239,9 @@ class PaymentService:
         await self.db.refresh(payment)
         
         # --- Notifications Logic ---
-        from app.services.notification import NotificationService
-        from app.schemas.notification import NotificationCreate
         from app.models.user import User
+        from app.schemas.notification import NotificationCreate
+        from app.services.notification import NotificationService
         
         notification_service = NotificationService(self.db)
         drawee_company_id = bill.company_id if bill.bill_type == "payable" else bill.network_drawee_company_id
@@ -304,7 +307,7 @@ class PaymentService:
 
         if bill.outstanding_amount <= 0:
             bill.status = "paid"
-            bill.paid_at = datetime.now(timezone.utc)
+            bill.paid_at = datetime.now(UTC)
         else:
             bill.status = "partially_paid"
 
@@ -313,9 +316,9 @@ class PaymentService:
         await self.db.refresh(payment)
         
         # --- Notifications Logic ---
-        from app.services.notification import NotificationService
-        from app.schemas.notification import NotificationCreate
         from app.models.user import User
+        from app.schemas.notification import NotificationCreate
+        from app.services.notification import NotificationService
         
         notification_service = NotificationService(self.db)
         drawee_company_id = bill.network_drawee_company_id if bill.bill_type == "receivable" else bill.company_id

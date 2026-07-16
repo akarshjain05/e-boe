@@ -1,22 +1,23 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
-from uuid import UUID
-from app.core.database import get_db
-from app.schemas.creditor import CreditorCreate, CreditorUpdate, CreditorResponse
-from app.services.creditor import CreditorService
-from app.models.user import User
+
 from app.api.dependencies.auth import get_current_user
+from app.core.database import get_db
+from app.models.user import User
 from app.schemas.common import MessageResponse
+from app.schemas.creditor import CreditorCreate, CreditorResponse, CreditorUpdate
+from app.services.creditor import CreditorService
 
 router = APIRouter()
 
-@router.get("/", response_model=List[CreditorResponse])
+@router.get("/", response_model=list[CreditorResponse])
 async def get_creditors(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    search: Optional[str] = Query(None),
-    sort_by: Optional[str] = Query(None),
+    search: str | None = Query(None),
+    sort_by: str | None = Query(None),
     sort_order: str = Query("asc"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)

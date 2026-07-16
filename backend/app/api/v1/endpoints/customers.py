@@ -1,26 +1,27 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
-from uuid import UUID
-from app.core.database import get_db
-from app.schemas.customer import CustomerCreate, CustomerUpdate, CustomerResponse
-from app.services.customer import CustomerService
-from app.models.user import User
+
 from app.api.dependencies.auth import get_current_user
+from app.core.database import get_db
+from app.models.user import User
 from app.schemas.common import MessageResponse
+from app.schemas.customer import CustomerCreate, CustomerResponse, CustomerUpdate
+from app.services.customer import CustomerService
 
 router = APIRouter()
 
-@router.get("/", response_model=List[CustomerResponse])
+@router.get("/", response_model=list[CustomerResponse])
 async def get_customers(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    search: Optional[str] = Query(None),
-    sort_by: Optional[str] = Query(None),
+    search: str | None = Query(None),
+    sort_by: str | None = Query(None),
     sort_order: str = Query("asc"),
-    status: Optional[str] = Query(None),
-    has_outstanding: Optional[bool] = Query(None),
-    customer_type: Optional[str] = Query(None),
+    status: str | None = Query(None),
+    has_outstanding: bool | None = Query(None),
+    customer_type: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

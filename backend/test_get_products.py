@@ -1,7 +1,10 @@
 import asyncio
-from app.core.database import SessionLocal
+
 from sqlalchemy import select
+
+from app.core.database import SessionLocal
 from app.models.user import User
+
 
 async def main():
     async with SessionLocal() as session:
@@ -14,7 +17,7 @@ async def main():
         try:
             products = await product_service.get_multi(session, company_id=user.company_id)
             print(f"Products: {products}")
-        except Exception as e:
+        except Exception:
             import traceback
             traceback.print_exc()
 

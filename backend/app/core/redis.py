@@ -1,7 +1,9 @@
-from redis import asyncio as aioredis
-from app.core.config import settings
 import json
-from typing import Any, Optional
+from typing import Any
+
+from redis import asyncio as aioredis
+
+from app.core.config import settings
 
 redis_client = aioredis.from_url(
     settings.REDIS_URL,
@@ -15,7 +17,7 @@ async def get_redis() -> aioredis.Redis:
 async def set_cached(key: str, value: Any, expire: int = 300) -> None:
     await redis_client.set(key, json.dumps(value), ex=expire)
 
-async def get_cached(key: str) -> Optional[Any]:
+async def get_cached(key: str) -> Any | None:
     val = await redis_client.get(key)
     if val:
         return json.loads(val)

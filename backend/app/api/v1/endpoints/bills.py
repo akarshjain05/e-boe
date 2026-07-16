@@ -1,30 +1,30 @@
-from fastapi import APIRouter, Depends, Query, Path
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
 from uuid import UUID
-from app.core.database import get_db
-from app.schemas.bill import BillCreate, BillUpdate, BillResponse
-from app.services.bill import BillService
-from app.models.user import User
+
+from fastapi import APIRouter, Depends, Path, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.dependencies.auth import get_current_user
+from app.core.database import get_db
+from app.models.user import User
+from app.schemas.bill import BillCreate, BillResponse, BillUpdate
+from app.services.bill import BillService
 
 router = APIRouter()
 
-from typing import List, Optional
 
-@router.get("/", response_model=List[BillResponse])
+@router.get("/", response_model=list[BillResponse])
 async def get_bills(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    search: Optional[str] = Query(None),
-    sort_by: Optional[str] = Query(None),
+    search: str | None = Query(None),
+    sort_by: str | None = Query(None),
     sort_order: str = Query("desc"),
     bill_type: str = Query("receivable"),
-    status: Optional[str] = Query(None),
-    from_date: Optional[str] = Query(None),
-    to_date: Optional[str] = Query(None),
-    creditor_id: Optional[UUID] = Query(None),
-    customer_id: Optional[UUID] = Query(None),
+    status: str | None = Query(None),
+    from_date: str | None = Query(None),
+    to_date: str | None = Query(None),
+    creditor_id: UUID | None = Query(None),
+    customer_id: UUID | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

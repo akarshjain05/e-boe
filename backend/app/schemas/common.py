@@ -1,17 +1,18 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Generic, TypeVar, List, Optional, Any
+from typing import Generic, TypeVar
 from uuid import UUID
+
+from pydantic import BaseModel
 
 T = TypeVar('T')
 
 class PaginationParams(BaseModel):
     page: int = 1
     per_page: int = 10
-    sort_by: Optional[str] = None
+    sort_by: str | None = None
     sort_order: str = "asc"
 
 class PaginatedResponse(BaseModel, Generic[T]):
-    items: List[T]
+    items: list[T]
     total: int
     page: int
     per_page: int
@@ -27,14 +28,14 @@ class ErrorResponse(BaseModel):
     success: bool = False
 
 class BulkActionRequest(BaseModel):
-    ids: List[UUID]
+    ids: list[UUID]
     action: str
 
 class BulkActionResponse(BaseModel):
     success_count: int
     failed_count: int
-    errors: Optional[List[dict]] = None
+    errors: list[dict] | None = None
     
 class DateRangeFilter(BaseModel):
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
+    start_date: str | None = None
+    end_date: str | None = None

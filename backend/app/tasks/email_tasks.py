@@ -1,6 +1,7 @@
+import logging
+
 from app.core.celery_app import celery_app
 from app.core.config import settings
-import logging
 
 logger = logging.getLogger("eboe")
 
@@ -9,8 +10,8 @@ def send_email_task(self, to_email: str, subject: str, body_html: str, body_text
     """Send an email asynchronously via Celery."""
     try:
         import smtplib
-        from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
 
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject

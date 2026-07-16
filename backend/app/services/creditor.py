@@ -1,9 +1,12 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from uuid import UUID, uuid4
+
 from fastapi import HTTPException, status
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.creditor import Creditor
 from app.schemas.creditor import CreditorCreate, CreditorUpdate
-from uuid import UUID, uuid4
+
 
 class CreditorService:
     def __init__(self, db: AsyncSession):

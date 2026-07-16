@@ -1,13 +1,14 @@
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import mm, cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
 from io import BytesIO
-from datetime import date
-from typing import Dict, List, Any
+from typing import Any
+
 import qrcode
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
 
 class BillPDFGenerator:
     def __init__(self):
@@ -66,7 +67,7 @@ class BillPDFGenerator:
         buffer.seek(0)
         return buffer
 
-    def generate(self, bill_data: Dict[str, Any]) -> BytesIO:
+    def generate(self, bill_data: dict[str, Any]) -> BytesIO:
         buffer = BytesIO()
         doc = SimpleDocTemplate(
             buffer, pagesize=A4,

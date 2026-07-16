@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.events import lifespan
-from app.api.v1.api import api_router
 from app.core.exceptions import AppException, app_exception_handler
 from app.core.logging import setup_logging
 
@@ -12,9 +13,9 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     lifespan=lifespan,
-    openapi_url=f"/api/v1/openapi.json",
-    docs_url=f"/api/v1/docs",
-    redoc_url=f"/api/v1/redoc",
+    openapi_url="/api/v1/openapi.json",
+    docs_url="/api/v1/docs",
+    redoc_url="/api/v1/redoc",
 )
 
 # CORS

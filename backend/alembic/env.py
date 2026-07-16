@@ -1,9 +1,11 @@
 import asyncio
-from logging.config import fileConfig
-from sqlalchemy.ext.asyncio import create_async_engine
-from alembic import context
 import os
 import sys
+from logging.config import fileConfig
+
+from sqlalchemy.ext.asyncio import create_async_engine
+
+from alembic import context
 
 # Add the app directory to the python path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -12,15 +14,6 @@ from app.core.config import settings
 from app.models.base import Base
 
 # Import all models here to ensure they are registered with Base.metadata
-from app.models.user import User, Role, Permission, RolePermission, UserSession
-from app.models.company import Company, Branch
-from app.models.customer import Customer, CustomerContact, CustomerAddress, CustomerBankDetail, CustomerTag, CustomerNote, CustomerBlacklist
-from app.models.bill import Bill, BillItem, BillTerm, BillApproval, BillStatusHistory, BillVersion, BillComment, BillReminder, BillAttachment
-from app.models.payment import Payment, PaymentProof, Refund, Adjustment
-from app.models.notification import Notification
-from app.models.document import Document
-from app.models.audit import AuditLog
-from app.models.settings import SystemSetting, Currency, TaxConfig, EmailTemplate, ApiKey, Webhook, WebhookLog, Announcement, Bookmark, RecycleBin, CustomField, CustomFieldValue, Holiday, ScheduledReport
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

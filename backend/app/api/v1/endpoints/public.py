@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
 from app.core.database import get_db
 from app.models.bill import Bill
 from app.schemas.bill import BillResponse
 from app.utils.pdf_generator import BillPDFGenerator
-from fastapi.responses import Response
-from uuid import UUID
 
 router = APIRouter()
 
@@ -51,8 +53,8 @@ async def accept_public_bill(token: UUID, db: AsyncSession = Depends(get_db)):
             customer.outstanding_balance = float(customer.outstanding_balance) + float(bill.outstanding_amount)
             
             # Send Email
-            from app.tasks.email_tasks import send_bill_notification_email
             from app.core.config import settings
+            from app.tasks.email_tasks import send_bill_notification_email
             if customer.customer_type == "B2C" and customer.email:
                 public_url = f"{settings.FRONTEND_URL}/bill/{bill.public_access_token}"
                 send_bill_notification_email.delay(str(bill.id), customer.email, "accepted", public_url)

@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, Query
+from datetime import UTC, datetime, timedelta
+
+from fastapi import APIRouter, Depends
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+
+from app.api.dependencies.auth import get_current_user
 from app.core.database import get_db
 from app.models.bill import Bill
 from app.models.customer import Customer
 from app.models.payment import Payment
 from app.models.user import User
-from app.api.dependencies.auth import get_current_user
-from datetime import datetime, timezone, timedelta
-from sqlalchemy import or_, and_
 
 router = APIRouter()
 
@@ -91,7 +92,7 @@ async def get_dashboard_summary(
     overdue_count = result.scalar() or 0
 
     # Bills due this week
-    now = datetime.now(timezone.utc).date()
+    now = datetime.now(UTC).date()
     week_end = now + timedelta(days=7)
     stmt = select(func.count(Bill.id)).where(
         or_(receivable_condition, payable_condition),

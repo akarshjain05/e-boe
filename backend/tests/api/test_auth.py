@@ -1,5 +1,5 @@
-import pytest
 from fastapi.testclient import TestClient
+
 
 def test_login_success(client: TestClient, test_user):
     response = client.post(

@@ -1,19 +1,20 @@
-from pydantic import BaseModel, Field
-from uuid import UUID
-from typing import Optional
 from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
 
 class ApiKeyCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
-    expires_in_days: Optional[int] = Field(None, ge=1, le=3650)
+    expires_in_days: int | None = Field(None, ge=1, le=3650)
 
 class ApiKeyOut(BaseModel):
     id: UUID
     name: str
     key_prefix: str
     is_active: bool
-    expires_at: Optional[datetime]
-    last_used_at: Optional[datetime]
+    expires_at: datetime | None
+    last_used_at: datetime | None
     created_at: datetime
     created_by: UUID
 

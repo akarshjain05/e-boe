@@ -1,5 +1,6 @@
-from fastapi import HTTPException, status, Request
+from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
+
 
 class AppException(HTTPException):
     def __init__(self, status_code: int, detail: str, error_code: str = "INTERNAL_ERROR"):

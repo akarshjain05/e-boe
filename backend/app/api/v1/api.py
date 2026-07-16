@@ -1,5 +1,21 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, customers, creditors, bills, payments, documents, reports, dashboard, api_keys, users, companies, notifications, products, public
+
+from app.api.v1.endpoints import (
+    api_keys,
+    auth,
+    bills,
+    companies,
+    creditors,
+    customers,
+    dashboard,
+    documents,
+    notifications,
+    payments,
+    products,
+    public,
+    reports,
+    users,
+)
 
 api_router = APIRouter()
 api_router.include_router(public.router, prefix="/public", tags=["public"])

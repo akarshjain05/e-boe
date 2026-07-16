@@ -1,16 +1,18 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
-from fastapi import HTTPException, status
-from app.models.bill import Bill, BillItem
-from app.models.customer import Customer
-from app.models.creditor import Creditor
-from app.schemas.bill import BillCreate, BillUpdate, BillResponse
-from app.models.company import Company
 from uuid import UUID, uuid4
-from sqlalchemy import select, func, or_, and_
-from app.tasks.email_tasks import send_bill_notification_email
+
+from fastapi import HTTPException, status
+from sqlalchemy import and_, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from app.core.config import settings
+from app.models.bill import Bill, BillItem
+from app.models.company import Company
+from app.models.creditor import Creditor
+from app.models.customer import Customer
+from app.schemas.bill import BillCreate, BillUpdate
+from app.tasks.email_tasks import send_bill_notification_email
+
 
 class BillService:
     def __init__(self, db: AsyncSession):
@@ -346,9 +348,9 @@ class BillService:
         await self.db.refresh(bill)
         
         # --- Notifications Logic ---
-        from app.services.notification import NotificationService
-        from app.schemas.notification import NotificationCreate
         from app.models.user import User
+        from app.schemas.notification import NotificationCreate
+        from app.services.notification import NotificationService
         
         notification_service = NotificationService(self.db)
         

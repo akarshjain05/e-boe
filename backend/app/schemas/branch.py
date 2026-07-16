@@ -1,19 +1,20 @@
-from pydantic import BaseModel, EmailStr, Field
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field
+
 
 class BranchBase(BaseModel):
     name: str = Field(..., max_length=100)
     code: str = Field(..., max_length=50)
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = Field(None, max_length=50)
-    address_line1: Optional[str] = Field(None, max_length=255)
-    address_line2: Optional[str] = Field(None, max_length=255)
-    city: Optional[str] = Field(None, max_length=100)
-    state: Optional[str] = Field(None, max_length=100)
-    country: Optional[str] = Field(None, max_length=100)
-    postal_code: Optional[str] = Field(None, max_length=20)
+    email: EmailStr | None = None
+    phone: str | None = Field(None, max_length=50)
+    address_line1: str | None = Field(None, max_length=255)
+    address_line2: str | None = Field(None, max_length=255)
+    city: str | None = Field(None, max_length=100)
+    state: str | None = Field(None, max_length=100)
+    country: str | None = Field(None, max_length=100)
+    postal_code: str | None = Field(None, max_length=20)
     is_active: bool = True
     is_head_office: bool = False
 
@@ -27,7 +28,7 @@ class BranchResponse(BranchBase):
     id: UUID
     company_id: UUID
     created_at: datetime
-    updated_at: Optional[datetime]
+    updated_at: datetime | None
 
     class Config:
         from_attributes = True

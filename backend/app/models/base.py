@@ -1,7 +1,8 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import MetaData, DateTime, func, String
-from uuid import UUID, uuid4
 from datetime import datetime
+from uuid import UUID, uuid4
+
+from sqlalchemy import DateTime, MetaData, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 convention = {
     "ix": "ix_%(column_0_label)s",

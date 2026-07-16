@@ -1,10 +1,13 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, DateTime, Boolean, Text
 from datetime import datetime
-from app.models.base import Base, AuditMixin
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import JSON
 from uuid import UUID
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import JSON
+
+from app.models.base import AuditMixin, Base
+
 
 class Company(Base, AuditMixin):
     __tablename__ = "companies"

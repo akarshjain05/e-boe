@@ -1,17 +1,18 @@
-from pydantic import BaseModel, EmailStr, Field
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field
+
 
 class UserBase(BaseModel):
     first_name: str = Field(..., max_length=100)
     last_name: str = Field(..., max_length=100)
-    phone: Optional[str] = Field(None, max_length=20)
-    pan_number: Optional[str] = Field(None, max_length=50)
+    phone: str | None = Field(None, max_length=20)
+    pan_number: str | None = Field(None, max_length=50)
 
 class UserCreate(UserBase):
     email: EmailStr
-    password: Optional[str] = Field(None, min_length=8)
+    password: str | None = Field(None, min_length=8)
 
 class UserUpdate(UserBase):
     pass
@@ -19,15 +20,15 @@ class UserUpdate(UserBase):
 class UserResponse(UserBase):
     id: UUID
     email: EmailStr
-    company_id: Optional[UUID]
-    branch_id: Optional[UUID]
-    role_id: Optional[UUID]
+    company_id: UUID | None
+    branch_id: UUID | None
+    role_id: UUID | None
     is_active: bool
     is_verified: bool
     is_superuser: bool
-    last_login_at: Optional[datetime]
+    last_login_at: datetime | None
     created_at: datetime
-    updated_at: Optional[datetime]
+    updated_at: datetime | None
 
     class Config:
         from_attributes = True

@@ -1,10 +1,12 @@
 import uuid
-from typing import List, Optional
-from datetime import datetime, timezone
-from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import UTC, datetime
+
 from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.notification import Notification
 from app.schemas.notification import NotificationCreate
+
 
 class NotificationService:
     def __init__(self, db: AsyncSession):
@@ -26,7 +28,7 @@ class NotificationService:
         await self.db.refresh(notification)
         return notification
 
-    async def get_all(self, user_id: uuid.UUID, company_id: uuid.UUID, limit: int = 50) -> List[Notification]:
+    async def get_all(self, user_id: uuid.UUID, company_id: uuid.UUID, limit: int = 50) -> list[Notification]:
         stmt = (
             select(Notification)
             .where(Notification.user_id == user_id, Notification.company_id == company_id)
@@ -41,14 +43,14 @@ class NotificationService:
         result = await self.db.execute(stmt)
         return len(result.scalars().all())
 
-    async def mark_as_read(self, notification_id: uuid.UUID, user_id: uuid.UUID) -> Optional[Notification]:
+    async def mark_as_read(self, notification_id: uuid.UUID, user_id: uuid.UUID) -> Notification | None:
         stmt = select(Notification).where(Notification.id == notification_id, Notification.user_id == user_id)
         result = await self.db.execute(stmt)
         notification = result.scalar_one_or_none()
         
         if notification and not notification.is_read:
             notification.is_read = True
-            notification.read_at = datetime.now(timezone.utc)
+            notification.read_at = datetime.now(UTC)
             await self.db.commit()
             await self.db.refresh(notification)
             
@@ -58,7 +60,7 @@ class NotificationService:
         stmt = (
             update(Notification)
             .where(Notification.user_id == user_id, Notification.company_id == company_id, Notification.is_read == False)
-            .values(is_read=True, read_at=datetime.now(timezone.utc))
+            .values(is_read=True, read_at=datetime.now(UTC))
         )
         await self.db.execute(stmt)
         await self.db.commit()

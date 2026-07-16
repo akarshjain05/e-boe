@@ -1,12 +1,21 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from fastapi import HTTPException, status
-from app.models.user import User, UserSession
-from app.models.company import Company
-from app.schemas.auth import LoginRequest, RegisterRequest
-from app.core.security import verify_password, hash_password, create_access_token, create_refresh_token, verify_token
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
+
+from fastapi import HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    hash_password,
+    verify_password,
+    verify_token,
+)
+from app.models.company import Company
+from app.models.user import User, UserSession
+from app.schemas.auth import LoginRequest, RegisterRequest
+
 
 class AuthService:
     def __init__(self, db: AsyncSession):
@@ -81,7 +90,7 @@ class AuthService:
             )
 
         # Update last login
-        user.last_login_at = datetime.now(timezone.utc)
+        user.last_login_at = datetime.now(UTC)
         
         # Create tokens
         access_token_expires = 30  # mins
@@ -99,8 +108,8 @@ class AuthService:
             ip_address=ip_address,
             user_agent=user_agent,
             is_active=True,
-            last_active_at=datetime.now(timezone.utc),
-            expires_at=datetime.now(timezone.utc)
+            last_active_at=datetime.now(UTC),
+            expires_at=datetime.now(UTC)
         )
         self.db.add(session)
         await self.db.commit()

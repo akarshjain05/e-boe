@@ -1,5 +1,6 @@
-from app.core.celery_app import celery_app
 import logging
+
+from app.core.celery_app import celery_app
 
 logger = logging.getLogger("eboe")
 

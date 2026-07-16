@@ -1,7 +1,10 @@
-from sqlalchemy import String, ForeignKey, Numeric, Boolean
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.models.base import Base, AuditMixin
 from uuid import UUID
+
+from sqlalchemy import Boolean, ForeignKey, Numeric, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.base import AuditMixin, Base
+
 
 class Product(Base, AuditMixin):
     __tablename__ = "products"

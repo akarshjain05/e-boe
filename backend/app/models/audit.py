@@ -1,10 +1,13 @@
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, ForeignKey, DateTime, Text, BigInteger
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import JSON
 from datetime import datetime
-from app.models.base import Base
 from uuid import UUID
+
+from sqlalchemy import BigInteger, DateTime, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.types import JSON
+
+from app.models.base import Base
+
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"

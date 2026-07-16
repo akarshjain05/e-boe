@@ -5,12 +5,14 @@ import sys
 # Add parent directory to path to allow importing app modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.core.config import settings
 from app.models.bill import Bill
 from app.models.company import Company
-from app.core.config import settings
+
 
 async def main():
     print("Starting historical bills fix...")

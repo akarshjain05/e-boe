@@ -1,8 +1,11 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, DateTime, Boolean, Text, Numeric, Date
-from datetime import datetime, date
-from app.models.base import Base, AuditMixin
+from datetime import date, datetime
 from uuid import UUID
+
+from sqlalchemy import Date, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.base import AuditMixin, Base
+
 
 class Payment(Base, AuditMixin):
     __tablename__ = "payments"

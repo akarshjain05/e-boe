@@ -1,25 +1,26 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr
+
 
 class CreditorBase(BaseModel):
     creditor_type: str = "B2B"
     creditor_code: str
     name: str
-    legal_name: Optional[str] = None
+    legal_name: str | None = None
     business_type: str
-    gst_number: Optional[str] = None
-    pan_number: Optional[str] = None
-    tan_number: Optional[str] = None
+    gst_number: str | None = None
+    pan_number: str | None = None
+    tan_number: str | None = None
     email: EmailStr
     phone: str
-    website: Optional[str] = None
-    credit_limit: Optional[float] = None
+    website: str | None = None
+    credit_limit: float | None = None
     payment_terms_days: int = 30
     status: str = "active"
     risk_rating: str = "low"
-    notes: Optional[str] = None
+    notes: str | None = None
 
 class CreditorCreate(CreditorBase):
     @property
@@ -32,14 +33,14 @@ class CreditorCreate(CreditorBase):
             raise ValueError("GST number is required for B2B creditors")
 
 class CreditorUpdate(CreditorBase):
-    creditor_code: Optional[str] = None
-    name: Optional[str] = None
-    business_type: Optional[str] = None
+    creditor_code: str | None = None
+    name: str | None = None
+    business_type: str | None = None
 
 class CreditorResponse(CreditorBase):
     id: UUID
     company_id: UUID
-    branch_id: Optional[UUID] = None
+    branch_id: UUID | None = None
     outstanding_balance: float
     created_at: datetime
     updated_at: datetime

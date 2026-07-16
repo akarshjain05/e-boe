@@ -1,10 +1,13 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, DateTime, Boolean, Text
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import JSON
 from datetime import datetime
-from app.models.base import Base, AuditMixin
 from uuid import UUID
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import JSON
+
+from app.models.base import AuditMixin, Base
+
 
 class Notification(Base, AuditMixin):
     __tablename__ = "notifications"

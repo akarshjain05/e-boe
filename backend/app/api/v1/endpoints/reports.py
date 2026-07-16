@@ -1,14 +1,16 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Path
 from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from uuid import UUID
+
+from app.api.dependencies.auth import get_current_user
 from app.core.database import get_db
 from app.models.bill import Bill
 from app.models.company import Company
 from app.models.user import User
-from app.api.dependencies.auth import get_current_user
 from app.utils.pdf_generator import BillPDFGenerator
 
 router = APIRouter()
@@ -79,9 +81,10 @@ async def generate_bill_pdf(
         headers={"Content-Disposition": f"inline; filename=BOE-{bill.bill_number}.pdf"}
     )
 
+from datetime import UTC, datetime, timedelta
+
 from sqlalchemy import func
-from app.models.payment import Payment
-from datetime import datetime, timedelta, timezone
+
 
 @router.get("/dashboard")
 async def get_dashboard_reports(
@@ -114,7 +117,7 @@ async def get_dashboard_reports(
     # 2. Monthly Trend (Issued, Overdue, Paid)
     # 3. Cash Flow (Inflow, Outflow)
     # To keep it simple, we'll generate the last 6 months structure
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     months_labels = []
     cash_flow = []
     monthly_trend = []

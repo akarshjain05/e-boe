@@ -1,16 +1,19 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-from app.schemas.payment import PaymentResponse
-from app.schemas.customer import CustomerResponse
-from app.schemas.creditor import CreditorResponse
-from uuid import UUID
 from datetime import date, datetime
+from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel
+
+from app.schemas.creditor import CreditorResponse
+from app.schemas.customer import CustomerResponse
+from app.schemas.payment import PaymentResponse
+
 
 class BillItemBase(BaseModel):
     description: str
-    hsn_code: Optional[str] = None
+    hsn_code: str | None = None
     quantity: float
-    unit: Optional[str] = None
+    unit: str | None = None
     unit_price: float
     discount_percent: float = 0.0
     tax_rate: float = 0.0
@@ -34,18 +37,18 @@ class BillBase(BaseModel):
     bill_type: str = "receivable"
     bill_number: str
     drawer_name: str
-    drawer_address: Optional[str] = None
-    drawer_state: Optional[str] = None
-    drawer_account: Optional[str] = None
+    drawer_address: str | None = None
+    drawer_state: str | None = None
+    drawer_account: str | None = None
     
     drawee_name: str
-    drawee_address: Optional[str] = None
-    drawee_state: Optional[str] = None
-    drawee_account: Optional[str] = None
+    drawee_address: str | None = None
+    drawee_state: str | None = None
+    drawee_account: str | None = None
     
     payee_name: str
-    payee_address: Optional[str] = None
-    payee_account: Optional[str] = None
+    payee_address: str | None = None
+    payee_account: str | None = None
     
     currency_code: str = "INR"
     exchange_rate: float = 1.0
@@ -55,74 +58,74 @@ class BillBase(BaseModel):
     
     issue_date: date
     due_date: date
-    credit_period_months: Optional[float] = None
+    credit_period_months: float | None = None
     transaction_type: str = "intra_state"
     
-    place_of_issue: Optional[str] = None
-    place_of_payment: Optional[str] = None
-    terms_and_conditions: Optional[str] = None
-    internal_notes: Optional[str] = None
+    place_of_issue: str | None = None
+    place_of_payment: str | None = None
+    terms_and_conditions: str | None = None
+    internal_notes: str | None = None
     
     is_recurring: bool = False
     priority: str = "normal"
-    tags: Optional[Dict[str, Any]] = None
+    tags: dict[str, Any] | None = None
 
 class BillCreate(BillBase):
-    customer_id: Optional[UUID] = None
-    creditor_id: Optional[UUID] = None
-    items: List[BillItemCreate]
+    customer_id: UUID | None = None
+    creditor_id: UUID | None = None
+    items: list[BillItemCreate]
 
 class BillUpdate(BaseModel):
-    bill_type: Optional[str] = None
-    bill_number: Optional[str] = None
-    drawer_name: Optional[str] = None
-    drawer_address: Optional[str] = None
-    drawer_state: Optional[str] = None
-    drawer_account: Optional[str] = None
+    bill_type: str | None = None
+    bill_number: str | None = None
+    drawer_name: str | None = None
+    drawer_address: str | None = None
+    drawer_state: str | None = None
+    drawer_account: str | None = None
     
-    drawee_name: Optional[str] = None
-    drawee_address: Optional[str] = None
-    drawee_state: Optional[str] = None
-    drawee_account: Optional[str] = None
+    drawee_name: str | None = None
+    drawee_address: str | None = None
+    drawee_state: str | None = None
+    drawee_account: str | None = None
     
-    payee_name: Optional[str] = None
-    payee_address: Optional[str] = None
-    payee_account: Optional[str] = None
+    payee_name: str | None = None
+    payee_address: str | None = None
+    payee_account: str | None = None
     
-    currency_code: Optional[str] = None
-    exchange_rate: Optional[float] = None
+    currency_code: str | None = None
+    exchange_rate: float | None = None
     
-    interest_rate: Optional[float] = None
-    penalty_rate: Optional[float] = None
+    interest_rate: float | None = None
+    penalty_rate: float | None = None
     
-    issue_date: Optional[date] = None
-    due_date: Optional[date] = None
-    credit_period_months: Optional[float] = None
-    transaction_type: Optional[str] = None
+    issue_date: date | None = None
+    due_date: date | None = None
+    credit_period_months: float | None = None
+    transaction_type: str | None = None
     
-    place_of_issue: Optional[str] = None
-    place_of_payment: Optional[str] = None
-    terms_and_conditions: Optional[str] = None
-    internal_notes: Optional[str] = None
+    place_of_issue: str | None = None
+    place_of_payment: str | None = None
+    terms_and_conditions: str | None = None
+    internal_notes: str | None = None
     
-    is_recurring: Optional[bool] = None
-    priority: Optional[str] = None
-    tags: Optional[Dict[str, Any]] = None
+    is_recurring: bool | None = None
+    priority: str | None = None
+    tags: dict[str, Any] | None = None
     
-    customer_id: Optional[UUID] = None
-    creditor_id: Optional[UUID] = None
-    items: Optional[List[BillItemCreate]] = None
-    status: Optional[str] = None
+    customer_id: UUID | None = None
+    creditor_id: UUID | None = None
+    items: list[BillItemCreate] | None = None
+    status: str | None = None
 
 class BillResponse(BillBase):
     id: UUID
     company_id: UUID
-    customer_id: Optional[UUID] = None
-    creditor_id: Optional[UUID] = None
-    drawee_creditor_id: Optional[UUID] = None
-    payee_customer_id: Optional[UUID] = None
-    network_drawee_company_id: Optional[UUID] = None
-    network_payee_company_id: Optional[UUID] = None
+    customer_id: UUID | None = None
+    creditor_id: UUID | None = None
+    drawee_creditor_id: UUID | None = None
+    payee_customer_id: UUID | None = None
+    network_drawee_company_id: UUID | None = None
+    network_payee_company_id: UUID | None = None
     
     amount: float
     discount_amount: float
@@ -136,11 +139,11 @@ class BillResponse(BillBase):
     created_at: datetime
     updated_at: datetime
     
-    items: List[BillItemResponse] = []
-    payments: List[PaymentResponse] = []
+    items: list[BillItemResponse] = []
+    payments: list[PaymentResponse] = []
     
-    customer: Optional[CustomerResponse] = None
-    creditor: Optional[CreditorResponse] = None
+    customer: CustomerResponse | None = None
+    creditor: CreditorResponse | None = None
 
     class Config:
         from_attributes = True

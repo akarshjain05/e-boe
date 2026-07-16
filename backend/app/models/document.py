@@ -1,9 +1,12 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, Boolean, BigInteger
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import JSON
-from app.models.base import Base, AuditMixin
 from uuid import UUID
+
+from sqlalchemy import BigInteger, Boolean, ForeignKey, String
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.types import JSON
+
+from app.models.base import AuditMixin, Base
+
 
 class Document(Base, AuditMixin):
     __tablename__ = "documents"

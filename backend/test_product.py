@@ -1,8 +1,10 @@
 import asyncio
-from app.core.database import SessionLocal
+
 from sqlalchemy import select
+
+from app.core.database import SessionLocal
 from app.models.user import User
-from app.models.product import Product
+
 
 async def main():
     async with SessionLocal() as session:
@@ -13,8 +15,8 @@ async def main():
             
         print(f"Testing with company_id: {user.company_id}")
         
-        from app.services.product import product_service
         from app.schemas.product import ProductCreate
+        from app.services.product import product_service
         
         try:
             prod_in = ProductCreate(
@@ -24,7 +26,7 @@ async def main():
             )
             prod = await product_service.create(session, obj_in=prod_in, company_id=user.company_id)
             print(f"Product created: {prod.id}")
-        except Exception as e:
+        except Exception:
             import traceback
             traceback.print_exc()
 

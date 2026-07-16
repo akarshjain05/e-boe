@@ -1,11 +1,14 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from datetime import UTC, datetime, timedelta
+from uuid import UUID, uuid4
+
 from fastapi import HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import generate_api_key, hash_password, verify_password
 from app.models.settings import ApiKey
 from app.schemas.api_key import ApiKeyCreate, ApiKeyResponse
-from app.core.security import generate_api_key, hash_password, verify_password
-from uuid import UUID, uuid4
-from datetime import datetime, timedelta, timezone
+
 
 class ApiKeyService:
     def __init__(self, db: AsyncSession):
@@ -26,7 +29,7 @@ class ApiKeyService:
 
         expires_at = None
         if data.expires_in_days:
-            expires_at = datetime.now(timezone.utc) + timedelta(days=data.expires_in_days)
+            expires_at = datetime.now(UTC) + timedelta(days=data.expires_in_days)
 
         db_key = ApiKey(
             id=uuid4(),
@@ -85,12 +88,12 @@ class ApiKeyService:
         
         # In case of prefix collision, check all matches
         for db_key in keys:
-            if db_key.expires_at and db_key.expires_at < datetime.now(timezone.utc):
+            if db_key.expires_at and db_key.expires_at < datetime.now(UTC):
                 continue
                 
             if verify_password(raw_key, db_key.hashed_key):
                 # Update last used
-                db_key.last_used_at = datetime.now(timezone.utc)
+                db_key.last_used_at = datetime.now(UTC)
                 await self.db.commit()
                 return db_key
                 

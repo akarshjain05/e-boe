@@ -1,8 +1,11 @@
 import asyncio
-from app.core.database import SessionLocal
+
 from sqlalchemy import select
-from app.models.payment import Payment
+
+from app.core.database import SessionLocal
 from app.models.bill import Bill
+from app.models.payment import Payment
+
 
 async def main():
     async with SessionLocal() as session:

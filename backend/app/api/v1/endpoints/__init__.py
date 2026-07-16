@@ -1,1 +1,15 @@
-from . import auth, customers, creditors, bills, payments, documents, reports, dashboard, api_keys, users, companies, notifications, products
+from . import (
+    api_keys,
+    auth,
+    bills,
+    companies,
+    creditors,
+    customers,
+    dashboard,
+    documents,
+    notifications,
+    payments,
+    products,
+    reports,
+    users,
+)

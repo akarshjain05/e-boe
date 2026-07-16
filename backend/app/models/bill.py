@@ -1,10 +1,13 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, DateTime, Boolean, Text, Numeric, Date
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import JSON
-from datetime import datetime, date
-from app.models.base import Base, AuditMixin
+from datetime import date, datetime
 from uuid import UUID
+
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import JSON
+
+from app.models.base import AuditMixin, Base
+
 
 class Bill(Base, AuditMixin):
     __tablename__ = "bills"

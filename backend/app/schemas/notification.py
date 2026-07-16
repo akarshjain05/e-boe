@@ -1,14 +1,16 @@
-from pydantic import BaseModel, ConfigDict
-from uuid import UUID
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
+
 
 class NotificationBase(BaseModel):
     type: str
     title: str
     message: str
-    priority: Optional[str] = "normal"
-    data_json: Optional[Dict[str, Any]] = None
+    priority: str | None = "normal"
+    data_json: dict[str, Any] | None = None
 
 class NotificationCreate(NotificationBase):
     company_id: UUID
@@ -19,7 +21,7 @@ class NotificationResponse(NotificationBase):
     company_id: UUID
     user_id: UUID
     is_read: bool
-    read_at: Optional[datetime] = None
+    read_at: datetime | None = None
     created_at: datetime
     
     model_config = ConfigDict(from_attributes=True)

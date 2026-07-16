@@ -1,5 +1,5 @@
-import pytest
 from fastapi.testclient import TestClient
+
 
 def test_create_bill_validation_error(authorized_client: TestClient):
     response = authorized_client.post(

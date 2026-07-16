@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.core.database import get_db
-from app.models.company import Company, Branch
-from app.models.user import User
-from app.schemas.company import CompanyUpdate, CompanyResponse
-from app.schemas.branch import BranchCreate, BranchResponse
-from app.api.dependencies.auth import get_current_user
 from uuid import uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.dependencies.auth import get_current_user
+from app.core.database import get_db
+from app.models.company import Branch, Company
+from app.models.user import User
+from app.schemas.branch import BranchCreate, BranchResponse
+from app.schemas.company import CompanyResponse, CompanyUpdate
 
 router = APIRouter()
 

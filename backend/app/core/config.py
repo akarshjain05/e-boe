@@ -1,5 +1,6 @@
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+
 
 class Settings(BaseSettings):
     APP_NAME: str = "e-BoE API"
@@ -25,7 +26,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # CORS
-    CORS_ORIGINS: List[str] | str = ["*"]
+    CORS_ORIGINS: list[str] | str = ["*"]
 
     # Email
     MAIL_SERVER: str = ""

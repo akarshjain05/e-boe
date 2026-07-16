@@ -1,15 +1,16 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
+import hashlib
+import os
 from uuid import UUID, uuid4
-from app.core.database import get_db
+
+import aiofiles
+from fastapi import APIRouter, Depends, File, Form, UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.dependencies.auth import get_current_user
 from app.core.config import settings
+from app.core.database import get_db
 from app.models.document import Document
 from app.models.user import User
-from app.api.dependencies.auth import get_current_user
-import os
-import hashlib
-import aiofiles
 
 router = APIRouter()
 

@@ -1,10 +1,12 @@
-from typing import List, Optional
 from uuid import UUID
-from sqlalchemy import select, or_, and_
+
+from fastapi import HTTPException
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
-from fastapi import HTTPException
+
 
 class ProductService:
     async def create(self, db: AsyncSession, *, obj_in: ProductCreate, company_id: UUID) -> Product:
@@ -24,9 +26,9 @@ class ProductService:
         company_id: UUID,
         skip: int = 0,
         limit: int = 100,
-        search: Optional[str] = None,
-        type: Optional[str] = None
-    ) -> List[Product]:
+        search: str | None = None,
+        type: str | None = None
+    ) -> list[Product]:
         query = select(Product).filter(Product.company_id == company_id)
         
         if search:
@@ -43,7 +45,7 @@ class ProductService:
         result = await db.execute(query)
         return list(result.scalars().all())
 
-    async def get(self, db: AsyncSession, id: UUID, company_id: UUID) -> Optional[Product]:
+    async def get(self, db: AsyncSession, id: UUID, company_id: UUID) -> Product | None:
         query = select(Product).filter(
             and_(Product.id == id, Product.company_id == company_id)
         )

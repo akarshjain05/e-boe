@@ -1,6 +1,6 @@
+
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
-from uuid import UUID
+
 
 class LoginRequest(BaseModel):
     gst_number: str
@@ -19,20 +19,20 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8)
     first_name: str
     last_name: str
-    phone: Optional[str] = None
+    phone: str | None = None
     company_name: str
     company_email: EmailStr
     organization_type: str
     company_pan: str
     owner_pan: str
     company_phone: str
-    company_website: Optional[str] = None
+    company_website: str | None = None
     gst_number: str
-    address_line1: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    country: Optional[str] = None
-    postal_code: Optional[str] = None
+    address_line1: str | None = None
+    city: str | None = None
+    state: str | None = None
+    country: str | None = None
+    postal_code: str | None = None
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
@@ -66,5 +66,5 @@ class TokenPayload(BaseModel):
     sub: str
     exp: int
     type: str
-    company_id: Optional[str] = None
-    role: Optional[str] = None
+    company_id: str | None = None
+    role: str | None = None

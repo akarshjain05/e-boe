@@ -1,8 +1,11 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, DateTime, Boolean, Text
 from datetime import datetime
-from app.models.base import Base, AuditMixin
 from uuid import UUID
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.base import AuditMixin, Base
+
 
 class Role(Base, AuditMixin):
     __tablename__ = "roles"
