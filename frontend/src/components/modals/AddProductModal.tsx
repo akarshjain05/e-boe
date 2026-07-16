@@ -146,7 +146,7 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                 name="hsn_code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{form.watch('type') === 'service' ? 'SAC Code' : 'HSN Number'}</FormLabel>
+                    <FormLabel>{form.watch('type') === 'service' ? 'SAC' : 'HSN'}</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. 1234" {...field} />
                     </FormControl>
@@ -171,7 +171,9 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
             />
 
             <div className="grid grid-cols-2 gap-4">
-              <FormField
+              {form.watch('type') === 'goods' && (
+                <>
+                  <FormField
                 control={form.control}
                 name="quantity_in_stock"
                 render={({ field }) => (
@@ -207,6 +209,8 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                   </FormItem>
                 )}
               />
+                </>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

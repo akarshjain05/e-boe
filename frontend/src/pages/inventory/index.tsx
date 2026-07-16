@@ -96,9 +96,11 @@ export default function Inventory() {
               <thead className="text-xs text-zinc-500 uppercase bg-zinc-50 dark:bg-zinc-950/50 border-b border-zinc-200 dark:border-zinc-800">
                 <tr>
                   <th className="px-6 py-4 font-semibold">Product Details</th>
-                  <th className="px-6 py-4 font-semibold">HSN / SAC</th>
+                  <th className="px-6 py-4 font-semibold">{filterType === 'service' ? 'SAC' : 'HSN'}</th>
                   <th className="px-6 py-4 font-semibold">Unit Price</th>
-                  <th className="px-6 py-4 font-semibold text-center">Quantity (in stock)</th>
+                  {filterType === 'goods' && (
+                    <th className="px-6 py-4 font-semibold text-center">Quantity (in stock)</th>
+                  )}
                   <th className="px-6 py-4 font-semibold">Tax Rate</th>
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
@@ -106,13 +108,13 @@ export default function Inventory() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center">
+                    <td colSpan={filterType === 'goods' ? 6 : 5} className="px-6 py-8 text-center">
                       <Loader2 className="h-6 w-6 animate-spin text-indigo-600 mx-auto" />
                     </td>
                   </tr>
                 ) : products.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
+                    <td colSpan={filterType === 'goods' ? 6 : 5} className="px-6 py-12 text-center text-zinc-500">
                       <Package className="h-6 w-6 text-zinc-400 mx-auto mb-2" />
                       <p>No products found in catalogue.</p>
                     </td>
@@ -136,13 +138,15 @@ export default function Inventory() {
                         {formatCurrency(product.unit_price || 0)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="font-medium text-zinc-900 dark:text-zinc-100">
-                        {(!product.unit || ['NOS', 'KG', 'LTR', 'MTR'].includes(product.unit)) 
-                          ? `${product.quantity_in_stock || 0} ${product.unit || ''}`
-                          : product.unit}
-                      </div>
-                    </td>
+                    {filterType === 'goods' && (
+                      <td className="px-6 py-4 text-center">
+                        <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                          {(!product.unit || ['NOS', 'KG', 'LTR', 'MTR'].includes(product.unit)) 
+                            ? `${product.quantity_in_stock || 0} ${product.unit || ''}`
+                            : product.unit}
+                        </div>
+                      </td>
+                    )}
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                         {product.tax_rate}%
