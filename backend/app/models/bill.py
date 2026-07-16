@@ -70,6 +70,7 @@ class Bill(Base, AuditMixin):
     barcode_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     pdf_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     digital_signature_data: Mapped[str | None] = mapped_column(Text, nullable=True)
+    public_access_token: Mapped[UUID | None] = mapped_column(index=True, unique=True, nullable=True)
     
     is_recurring: Mapped[bool] = mapped_column(Boolean, default=False)
     recurrence_pattern: Mapped[str | None] = mapped_column(String(100), nullable=True)

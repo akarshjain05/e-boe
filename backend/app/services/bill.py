@@ -9,6 +9,8 @@ from app.schemas.bill import BillCreate, BillUpdate, BillResponse
 from app.models.company import Company
 from uuid import UUID, uuid4
 from sqlalchemy import select, func, or_, and_
+from app.tasks.email_tasks import send_bill_notification_email
+from app.core.config import settings
 
 class BillService:
     def __init__(self, db: AsyncSession):
@@ -306,6 +308,11 @@ class BillService:
         await self.db.commit()
         await self.db.refresh(bill)
         
+        # Notify B2C customers
+        if data.bill_type == "receivable" and 'customer' in locals() and customer and customer.customer_type == "B2C" and customer.email:
+            public_url = f"{settings.FRONTEND_URL}/bill/{bill.public_access_token}"
+            send_bill_notification_email.delay(str(bill.id), customer.email, "created", public_url)
+        
         # Eager load items for response
         return await self.get_by_id(bill.id, company_id)
 
@@ -383,6 +390,15 @@ class BillService:
                     message=message,
                     data_json={"bill_id": str(bill.id)}
                 ))
+                
+        # --- B2C Email Notifications ---
+        if status_val in ["accepted", "overdue"] and bill.bill_type == "receivable" and bill.customer_id:
+            from app.models.customer import Customer
+            stmt_c = select(Customer).where(Customer.id == bill.customer_id)
+            c = (await self.db.execute(stmt_c)).scalar_one_or_none()
+            if c and c.customer_type == "B2C" and c.email:
+                public_url = f"{settings.FRONTEND_URL}/bill/{bill.public_access_token}"
+                send_bill_notification_email.delay(str(bill.id), c.email, status_val, public_url)
         
         return bill
 

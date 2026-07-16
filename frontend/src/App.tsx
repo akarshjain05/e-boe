@@ -22,6 +22,9 @@ const Settings = lazy(() => import('./pages/settings'));
 const NotFound = lazy(() => import('./pages/errors/NotFound'));
 const ServerError = lazy(() => import('./pages/errors/ServerError'));
 
+// Public Portal Route
+const PublicBillView = lazy(() => import('./pages/public/PublicBillView').then(module => ({ default: module.PublicBillView })));
+
 const Spinner = () => (
   <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
@@ -54,6 +57,9 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
         <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+        
+        {/* Public Portal Route */}
+        <Route path="/bill/:token" element={<PublicBillView />} />
         
         {/* Protected Routes inside App Layout */}
         <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

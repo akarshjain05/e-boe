@@ -8,6 +8,8 @@ from app.schemas.payment import PaymentCreate, RefundCreate, BulkPaymentCreate
 from uuid import UUID, uuid4
 from datetime import datetime, timezone
 import secrets
+from app.tasks.email_tasks import send_bill_notification_email
+from app.core.config import settings
 
 class PaymentService:
     def __init__(self, db: AsyncSession):
@@ -330,6 +332,15 @@ class PaymentService:
                     message=f"Your payment of ₹{payment.amount} for Bill {bill.bill_number} has been confirmed.",
                     data_json={"bill_id": str(bill.id), "payment_id": str(payment.id)}
                 ))
+
+        # --- B2C Email Notifications ---
+        if bill.bill_type == "receivable" and bill.customer_id:
+            from app.models.customer import Customer
+            stmt_c = select(Customer).where(Customer.id == bill.customer_id)
+            c = (await self.db.execute(stmt_c)).scalar_one_or_none()
+            if c and c.customer_type == "B2C" and c.email:
+                public_url = f"{settings.FRONTEND_URL}/bill/{bill.public_access_token}"
+                send_bill_notification_email.delay(str(bill.id), c.email, "payment_received", public_url)
 
         return payment
 
