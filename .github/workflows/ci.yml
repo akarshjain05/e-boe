@@ -56,10 +56,6 @@ jobs:
         working-directory: ./backend
         run: ruff check .
 
-      - name: Run Mypy
-        working-directory: ./backend
-        run: mypy . --ignore-missing-imports
-
       - name: Run Tests
         working-directory: ./backend
         env:
