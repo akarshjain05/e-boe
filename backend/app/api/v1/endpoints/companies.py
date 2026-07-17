@@ -126,7 +126,20 @@ async def lookup_company_by_gstin(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Not Applicable"
         )
+    # Second, check if the customer is already added by this company
+    from app.models.customer import Customer
+    stmt_customer = select(Customer).where(
+        Customer.company_id == current_user.company_id,
+        Customer.gst_number == gstin
+    )
+    existing_customer = (await db.execute(stmt_customer)).scalar_one_or_none()
+    if existing_customer:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Customer with this GSTIN is already added"
+        )
 
+    # Third, check if they exist as another company on the platform
     stmt = select(Company).where(Company.gst_number == gstin, Company.is_active == True)
     result = await db.execute(stmt)
     company = result.scalar_one_or_none()
@@ -149,7 +162,7 @@ async def lookup_company_by_gstin(
             source="internal"
         )
     
-    # Try RapidAPI
+    # Finally, try RapidAPI
     from app.core.config import settings
     if settings.RAPIDAPI_KEY:
         import httpx
@@ -164,20 +177,28 @@ async def lookup_company_by_gstin(
                 response = await client.get(url, headers=headers)
                 if response.status_code == 200:
                     data = response.json()
-                    if data.get("success") and data.get("data"):
-                        gst_data = data["data"]
-                        pradr = gst_data.get("pradr", {}).get("addr", {})
-                        address1 = f"{pradr.get('bno', '')} {pradr.get('st', '')} {pradr.get('loc', '')}".strip()
+                    if data.get("success") and data.get("data") and len(data["data"]) > 0:
+                        gst_data = data["data"][0]
+                        address_obj = gst_data.get("principalAddress", {}).get("address", {})
+                        
+                        bno = address_obj.get("buildingNumber", "")
+                        street = address_obj.get("street", "")
+                        loc = address_obj.get("location", "")
+                        parts = [p for p in [bno, street, loc] if p]
+                        address1 = ", ".join(parts)
+                        
+                        legal_name = gst_data.get("legalName")
+                        trade_name = gst_data.get("tradeName") or legal_name or "Unknown Company"
                         
                         return CompanyLookupResponse(
-                            name=gst_data.get("lgnm") or gst_data.get("tradeNam", "Unknown Company"),
-                            legal_name=gst_data.get("lgnm"),
+                            name=trade_name,
+                            legal_name=legal_name,
                             gst_number=gstin,
                             pan_number=gstin[2:12] if len(gstin) >= 12 else None,
                             address_line1=address1[:255] if address1 else None,
-                            city=pradr.get('dst'),
-                            state=pradr.get('stcd'),
-                            postal_code=pradr.get('pncd'),
+                            city=address_obj.get("district", address_obj.get("city")),
+                            state=address_obj.get("stateCode"),
+                            postal_code=address_obj.get("pincode"),
                             country="India",
                             source="rapidapi"
                         )
