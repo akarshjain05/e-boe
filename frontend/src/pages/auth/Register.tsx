@@ -204,7 +204,8 @@ export default function Register() {
                                 }
                                 if (fetchedDetails) setFetchedDetails(null)
                               }}
-                              disabled={isConfirmed}
+                              readOnly={isConfirmed}
+                              className={`pl-10 h-12 rounded-xl uppercase transition-colors ${isConfirmed ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-500 cursor-not-allowed border-zinc-200 dark:border-zinc-800' : ''}`}
                             />
                           </div>
                         </FormControl>
