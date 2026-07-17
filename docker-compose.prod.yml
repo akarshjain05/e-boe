@@ -93,7 +93,8 @@ services:
       context: ./frontend
       dockerfile: ../docker/frontend/Dockerfile.prod
     volumes:
-      - frontend_dist:/app/dist
+      - frontend_dist:/shared_dist
+    command: sh -c "cp -r /app/dist/* /shared_dist/ && echo 'Frontend files synced to volume.'"
     networks:
       - eboe_network
 
