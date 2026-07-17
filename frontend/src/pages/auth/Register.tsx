@@ -35,6 +35,8 @@ export default function Register() {
     state: string | null;
     postalCode: string | null;
   } | null>(null)
+  
+  const [isVerificationAttempted, setIsVerificationAttempted] = useState(false)
 
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -60,8 +62,11 @@ export default function Register() {
     setIsVerifying(true)
     try {
       const details = await authService.verifyGst(gstNumber)
+      setIsVerificationAttempted(true)
+      
       if (!details.company_name) {
-         toast.error("Could not fetch details. Please try again.")
+         toast.error("Could not fetch business details automatically. Please proceed anyway.")
+         setFetchedDetails(null)
          return
       }
       setFetchedDetails({
@@ -74,7 +79,8 @@ export default function Register() {
       })
       toast.success('GST details verified successfully!')
     } catch (err) {
-      toast.error('Failed to verify GST number. Please check and try again.')
+      setIsVerificationAttempted(true)
+      toast.error('Could not verify GST number automatically. You can still proceed with registration.')
       setFetchedDetails(null)
     } finally {
       setIsVerifying(false)
@@ -82,7 +88,7 @@ export default function Register() {
   }
 
   async function onSubmit(data: RegisterFormValues) {
-    if (!fetchedDetails) {
+    if (!isVerificationAttempted) {
       toast.error("Please verify your GST number first.")
       return
     }
@@ -188,6 +194,7 @@ export default function Register() {
                               value={field.value?.toUpperCase() || ''}
                               onChange={(e) => {
                                 field.onChange(e)
+                                if (isVerificationAttempted) setIsVerificationAttempted(false)
                                 if (fetchedDetails) setFetchedDetails(null)
                               }}
                             />
@@ -210,44 +217,46 @@ export default function Register() {
               </div>
 
               <AnimatePresence>
-                {fetchedDetails && (
+                {isVerificationAttempted && (
                   <motion.div 
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="p-5 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 space-y-4 mb-6">
-                      <div className="flex items-start gap-3">
-                        <Building2 className="w-5 h-5 text-indigo-500 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-zinc-900 dark:text-white">
-                            {fetchedDetails.companyName}
-                          </p>
-                          {fetchedDetails.legalName && fetchedDetails.legalName !== fetchedDetails.companyName && (
-                            <p className="text-xs text-zinc-500 mt-1">Legal Name: {fetchedDetails.legalName}</p>
-                          )}
+                    {fetchedDetails && (
+                      <div className="p-5 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 space-y-4 mb-6">
+                        <div className="flex items-start gap-3">
+                          <Building2 className="w-5 h-5 text-indigo-500 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-zinc-900 dark:text-white">
+                              {fetchedDetails.companyName}
+                            </p>
+                            {fetchedDetails.legalName && fetchedDetails.legalName !== fetchedDetails.companyName && (
+                              <p className="text-xs text-zinc-500 mt-1">Legal Name: {fetchedDetails.legalName}</p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-3">
+                          <MapPin className="w-5 h-5 text-indigo-500 mt-0.5" />
+                          <div>
+                            <p className="text-sm text-zinc-700 dark:text-zinc-300">
+                              {fetchedDetails.addressLine1}
+                            </p>
+                            <p className="text-xs text-zinc-500 mt-1">
+                              {fetchedDetails.city}, {fetchedDetails.state} {fetchedDetails.postalCode && `- ${fetchedDetails.postalCode}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            GST Details Verified Successfully
+                          </span>
                         </div>
                       </div>
-                      
-                      <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-indigo-500 mt-0.5" />
-                        <div>
-                          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                            {fetchedDetails.addressLine1}
-                          </p>
-                          <p className="text-xs text-zinc-500 mt-1">
-                            {fetchedDetails.city}, {fetchedDetails.state} {fetchedDetails.postalCode && `- ${fetchedDetails.postalCode}`}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                          GST Details Verified Successfully
-                        </span>
-                      </div>
-                    </div>
+                    )}
 
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
