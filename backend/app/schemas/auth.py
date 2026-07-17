@@ -17,15 +17,15 @@ class LoginResponse(BaseModel):
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
-    first_name: str
-    last_name: str
+    first_name: str | None = None
+    last_name: str | None = None
     phone: str | None = None
-    company_name: str
-    company_email: EmailStr
-    organization_type: str
-    company_pan: str
-    owner_pan: str
-    company_phone: str
+    company_name: str | None = None
+    company_email: EmailStr | None = None
+    organization_type: str | None = None
+    company_pan: str | None = None
+    owner_pan: str | None = None
+    company_phone: str | None = None
     company_website: str | None = None
     gst_number: str
     address_line1: str | None = None

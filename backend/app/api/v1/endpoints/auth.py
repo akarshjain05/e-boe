@@ -18,6 +18,15 @@ async def register(
     user = await auth_service.register_user(data)
     return {"message": "User registered successfully", "user_id": user.id}
 
+@router.get("/verify-gst/{gst_number}")
+async def verify_gst(
+    gst_number: str,
+    db: AsyncSession = Depends(get_db)
+):
+    auth_service = AuthService(db)
+    details = await auth_service.fetch_gst_details(gst_number)
+    return details
+
 @router.post("/login", response_model=LoginResponse)
 async def login(
     request: Request,

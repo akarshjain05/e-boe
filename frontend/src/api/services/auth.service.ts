@@ -13,28 +13,19 @@ export const authService = {
   },
 
   register: async (data: RegisterFormValues) => {
-    // Transform camelCase frontend schema to snake_case backend payload
+    // Transform frontend schema to backend payload
     const payload = {
-      email: data.email,
-      password: data.password,
-      first_name: data.firstName,
-      last_name: data.lastName,
-      phone: data.phone,
-      company_name: data.companyName,
-      company_email: data.companyEmail,
-      organization_type: data.organizationType,
-      company_pan: data.companyPan,
-      owner_pan: data.ownerPan,
-      company_phone: data.companyPhone,
-      company_website: data.companyWebsite,
       gst_number: data.gstNumber,
-      address_line1: data.addressLine1,
-      city: data.city,
-      state: data.state,
-      country: data.country,
-      postal_code: data.postalCode
+      email: data.email,
+      phone: data.phone,
+      password: data.password
     };
     const response = await api.post('/auth/register', payload);
+    return response.data;
+  },
+
+  verifyGst: async (gstNumber: string) => {
+    const response = await api.get(`/auth/verify-gst/${gstNumber}`);
     return response.data;
   }
 };
