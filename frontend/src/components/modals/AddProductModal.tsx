@@ -44,9 +44,10 @@ interface AddProductModalProps {
   onOpenChange: (open: boolean) => void
   initialSearchTerm?: string
   onSuccessAction?: (productId: string, product?: any) => void
+  productToEdit?: any
 }
 
-export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSuccessAction }: AddProductModalProps) {
+export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSuccessAction, productToEdit }: AddProductModalProps) {
   const queryClient = useQueryClient()
   
   const form = useForm<ProductFormValues>({
@@ -62,14 +63,34 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
     }
   })
 
-  // Auto-fill logic when modal opens with a search term
+  // Auto-fill logic when modal opens with a search term or productToEdit
   useEffect(() => {
-    if (open && initialSearchTerm) {
-      form.setValue('name', initialSearchTerm)
+    if (open) {
+      if (productToEdit) {
+        form.reset({
+          type: productToEdit.type || 'goods',
+          name: productToEdit.name || '',
+          hsn_code: productToEdit.hsn_code || '',
+          unit: productToEdit.unit || '',
+          quantity_in_stock: productToEdit.quantity_in_stock || 0,
+          unit_price: productToEdit.unit_price || 0,
+          tax_rate: productToEdit.tax_rate || 0,
+        })
+      } else {
+        form.reset({
+          type: 'goods',
+          name: initialSearchTerm || '',
+          hsn_code: '',
+          unit: '',
+          quantity_in_stock: 0,
+          unit_price: 0,
+          tax_rate: 0,
+        })
+      }
     }
-  }, [open, initialSearchTerm, form])
+  }, [open, initialSearchTerm, productToEdit, form])
 
-  const mutation = useMutation({
+  const createMutation = useMutation({
     mutationFn: productService.createProduct,
     onSuccess: (data) => {
       toast.success('Product added successfully')
@@ -82,13 +103,32 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
     }
   })
 
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => productService.updateProduct(productToEdit.id, data),
+    onSuccess: (data) => {
+      toast.success('Product updated successfully')
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      if (onSuccessAction) onSuccessAction(data.id, data)
+      handleClose()
+    },
+    onError: () => {
+      toast.error('Failed to update product')
+    }
+  })
+
+  const isPending = createMutation.isPending || updateMutation.isPending
+
   const handleClose = () => {
     form.reset()
     onOpenChange(false)
   }
 
   const onSubmit = (data: ProductFormValues) => {
-    mutation.mutate(data)
+    if (productToEdit) {
+      updateMutation.mutate(data)
+    } else {
+      createMutation.mutate(data)
+    }
   }
 
   return (
@@ -98,10 +138,11 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
     }}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Product</DialogTitle>
+          <DialogTitle>{productToEdit ? 'Edit Product' : 'Add Product'}</DialogTitle>
           <DialogDescription>
-            Fill in the product or service details below.
+            {productToEdit ? 'Update the details for this product or service below.' : 'Fill in the product or service details below.'}
           </DialogDescription>
+
         </DialogHeader>
         
         <Form {...form}>
@@ -256,8 +297,8 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={mutation.isPending} className="bg-indigo-600 hover:bg-indigo-700">
-                {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700">
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Product
               </Button>
             </DialogFooter>

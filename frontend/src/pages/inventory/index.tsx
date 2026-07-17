@@ -22,6 +22,7 @@ export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<string>('goods')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [productToEdit, setProductToEdit] = useState<any>(null)
   const queryClient = useQueryClient()
 
   const deleteMutation = useMutation({
@@ -160,6 +161,12 @@ export default function Inventory() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => {
+                            setProductToEdit(product)
+                            setIsAddModalOpen(true)
+                          }}>
+                            Edit Product
+                          </DropdownMenuItem>
                           <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => handleDelete(product.id)}>
                             Delete Product
                           </DropdownMenuItem>
@@ -186,7 +193,12 @@ export default function Inventory() {
       
       <AddProductModal 
         open={isAddModalOpen} 
-        onOpenChange={setIsAddModalOpen} />
+        onOpenChange={(open) => {
+          setIsAddModalOpen(open)
+          if (!open) setProductToEdit(null)
+        }}
+        productToEdit={productToEdit} 
+      />
     </div>
   )
 }
