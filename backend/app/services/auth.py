@@ -43,8 +43,6 @@ class AuthService:
             "postal_code": None
         }
 
-        api_success = False
-
         if settings.RAPIDAPI_KEY:
             import httpx
             url = f"https://gst-insights-api.p.rapidapi.com/getGSTDetailsUsingGST/{gst_number}"
@@ -68,21 +66,9 @@ class AuthService:
                                 result["city"] = pradr.get('dst')
                                 result["state"] = pradr.get('stcd')
                                 result["postal_code"] = pradr.get('pncd')
-                            api_success = True
             except Exception as e:
                 print(f"RapidAPI GST Lookup failed: {e}")
                 
-        # If API failed, return mock data so the UI flow can be tested
-        if not api_success:
-            result = {
-                "company_name": "Demo Company Pvt Ltd",
-                "legal_name": "Demo Company Private Limited",
-                "address_line1": "123 Tech Park, Phase 1",
-                "city": "Bangalore",
-                "state": "KA",
-                "postal_code": "560001"
-            }
-            
         return result
 
     async def register_user(self, data: RegisterRequest) -> User:
