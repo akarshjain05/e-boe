@@ -14,6 +14,7 @@ import { billService } from '@/api/services/bills'
 import { customerService } from '@/api/services/customers'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { ProductSearch } from '@/components/shared/ProductSearch'
 
 // Schema for a single bill item
 const billItemSchema = z.object({
@@ -349,8 +350,18 @@ export default function EditBill() {
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 pr-10">
                         <FormField control={form.control} name={`items.${index}.description`} render={({ field }) => (
                           <FormItem className="sm:col-span-12">
-                            <FormLabel>Description</FormLabel>
-                            <FormControl><Input placeholder="Item description..." {...field} /></FormControl>
+                            <FormLabel>Product / Description</FormLabel>
+                            <FormControl>
+                              <ProductSearch 
+                                value={field.value}
+                                onSelect={(product) => {
+                                  field.onChange(product.name)
+                                  if (product.hsn_code) form.setValue(`items.${index}.hsn_code`, product.hsn_code)
+                                  if (product.unit_price) form.setValue(`items.${index}.unit_price`, product.unit_price)
+                                  if (product.tax_rate !== undefined) form.setValue(`items.${index}.tax_rate`, product.tax_rate)
+                                }}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
