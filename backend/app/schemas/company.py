@@ -27,6 +27,10 @@ class CompanyBase(BaseModel):
 class CompanyUpdate(CompanyBase):
     pass
 
+class CompanyLookupResponse(CompanyBase):
+    source: str = Field(default="internal")
+    is_active: bool = Field(default=True)
+
 class CompanyResponse(CompanyBase):
     id: UUID
     logo_url: str | None

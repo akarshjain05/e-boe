@@ -9,7 +9,7 @@ from app.core.database import get_db
 from app.models.company import Branch, Company
 from app.models.user import User
 from app.schemas.branch import BranchCreate, BranchResponse
-from app.schemas.company import CompanyResponse, CompanyUpdate
+from app.schemas.company import CompanyResponse, CompanyUpdate, CompanyLookupResponse
 
 router = APIRouter()
 
@@ -111,7 +111,7 @@ async def create_branch(
     
     return branch
 
-@router.get("/lookup/{gstin}", response_model=CompanyResponse)
+@router.get("/lookup/{gstin}", response_model=CompanyLookupResponse)
 async def lookup_company_by_gstin(
     gstin: str,
     db: AsyncSession = Depends(get_db),
@@ -131,10 +131,60 @@ async def lookup_company_by_gstin(
     result = await db.execute(stmt)
     company = result.scalar_one_or_none()
     
-    if not company:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found with this GSTIN"
+    if company:
+        # Return internal company
+        return CompanyLookupResponse(
+            name=company.name,
+            legal_name=company.legal_name,
+            gst_number=company.gst_number,
+            pan_number=company.pan_number,
+            email=company.email,
+            phone=company.phone,
+            address_line1=company.address_line1,
+            address_line2=company.address_line2,
+            city=company.city,
+            state=company.state,
+            country=company.country,
+            postal_code=company.postal_code,
+            source="internal"
         )
+    
+    # Try RapidAPI
+    from app.core.config import settings
+    if settings.RAPIDAPI_KEY:
+        import httpx
+        url = f"https://gst-insights-api.p.rapidapi.com/getGSTDetailsUsingGST/{gstin}"
+        headers = {
+            "x-rapidapi-host": "gst-insights-api.p.rapidapi.com",
+            "x-rapidapi-key": settings.RAPIDAPI_KEY
+        }
         
-    return company
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(url, headers=headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("success") and data.get("data"):
+                        gst_data = data["data"]
+                        pradr = gst_data.get("pradr", {}).get("addr", {})
+                        address1 = f"{pradr.get('bno', '')} {pradr.get('st', '')} {pradr.get('loc', '')}".strip()
+                        
+                        return CompanyLookupResponse(
+                            name=gst_data.get("lgnm") or gst_data.get("tradeNam", "Unknown Company"),
+                            legal_name=gst_data.get("lgnm"),
+                            gst_number=gstin,
+                            pan_number=gstin[2:12] if len(gstin) >= 12 else None,
+                            address_line1=address1[:255] if address1 else None,
+                            city=pradr.get('dst'),
+                            state=pradr.get('stcd'),
+                            postal_code=pradr.get('pncd'),
+                            country="India",
+                            source="rapidapi"
+                        )
+            except Exception as e:
+                print(f"RapidAPI GST Lookup failed: {e}")
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Company not found with this GSTIN"
+    )

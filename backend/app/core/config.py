@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     AWS_S3_BUCKET: str = ""
     AWS_S3_REGION: str = ""
 
+    # RapidAPI
+    RAPIDAPI_KEY: str = ""
+
     # Limits
     RATE_LIMIT_PER_MINUTE: int = 60
     MAX_UPLOAD_SIZE_MB: int = 50
