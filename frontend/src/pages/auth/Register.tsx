@@ -37,6 +37,7 @@ export default function Register() {
   } | null>(null)
   
   const [isVerificationAttempted, setIsVerificationAttempted] = useState(false)
+  const [isConfirmed, setIsConfirmed] = useState(false)
 
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -63,10 +64,12 @@ export default function Register() {
     try {
       const details = await authService.verifyGst(gstNumber)
       setIsVerificationAttempted(true)
+      setIsConfirmed(false)
       
       if (!details.company_name) {
          toast.error("Could not fetch business details automatically. Please proceed anyway.")
          setFetchedDetails(null)
+         setIsConfirmed(true) // skip confirm step if nothing to confirm
          return
       }
       setFetchedDetails({
@@ -80,6 +83,7 @@ export default function Register() {
       toast.success('GST details verified successfully!')
     } catch (err) {
       setIsVerificationAttempted(true)
+      setIsConfirmed(true) // skip confirm step if failed
       toast.error('Could not verify GST number automatically. You can still proceed with registration.')
       setFetchedDetails(null)
     } finally {
@@ -88,8 +92,8 @@ export default function Register() {
   }
 
   async function onSubmit(data: RegisterFormValues) {
-    if (!isVerificationAttempted) {
-      toast.error("Please verify your GST number first.")
+    if (!isVerificationAttempted || !isConfirmed) {
+      toast.error("Please verify and confirm your GST details first.")
       return
     }
 
@@ -194,9 +198,13 @@ export default function Register() {
                               value={field.value?.toUpperCase() || ''}
                               onChange={(e) => {
                                 field.onChange(e)
-                                if (isVerificationAttempted) setIsVerificationAttempted(false)
+                                if (isVerificationAttempted) {
+                                  setIsVerificationAttempted(false)
+                                  setIsConfirmed(false)
+                                }
                                 if (fetchedDetails) setFetchedDetails(null)
                               }}
+                              disabled={isConfirmed}
                             />
                           </div>
                         </FormControl>
@@ -205,15 +213,17 @@ export default function Register() {
                     )}
                   />
                 </div>
-                <Button 
-                  type="button" 
-                  onClick={handleVerifyGst}
-                  disabled={isVerifying || !form.watch("gstNumber") || form.watch("gstNumber").length < 15}
-                  className="h-12 px-6 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 transition-all w-full sm:w-auto"
-                >
-                  {isVerifying ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Search className="h-5 w-5 mr-2" />}
-                  Verify
-                </Button>
+                {!isConfirmed && (
+                  <Button 
+                    type="button" 
+                    onClick={handleVerifyGst}
+                    disabled={isVerifying || !form.watch("gstNumber") || form.watch("gstNumber").length < 15}
+                    className="h-12 px-6 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 transition-all w-full sm:w-auto"
+                  >
+                    {isVerifying ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Search className="h-5 w-5 mr-2" />}
+                    Verify
+                  </Button>
+                )}
               </div>
 
               <AnimatePresence>
@@ -222,10 +232,10 @@ export default function Register() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden"
+                    className="overflow-hidden space-y-6"
                   >
                     {fetchedDetails && (
-                      <div className="p-5 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 space-y-4 mb-6">
+                      <div className="p-5 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 space-y-4">
                         <div className="flex items-start gap-3">
                           <Building2 className="w-5 h-5 text-indigo-500 mt-0.5" />
                           <div>
@@ -258,106 +268,122 @@ export default function Register() {
                       </div>
                     )}
 
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-zinc-700 dark:text-zinc-300">Work Email</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Mail className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
-                                  <Input type="email" placeholder="john@company.com" className="pl-10 h-12 rounded-xl" {...field} />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-zinc-700 dark:text-zinc-300">Phone</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Phone className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
-                                  <Input type="tel" placeholder="+91 9876543210" className="pl-10 h-12 rounded-xl" {...field} value={field.value || ''} />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <FormField
-                          control={form.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-zinc-700 dark:text-zinc-300">Password</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Lock className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
-                                  <Input 
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="••••••••" 
-                                    className="pl-10 pr-10 h-12 rounded-xl" 
-                                    {...field} 
-                                  />
-                                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
-                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                  </button>
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="confirmPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-zinc-700 dark:text-zinc-300">Confirm Password</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Lock className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
-                                  <Input 
-                                    type={showConfirmPassword ? "text" : "password"}
-                                    placeholder="••••••••" 
-                                    className="pl-10 pr-10 h-12 rounded-xl" 
-                                    {...field} 
-                                  />
-                                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
-                                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                  </button>
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
+                    {!isConfirmed && fetchedDetails && (
                       <Button 
-                        type="submit" 
-                        className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-base rounded-xl shadow-md shadow-indigo-600/20 transition-all mt-8"
-                        disabled={isLoading}
+                        type="button" 
+                        onClick={() => setIsConfirmed(true)}
+                        className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-md transition-all"
                       >
-                        {isLoading ? (
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        ) : null}
-                        {isLoading ? 'Creating Account...' : 'Complete Registration'}
+                        Confirm Details
                       </Button>
-                    </div>
+                    )}
+
+                    {isConfirmed && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-6 pt-4 border-t border-zinc-100 dark:border-zinc-800"
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-zinc-700 dark:text-zinc-300">Work Email</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Mail className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
+                                    <Input type="email" placeholder="john@company.com" className="pl-10 h-12 rounded-xl" {...field} />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-zinc-700 dark:text-zinc-300">Phone</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Phone className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
+                                    <Input type="tel" placeholder="+91 9876543210" className="pl-10 h-12 rounded-xl" {...field} value={field.value || ''} />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          <FormField
+                            control={form.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-zinc-700 dark:text-zinc-300">Password</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Lock className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
+                                    <Input 
+                                      type={showPassword ? "text" : "password"}
+                                      placeholder="••••••••" 
+                                      className="pl-10 pr-10 h-12 rounded-xl" 
+                                      {...field} 
+                                    />
+                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                    </button>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="confirmPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-zinc-700 dark:text-zinc-300">Confirm Password</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Lock className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
+                                    <Input 
+                                      type={showConfirmPassword ? "text" : "password"}
+                                      placeholder="••••••••" 
+                                      className="pl-10 pr-10 h-12 rounded-xl" 
+                                      {...field} 
+                                    />
+                                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                    </button>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <Button 
+                          type="submit" 
+                          className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-base rounded-xl shadow-md shadow-indigo-600/20 transition-all mt-8"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? (
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          ) : null}
+                          {isLoading ? 'Creating Account...' : 'Complete Registration'}
+                        </Button>
+                      </motion.div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
