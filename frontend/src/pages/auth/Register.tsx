@@ -193,7 +193,6 @@ export default function Register() {
                             <Hash className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
                             <Input 
                               placeholder="22AAAAA0000A1Z5" 
-                              className="pl-10 h-12 rounded-xl uppercase" 
                               {...field} 
                               value={field.value?.toUpperCase() || ''}
                               onChange={(e) => {
