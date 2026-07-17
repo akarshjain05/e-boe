@@ -55,17 +55,21 @@ class AuthService:
                     response = await client.get(url, headers=headers)
                     if response.status_code == 200:
                         gst_resp = response.json()
-                        if gst_resp.get("success") and gst_resp.get("data"):
-                            gst_data = gst_resp["data"]
-                            result["legal_name"] = gst_data.get("lgnm")
-                            result["company_name"] = gst_data.get("lgnm") or gst_data.get("tradeNam")
+                        if gst_resp.get("success") and gst_resp.get("data") and len(gst_resp["data"]) > 0:
+                            gst_data = gst_resp["data"][0]
+                            result["legal_name"] = gst_data.get("legalName")
+                            result["company_name"] = gst_data.get("tradeName") or gst_data.get("legalName")
                             
-                            pradr = gst_data.get("pradr", {}).get("addr", {})
-                            if pradr:
-                                result["address_line1"] = f"{pradr.get('bno', '')} {pradr.get('st', '')} {pradr.get('loc', '')}".strip()[:255]
-                                result["city"] = pradr.get('dst')
-                                result["state"] = pradr.get('stcd')
-                                result["postal_code"] = pradr.get('pncd')
+                            address_obj = gst_data.get("principalAddress", {}).get("address", {})
+                            if address_obj:
+                                street = address_obj.get("street", "")
+                                bno = address_obj.get("buildingNumber", "")
+                                loc = address_obj.get("location", "")
+                                parts = [p for p in [bno, street, loc] if p]
+                                result["address_line1"] = ", ".join(parts)[:255] if parts else "Address not provided"
+                                result["city"] = address_obj.get("district", address_obj.get("city", ""))
+                                result["state"] = address_obj.get("stateCode", "")
+                                result["postal_code"] = address_obj.get("pincode", "")
             except Exception as e:
                 print(f"RapidAPI GST Lookup failed: {e}")
                 
