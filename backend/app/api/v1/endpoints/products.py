@@ -80,6 +80,27 @@ async def create_product(
     )
     return product
 
+@router.get("/hsn/lookup")
+async def hsn_lookup(
+    code: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Lookup HSN/SAC description by code.
+    """
+    from sqlalchemy import text
+    query = text("SELECT hsn_cd, description FROM hsn_sac_codes WHERE hsn_cd LIKE :code LIMIT 10")
+    # Add wildcard for partial matching if it's not full
+    search_code = f"{code}%" if len(code) < 8 else code
+    result = await db.execute(query, {"code": search_code})
+    rows = result.fetchall()
+    
+    if not rows:
+        return []
+    
+    return [{"hsn_cd": row[0], "description": row[1]} for row in rows]
+
 @router.get("/{id}", response_model=ProductResponse)
 async def read_product(
     *,

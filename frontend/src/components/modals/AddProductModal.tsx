@@ -26,6 +26,7 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { productService } from '@/api/services/products'
+import { HsnSearch } from '@/components/shared/HsnSearch'
 
 const productSchema = z.object({
   type: z.enum(['goods', 'service']).default('goods'),
@@ -189,7 +190,15 @@ export function AddProductModal({ open, onOpenChange, initialSearchTerm, onSucce
                   <FormItem>
                     <FormLabel>{form.watch('type') === 'service' ? 'SAC' : 'HSN'}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. 1234" {...field} />
+                      <HsnSearch 
+                        value={field.value || ''} 
+                        onChange={(code, desc) => {
+                          field.onChange(code);
+                          if (desc && !form.getValues('name')) {
+                            form.setValue('name', desc, { shouldValidate: true });
+                          }
+                        }} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

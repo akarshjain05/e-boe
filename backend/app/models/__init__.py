@@ -31,6 +31,7 @@ from app.models.customer import (
     CustomerTag,
 )
 from app.models.document import Document
+from app.models.hsn_code import HsnCode
 from app.models.notification import Notification
 from app.models.payment import Adjustment, Payment, PaymentProof, Refund
 from app.models.settings import (

@@ -57,6 +57,14 @@ class ProductService {
     const response = await api.delete<Product>(`/products/${id}`);
     return response.data;
   }
+
+  async lookupHsn(code: string) {
+    if (!code) return [];
+    const response = await api.get<{hsn_cd: string, description: string}[]>('/products/hsn/lookup', {
+      params: { code }
+    });
+    return response.data;
+  }
 }
 
 export const productService = new ProductService();
