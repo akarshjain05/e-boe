@@ -18,7 +18,14 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
-const sidebarNavItems = [
+type SidebarNavItem = {
+  title: string;
+  href: string;
+  icon: any;
+  subItems?: { title: string; href: string }[];
+};
+
+const sidebarNavItems: SidebarNavItem[] = [
   {
     title: "Dashboard",
     href: "/",
@@ -165,7 +172,7 @@ export function Sidebar() {
                         className="overflow-hidden"
                       >
                         <div className="ml-9 mt-1 flex flex-col gap-1 border-l border-zinc-200 dark:border-zinc-800 pl-3">
-                          {item.subItems.map((sub, subIdx) => {
+                          {item.subItems?.map((sub, subIdx) => {
                             const isSubActive = pathname === sub.href
                             return (
                               <Link
