@@ -108,12 +108,19 @@ export default function IssueBillOfExchange() {
       toast.error("Please select at least one bill/invoice.");
       return;
     }
-    if (!myCompany || !selectedCustomer) return;
+    if (!myCompany) {
+      toast.error("Company profile not found. Please complete your company profile.");
+      return;
+    }
+    if (!selectedCustomer) {
+      toast.error("Customer not found.");
+      return;
+    }
 
     createMutation.mutate({
       customer_id: values.customer_id,
       drawer_name: myCompany.name,
-      drawer_address: myCompany.address || undefined,
+      drawer_address: myCompany.address_line1 || undefined,
       drawer_phone: myCompany.phone || undefined,
       drawer_email: myCompany.email || undefined,
       drawee_name: selectedCustomer.name,
