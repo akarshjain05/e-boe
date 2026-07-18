@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, ScrollText } from 'lucide-react';
+import { Search, ScrollText, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { boeService } from '@/api/services/billsOfExchange';
 import { formatCurrency } from '@/lib/utils';
@@ -38,6 +39,17 @@ export default function ListBillsOfExchange() {
     },
     onError: () => {
       toast.error('Failed to accept Bill of Exchange');
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => boeService.deleteBillOfExchange(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
+      toast.success('Bill of Exchange deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete Bill of Exchange');
     }
   });
 
@@ -110,7 +122,11 @@ export default function ListBillsOfExchange() {
                   </tr>
                 ) : (
                   filteredBills.map((bill) => (
-                    <tr key={bill.id} className="border-b transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50">
+                    <tr 
+                      key={bill.id} 
+                      className="border-b transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 cursor-pointer"
+                      onClick={() => setSelectedBoeId(bill.id)}
+                    >
                       <td className="p-4 align-middle">
                         <div className="font-medium">
                           {activeTab === 'issued_by_me' ? bill.drawee_name : bill.drawer_name}
@@ -125,19 +141,50 @@ export default function ListBillsOfExchange() {
                           {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
                         </span>
                       </td>
-                      <td className="p-4 align-middle text-right space-x-2">
+                      <td className="p-4 align-middle text-right space-x-2" onClick={(e) => e.stopPropagation()}>
                         {activeTab === 'issued_against_me' && bill.status === 'issued' && (
                           <Button 
                             variant="default" 
                             size="sm" 
                             className="bg-green-600 hover:bg-green-700 text-white"
-                            onClick={() => acceptMutation.mutate(bill.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              acceptMutation.mutate(bill.id);
+                            }}
                             disabled={acceptMutation.isPending}
                           >
                             Accept
                           </Button>
                         )}
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedBoeId(bill.id)}>View</Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              toast.info('Edit functionality coming soon');
+                            }}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              <span>Edit</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Are you sure you want to delete this bill of exchange?')) {
+                                  deleteMutation.mutate(bill.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              <span>Delete</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))
