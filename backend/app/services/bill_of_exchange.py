@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy import select, or_, and_
 
 from app.models.bill_of_exchange import BillOfExchange, BillOfExchangeInvoice
 from app.schemas.bill_of_exchange import BillOfExchangeCreate, BillOfExchangeUpdate
@@ -14,6 +15,30 @@ class BillOfExchangeService:
     async def create_with_invoices(
         self, db: AsyncSession, *, obj_in: BillOfExchangeCreate, company_id: UUID, created_by: UUID
     ) -> BillOfExchange:
+        # Check for duplicates
+        stmt = select(BillOfExchangeInvoice).join(BillOfExchange).where(
+            BillOfExchangeInvoice.bill_id.in_(obj_in.invoice_ids),
+            BillOfExchange.status.notin_(["cancelled", "rejected"]),
+            BillOfExchange.is_deleted == False
+        )
+        existing = (await db.execute(stmt)).scalars().first()
+        if existing:
+            raise HTTPException(status_code=400, detail="One or more selected bills are already associated with an active Bill of Exchange")
+
+        # Find network drawee
+        from app.models.customer import Customer
+        from app.models.company import Company
+        network_drawee_company_id = None
+        
+        stmt = select(Customer).where(Customer.id == obj_in.customer_id)
+        customer = (await db.execute(stmt)).scalar_one_or_none()
+        
+        if customer and customer.gst_number:
+            stmt = select(Company).where(Company.gst_number == customer.gst_number, Company.is_active == True)
+            target_company = (await db.execute(stmt)).scalar_one_or_none()
+            if target_company:
+                network_drawee_company_id = target_company.id
+
         # Create the BOE object
         db_obj = BillOfExchange(
             company_id=company_id,
@@ -32,7 +57,8 @@ class BillOfExchangeService:
             due_date=obj_in.due_date,
             place_of_issue=obj_in.place_of_issue,
             status="issued",
-            created_by=created_by
+            created_by=created_by,
+            network_drawee_company_id=network_drawee_company_id
         )
         db.add(db_obj)
         await db.flush()
@@ -58,7 +84,12 @@ class BillOfExchangeService:
             BillOfExchange.is_deleted == False
         )
         if company_id:
-            query = query.where(BillOfExchange.company_id == company_id)
+            query = query.where(
+                or_(
+                    BillOfExchange.company_id == company_id,
+                    BillOfExchange.network_drawee_company_id == company_id
+                )
+            )
             
         result = await db.execute(query)
         return result.scalars().first()
@@ -73,7 +104,10 @@ class BillOfExchangeService:
         customer_id: Optional[UUID] = None
     ) -> List[BillOfExchange]:
         query = select(BillOfExchange).options(selectinload(BillOfExchange.invoices)).where(
-            BillOfExchange.company_id == company_id,
+            or_(
+                BillOfExchange.company_id == company_id,
+                BillOfExchange.network_drawee_company_id == company_id
+            ),
             BillOfExchange.is_deleted == False
         )
         

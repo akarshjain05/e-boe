@@ -3,6 +3,7 @@ import api from '../axios';
 export interface BillOfExchange {
   id: string;
   company_id: string;
+  network_drawee_company_id?: string;
   customer_id: string;
   drawer_name: string;
   drawer_address?: string;
@@ -63,7 +64,7 @@ class BillsOfExchangeService {
     return response.data;
   }
 
-  async updateBillOfExchange(id: string, data: Partial<BillOfExchangeCreate>) {
+  async updateBillOfExchange(id: string, data: Partial<BillOfExchangeCreate> & { status?: string }) {
     const response = await api.put<BillOfExchange>(`/bills-of-exchange/${id}`, data);
     return response.data;
   }

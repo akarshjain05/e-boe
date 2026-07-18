@@ -14,6 +14,7 @@ class BillOfExchange(Base, AuditMixin):
 
     company_id: Mapped[UUID] = mapped_column(ForeignKey("companies.id"))
     customer_id: Mapped[UUID] = mapped_column(ForeignKey("customers.id"))
+    network_drawee_company_id: Mapped[UUID | None] = mapped_column(ForeignKey("companies.id"), nullable=True)
     
     # Drawer (Issuer) Details
     drawer_name: Mapped[str] = mapped_column(String(255))
@@ -43,6 +44,7 @@ class BillOfExchange(Base, AuditMixin):
     # Relationships
     company = relationship("Company", foreign_keys="[BillOfExchange.company_id]")
     customer = relationship("Customer", foreign_keys="[BillOfExchange.customer_id]")
+    network_drawee_company = relationship("Company", foreign_keys="[BillOfExchange.network_drawee_company_id]")
     invoices = relationship("BillOfExchangeInvoice", back_populates="bill_of_exchange", cascade="all, delete-orphan")
 
 
