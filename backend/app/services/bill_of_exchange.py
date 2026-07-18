@@ -1,16 +1,16 @@
 from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.bill_of_exchange import BillOfExchange, BillOfExchangeInvoice
 from app.schemas.bill_of_exchange import BillOfExchangeCreate, BillOfExchangeUpdate
-from app.services.base import BaseService
 
 
-class BillOfExchangeService(BaseService[BillOfExchange, BillOfExchangeCreate, BillOfExchangeUpdate]):
+class BillOfExchangeService:
     async def create_with_invoices(
         self, db: AsyncSession, *, obj_in: BillOfExchangeCreate, company_id: UUID, created_by: UUID
     ) -> BillOfExchange:
@@ -84,5 +84,26 @@ class BillOfExchangeService(BaseService[BillOfExchange, BillOfExchangeCreate, Bi
         result = await db.execute(query)
         return list(result.scalars().all())
 
+    async def update(
+        self, db: AsyncSession, *, db_obj: BillOfExchange, obj_in: BillOfExchangeUpdate
+    ) -> BillOfExchange:
+        update_data = obj_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_obj, field, value)
+            
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj
 
-bill_of_exchange_service = BillOfExchangeService(BillOfExchange)
+    async def remove(self, db: AsyncSession, *, id: UUID) -> BillOfExchange:
+        obj = await self.get(db, id=id)
+        if not obj:
+            raise HTTPException(status_code=404, detail="Bill of exchange not found")
+        obj.is_deleted = True
+        db.add(obj)
+        await db.commit()
+        return obj
+
+
+bill_of_exchange_service = BillOfExchangeService()
