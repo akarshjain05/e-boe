@@ -24,18 +24,7 @@ export default function ListBillsOfExchange() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-6 pb-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Bills of Exchange</h1>
-          <p className="text-sm text-zinc-500">Manage and track your issued bills of exchange.</p>
-        </div>
-        <Link to="/bills-of-exchange/issue">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Issue Bill
-          </Button>
-        </Link>
-      </div>
+
 
       <div className="px-6 pb-6">
         <div className="flex items-center gap-4 mb-6">

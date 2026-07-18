@@ -43,12 +43,6 @@ const sidebarNavItems = [
     title: "Bills of Exchange",
     href: "/bills-of-exchange",
     icon: ScrollText,
-    subItems: [
-      { title: "All Bills", href: "/bills-of-exchange" },
-      { title: "Issue Bill", href: "/bills-of-exchange/issue" },
-      { title: "Endorse Bill", href: "/bills-of-exchange/endorse" },
-      { title: "Discount Bill", href: "/bills-of-exchange/discount" },
-    ]
   },
   {
     title: "Payments",

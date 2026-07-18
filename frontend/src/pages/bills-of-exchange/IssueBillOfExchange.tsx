@@ -149,12 +149,7 @@ export default function IssueBillOfExchange() {
 
   return (
     <div className="flex flex-col h-full bg-zinc-50 dark:bg-zinc-950">
-      <div className="flex items-center justify-between p-6 pb-4 border-b">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Issue Bill of Exchange</h1>
-          <p className="text-sm text-zinc-500">Create a legal instrument directing a customer to pay a specific amount.</p>
-        </div>
-      </div>
+
 
       <div className="p-6 overflow-auto">
         <Form {...form}>
