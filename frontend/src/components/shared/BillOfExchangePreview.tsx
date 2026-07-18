@@ -71,7 +71,7 @@ export function BillOfExchangePreview({ id }: { id: string }) {
       {/* Amount Header */}
       <div className="bg-[#D2691E] border-b-2 border-black py-1 px-4 flex">
         <span className="font-bold text-[#8B4513] w-24">Amount :</span>
-        <span className="font-bold text-black ml-4">₹{formatCurrency(boe.amount)}</span>
+        <span className="font-bold text-black ml-4">{formatCurrency(boe.amount)}</span>
       </div>
 
       {/* Description Content */}

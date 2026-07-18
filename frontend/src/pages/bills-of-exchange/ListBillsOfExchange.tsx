@@ -81,7 +81,7 @@ export default function ListBillsOfExchange() {
                       </td>
                       <td className="p-4 align-middle">{format(new Date(bill.issue_date), 'MMM dd, yyyy')}</td>
                       <td className="p-4 align-middle">{format(new Date(bill.due_date), 'MMM dd, yyyy')}</td>
-                      <td className="p-4 align-middle font-medium">₹{formatCurrency(bill.amount)}</td>
+                      <td className="p-4 align-middle font-medium">{formatCurrency(bill.amount)}</td>
                       <td className="p-4 align-middle">
                         <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${bill.status === 'issued' ? 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80' : 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>
                           {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
@@ -105,8 +105,10 @@ export default function ListBillsOfExchange() {
             <DialogTitle>Bill of Exchange</DialogTitle>
             <DialogDescription>View the details of this bill of exchange instrument.</DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-auto bg-zinc-100 dark:bg-zinc-950 p-6 flex justify-center">
-            {selectedBoeId && <BillOfExchangePreview id={selectedBoeId} />}
+          <div className="flex-1 overflow-auto bg-zinc-100 dark:bg-zinc-950 p-6">
+            <div className="mx-auto w-fit pb-8">
+              {selectedBoeId && <BillOfExchangePreview id={selectedBoeId} />}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

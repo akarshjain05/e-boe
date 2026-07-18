@@ -154,8 +154,10 @@ export default function IssueBillOfExchange() {
             </Button>
           </div>
         </div>
-        <div className="flex-1 overflow-auto flex justify-center">
-          <BillOfExchangePreview id={createdBoeId} />
+        <div className="flex-1 overflow-auto">
+          <div className="mx-auto w-fit pb-8">
+            <BillOfExchangePreview id={createdBoeId} />
+          </div>
         </div>
       </div>
     );
@@ -248,11 +250,11 @@ export default function IssueBillOfExchange() {
                             Invoice #{bill.id.substring(0, 8).toUpperCase()}
                           </label>
                           <p className="text-sm text-zinc-500 mt-1">
-                            Issued: {bill.issue_date} • Outstanding: ₹{formatCurrency(Number(bill.outstanding_amount))}
+                            Issued: {bill.issue_date} • Outstanding: {formatCurrency(Number(bill.outstanding_amount))}
                           </p>
                         </div>
                         <div className="font-bold text-right">
-                          ₹{formatCurrency(Number(bill.total_amount))}
+                          {formatCurrency(Number(bill.total_amount))}
                         </div>
                       </div>
                     ))}
@@ -263,7 +265,7 @@ export default function IssueBillOfExchange() {
                   <div className="text-right">
                     <span className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Total Bill of Exchange Amount</span>
                     <div className="text-3xl font-bold text-indigo-950 dark:text-indigo-300">
-                      ₹{formatCurrency(totalAmount)}
+                      {formatCurrency(totalAmount)}
                     </div>
                   </div>
                 </div>
