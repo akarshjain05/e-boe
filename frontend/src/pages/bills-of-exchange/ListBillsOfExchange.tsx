@@ -6,11 +6,14 @@ import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { boeService } from '@/api/services/billsOfExchange';
 import { formatCurrency } from '@/lib/utils';
+import { BillOfExchangePreview } from '@/components/shared/BillOfExchangePreview';
 
 export default function ListBillsOfExchange() {
   const [search, setSearch] = useState('');
+  const [selectedBoeId, setSelectedBoeId] = useState<string | null>(null);
 
   const { data: bills = [], isLoading } = useQuery({
     queryKey: ['bills-of-exchange'],
@@ -85,7 +88,7 @@ export default function ListBillsOfExchange() {
                         </span>
                       </td>
                       <td className="p-4 align-middle text-right">
-                        <Button variant="ghost" size="sm">View</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedBoeId(bill.id)}>View</Button>
                       </td>
                     </tr>
                   ))
@@ -95,6 +98,18 @@ export default function ListBillsOfExchange() {
           </div>
         </div>
       </div>
+
+      <Dialog open={!!selectedBoeId} onOpenChange={(open) => !open && setSelectedBoeId(null)}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="px-6 py-4 border-b shrink-0 bg-zinc-50 dark:bg-zinc-900/50">
+            <DialogTitle>Bill of Exchange</DialogTitle>
+            <DialogDescription>View the details of this bill of exchange instrument.</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto bg-zinc-100 dark:bg-zinc-950 p-6 flex justify-center">
+            {selectedBoeId && <BillOfExchangePreview id={selectedBoeId} />}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

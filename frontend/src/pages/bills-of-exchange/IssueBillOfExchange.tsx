@@ -145,7 +145,10 @@ export default function IssueBillOfExchange() {
             <Button variant="outline" onClick={() => navigate('/bills-of-exchange')}>
               Back to List
             </Button>
-            <Button className="gap-2" onClick={() => toast.success("Sent to drawee successfully!")}>
+            <Button className="gap-2" onClick={() => {
+              toast.success("Sent to drawee successfully!");
+              navigate('/bills-of-exchange');
+            }}>
               <Send className="h-4 w-4" />
               Send to Drawee for Acceptance
             </Button>
