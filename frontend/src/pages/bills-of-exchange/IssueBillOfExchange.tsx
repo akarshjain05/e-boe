@@ -11,8 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import { customerService } from '@/api/services/customers';
 import { billService } from '@/api/services/bills';
@@ -35,6 +39,9 @@ export default function IssueBillOfExchange() {
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [createdBoeId, setCreatedBoeId] = useState<string | null>(null);
+
+  const [openCustomerCombobox, setOpenCustomerCombobox] = useState(false);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
 
   // Queries
   const { data: myCompany } = useQuery({
@@ -183,21 +190,72 @@ export default function IssueBillOfExchange() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Customer</FormLabel>
-                      <Select onValueChange={(val) => {
-                        field.onChange(val);
-                        setSelectedInvoices([]); // Reset selected invoices
-                      }} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a customer" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {customers.map(c => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={openCustomerCombobox} onOpenChange={setOpenCustomerCombobox}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openCustomerCombobox}
+                              className={cn(
+                                "w-full justify-between font-normal bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? customers.find((c) => c.id === field.value)?.name
+                                : "Select a customer..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0" align="start">
+                          <Command>
+                            <CommandInput 
+                              placeholder="Search by name, phone, or GST..."
+                              value={customerSearchQuery}
+                              onValueChange={setCustomerSearchQuery}
+                            />
+                            <CommandList>
+                              <CommandEmpty className="py-2 px-2 text-sm text-center">
+                                <p className="text-zinc-500">No customer found.</p>
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {customers.map((customer) => {
+                                  const searchValue = `${customer.name} ${customer.phone || ''} ${customer.gst_number || ''}`;
+                                  
+                                  return (
+                                    <CommandItem
+                                      key={customer.id}
+                                      value={searchValue}
+                                      onSelect={() => {
+                                        field.onChange(customer.id);
+                                        setSelectedInvoices([]); // Reset selected invoices
+                                        setOpenCustomerCombobox(false);
+                                      }}
+                                    >
+                                      <div className="flex w-full items-center justify-between">
+                                        <div className="flex items-center">
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              customer.id === field.value ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                          <span>{customer.name}</span>
+                                        </div>
+                                        <span className="text-xs italic text-zinc-400 dark:text-zinc-500 ml-4">
+                                          {customer.customer_type === 'B2B' ? customer.gst_number : customer.phone}
+                                        </span>
+                                      </div>
+                                    </CommandItem>
+                                  );
+                                })}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
