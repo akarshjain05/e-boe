@@ -15,6 +15,8 @@ const Bills = lazy(() => import('./pages/bills'));
 const CreateBill = lazy(() => import('./pages/bills/CreateBill'));
 const EditBill = lazy(() => import('./pages/bills/EditBill'));
 const BillDetails = lazy(() => import('./pages/bills/BillDetails'));
+const ListBillsOfExchange = lazy(() => import('./pages/bills-of-exchange/ListBillsOfExchange'));
+const IssueBillOfExchange = lazy(() => import('./pages/bills-of-exchange/IssueBillOfExchange'));
 const Payments = lazy(() => import('./pages/payments'));
 const Passbook = lazy(() => import('./pages/passbook'));
 const Reports = lazy(() => import('./pages/reports'));
@@ -71,6 +73,12 @@ function App() {
             <Route path="create" element={<CreateBill />} />
             <Route path=":id" element={<BillDetails />} />
             <Route path=":id/edit" element={<EditBill />} />
+          </Route>
+          <Route path="bills-of-exchange">
+            <Route index element={<ListBillsOfExchange />} />
+            <Route path="issue" element={<IssueBillOfExchange />} />
+            <Route path="endorse" element={<div className="p-8">Endorse Bill Feature (Coming Soon)</div>} />
+            <Route path="discount" element={<div className="p-8">Discount Bill Feature (Coming Soon)</div>} />
           </Route>
           <Route path="payments" element={<Payments />} />
           <Route path="passbook" element={<Passbook />} />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   LayoutDashboard, 
   Users, 
@@ -11,7 +11,9 @@ import {
   LogOut,
   ChevronRight,
   BookOpen,
-  Package
+  Package,
+  ScrollText,
+  ChevronDown
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
@@ -36,6 +38,17 @@ const sidebarNavItems = [
     title: "Bills",
     href: "/bills",
     icon: FileText,
+  },
+  {
+    title: "Bills of Exchange",
+    href: "/bills-of-exchange",
+    icon: ScrollText,
+    subItems: [
+      { title: "All Bills", href: "/bills-of-exchange" },
+      { title: "Issue Bill", href: "/bills-of-exchange/issue" },
+      { title: "Endorse Bill", href: "/bills-of-exchange/endorse" },
+      { title: "Discount Bill", href: "/bills-of-exchange/discount" },
+    ]
   },
   {
     title: "Payments",
@@ -63,6 +76,16 @@ export function Sidebar() {
   const { pathname } = useLocation()
   const { logout, user } = useAuth()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [expandedNav, setExpandedNav] = useState<string | null>("Bills of Exchange")
+
+  const toggleNav = (title: string) => {
+    if (expandedNav === title) {
+      setExpandedNav(null)
+    } else {
+      setExpandedNav(title)
+      if (isCollapsed) setIsCollapsed(false)
+    }
+  }
 
   return (
     <div className={cn(
@@ -90,30 +113,87 @@ export function Sidebar() {
       <div className="flex-1 overflow-auto py-4">
         <nav className="grid gap-1 px-3">
           {sidebarNavItems.map((item, index) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+            const hasSubItems = !!item.subItems
+            const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`))
+            const isExpanded = expandedNav === item.title
+
             return (
-              <Link
-                key={index}
-                to={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
-                  isActive 
-                    ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 font-medium" 
-                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-50"
+              <div key={index} className="flex flex-col">
+                {hasSubItems ? (
+                  <button
+                    onClick={() => toggleNav(item.title)}
+                    className={cn(
+                      "flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors w-full text-left",
+                      isActive 
+                        ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 font-medium" 
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-50"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon className="h-5 w-5" />
+                      {!isCollapsed && <span>{item.title}</span>}
+                    </div>
+                    {!isCollapsed && (
+                      <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded ? "rotate-180" : "")} />
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
+                      isActive 
+                        ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 font-medium" 
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-50"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {!isCollapsed && <span>{item.title}</span>}
+                    {isActive && !isCollapsed && !hasSubItems && (
+                      <motion.div
+                        layoutId="active-nav-indicator"
+                        className="absolute left-0 w-1 h-8 bg-indigo-600 rounded-r-full"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                  </Link>
                 )}
-              >
-                <item.icon className="h-5 w-5" />
-                {!isCollapsed && <span>{item.title}</span>}
-                {isActive && !isCollapsed && (
-                  <motion.div
-                    layoutId="active-nav-indicator"
-                    className="absolute left-0 w-1 h-8 bg-indigo-600 rounded-r-full"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
+                
+                {hasSubItems && !isCollapsed && (
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="ml-9 mt-1 flex flex-col gap-1 border-l border-zinc-200 dark:border-zinc-800 pl-3">
+                          {item.subItems.map((sub, subIdx) => {
+                            const isSubActive = pathname === sub.href
+                            return (
+                              <Link
+                                key={subIdx}
+                                to={sub.href}
+                                className={cn(
+                                  "rounded-md px-3 py-1.5 text-sm transition-colors",
+                                  isSubActive
+                                    ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 font-medium"
+                                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+                                )}
+                              >
+                                {sub.title}
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 )}
-              </Link>
+              </div>
             )
           })}
         </nav>

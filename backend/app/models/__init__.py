@@ -32,6 +32,7 @@ from app.models.customer import (
 )
 from app.models.document import Document
 from app.models.hsn_code import HsnCode
+from app.models.bill_of_exchange import BillOfExchange, BillOfExchangeInvoice
 from app.models.notification import Notification
 from app.models.payment import Adjustment, Payment, PaymentProof, Refund
 from app.models.settings import (
