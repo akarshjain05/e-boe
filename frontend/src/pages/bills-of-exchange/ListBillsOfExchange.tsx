@@ -11,7 +11,7 @@ import { boeService } from '@/api/services/billsOfExchange';
 import { formatCurrency } from '@/lib/utils';
 import { BillOfExchangePreview } from '@/components/shared/BillOfExchangePreview';
 
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
