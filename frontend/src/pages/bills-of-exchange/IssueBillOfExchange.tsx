@@ -68,9 +68,13 @@ export default function IssueBillOfExchange() {
     enabled: !!selectedCustomerId
   });
 
-  // Filter bills for the specific customer that are unpaid/partially paid
+  // Filter bills for the specific customer that are accepted/overdue and unpaid
   const availableBills = useMemo(() => {
-    return customerBills.filter(b => b.customer_id === selectedCustomerId && b.status !== 'paid');
+    return customerBills.filter(b => 
+      b.customer_id === selectedCustomerId && 
+      ['accepted', 'overdue'].includes(b.status) &&
+      Number(b.outstanding_amount) > 0
+    );
   }, [customerBills, selectedCustomerId]);
 
   // Calculate total amount
