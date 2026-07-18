@@ -44,6 +44,7 @@ class BillOfExchangeInvoiceResponse(BaseModel):
 class BillOfExchangeResponse(BillOfExchangeBase):
     id: UUID
     company_id: UUID
+    network_drawee_company_id: Optional[UUID] = None
     status: str
     boe_pdf_url: Optional[str] = None
     accepted_at: Optional[datetime] = None
