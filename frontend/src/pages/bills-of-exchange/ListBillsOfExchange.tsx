@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, ScrollText, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { Search, ScrollText, MoreHorizontal, Edit, Trash2, Send, ArrowRightLeft, Banknote } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -33,13 +33,24 @@ export default function ListBillsOfExchange() {
   });
 
   const acceptMutation = useMutation({
-    mutationFn: (id: string) => boeService.updateBillOfExchange(id, { status: 'accepted' }),
+    mutationFn: (id: string) => boeService.acceptBillOfExchange(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
       toast.success('Bill of Exchange accepted successfully');
     },
     onError: () => {
       toast.error('Failed to accept Bill of Exchange');
+    }
+  });
+
+  const sendMutation = useMutation({
+    mutationFn: (id: string) => boeService.sendForAcceptance(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
+      toast.success('Bill of Exchange sent to Drawee for acceptance');
+    },
+    onError: () => {
+      toast.error('Failed to send Bill of Exchange');
     }
   });
 
@@ -51,6 +62,28 @@ export default function ListBillsOfExchange() {
     },
     onError: () => {
       toast.error('Failed to delete Bill of Exchange');
+    }
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: boeService.cancelBill,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
+      toast.success('Bill of Exchange cancelled successfully');
+    },
+    onError: () => {
+      toast.error('Failed to cancel Bill of Exchange');
+    }
+  });
+
+  const listForDiscountingMutation = useMutation({
+    mutationFn: boeService.listForDiscounting,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
+      toast.success('Bill listed for discounting successfully');
+    },
+    onError: () => {
+      toast.error('Failed to list bill for discounting');
     }
   });
 
@@ -143,7 +176,7 @@ export default function ListBillsOfExchange() {
                         </span>
                       </td>
                       <td className="p-4 align-middle text-right space-x-2" onClick={(e) => e.stopPropagation()}>
-                        {activeTab === 'issued_against_me' && bill.status === 'issued' && (
+                        {activeTab === 'issued_against_me' && ['issued', 'sent'].includes(bill.status) && (
                           <Button 
                             variant="default" 
                             size="sm" 
@@ -165,27 +198,81 @@ export default function ListBillsOfExchange() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {bill.status === 'issued' && (
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                navigate('/bills-of-exchange/edit/' + bill.id);
-                              }}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                <span>Edit</span>
+                            {bill.status === 'draft' && activeTab === 'issued_by_me' && (
+                              <>
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation();
+                                  sendMutation.mutate(bill.id);
+                                }} disabled={sendMutation.isPending}>
+                                  <Send className="mr-2 h-4 w-4" />
+                                  <span>Issue & Send</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate('/bills-of-exchange/edit/' + bill.id);
+                                }}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  <span>Edit Draft</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm('Are you sure you want to delete this draft?')) {
+                                      deleteMutation.mutate(bill.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  <span>Delete Draft</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+
+                            {bill.status === 'issued' && activeTab === 'issued_by_me' && (
+                              <DropdownMenuItem 
+                                className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (window.confirm('Are you sure you want to cancel this bill?')) {
+                                    cancelMutation.mutate(bill.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Cancel Bill</span>
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem 
-                              className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm('Are you sure you want to delete this bill of exchange?')) {
-                                  deleteMutation.mutate(bill.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>Delete</span>
-                            </DropdownMenuItem>
+                            
+                            {['accepted', 'endorsed'].includes(bill.status) && activeTab === 'issued_by_me' && (
+                              <>
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate('/bills-of-exchange/endorse/' + bill.id);
+                                }}>
+                                  <ArrowRightLeft className="mr-2 h-4 w-4" />
+                                  <span>Endorse Bill</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation();
+                                  listForDiscountingMutation.mutate(bill.id);
+                                }} disabled={listForDiscountingMutation.isPending}>
+                                  <Banknote className="mr-2 h-4 w-4" />
+                                  <span>List for Discounting</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            
+                            {['listed_for_discounting', 'bidding_open', 'bid_accepted'].includes(bill.status) && activeTab === 'issued_by_me' && (
+                               <DropdownMenuItem onClick={(e) => {
+                                 e.stopPropagation();
+                                 navigate('/bills-of-exchange/discount/' + bill.id);
+                               }}>
+                                 <Banknote className="mr-2 h-4 w-4" />
+                                 <span>Bidding & Discounting</span>
+                               </DropdownMenuItem>
+                            )}
+
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>

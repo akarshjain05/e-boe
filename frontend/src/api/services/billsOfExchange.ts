@@ -4,6 +4,7 @@ export interface BillOfExchange {
   id: string;
   company_id: string;
   network_drawee_company_id?: string;
+  current_holder_company_id?: string;
   customer_id: string;
   drawer_name: string;
   drawer_address?: string;
@@ -21,6 +22,11 @@ export interface BillOfExchange {
   status: string;
   boe_pdf_url?: string;
   accepted_at?: string;
+  rejected_at?: string;
+  rejected_reason?: string;
+  public_access_token?: string;
+  is_negotiable?: boolean;
+  endorsement_restricted?: boolean;
   created_at: string;
   updated_at: string;
   invoices: {
@@ -28,6 +34,25 @@ export interface BillOfExchange {
     bill_of_exchange_id: string;
     bill_id: string;
   }[];
+  endorsements: BOEEndorsement[];
+}
+
+export interface BOEEndorsement {
+  id: string;
+  bill_of_exchange_id: string;
+  sequence_no: number;
+  endorser_company_id: string;
+  endorser_name: string;
+  endorser_signature_ref?: string;
+  endorsee_company_id?: string;
+  endorsee_name: string;
+  endorsee_address?: string;
+  endorsee_phone?: string;
+  endorsee_email?: string;
+  endorsement_type: string;
+  endorsement_date: string;
+  remarks?: string;
+  is_active: boolean;
 }
 
 export interface BillOfExchangeCreate {
@@ -45,6 +70,8 @@ export interface BillOfExchangeCreate {
   issue_date: string;
   due_date: string;
   place_of_issue?: string;
+  is_negotiable?: boolean;
+  endorsement_restricted?: boolean;
   invoice_ids: string[];
 }
 

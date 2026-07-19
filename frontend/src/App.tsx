@@ -30,6 +30,7 @@ const ServerError = lazy(() => import('./pages/errors/ServerError'));
 
 // Public Portal Route
 const PublicBillView = lazy(() => import('./pages/public/PublicBillView').then(module => ({ default: module.PublicBillView })));
+const PublicBoeView = lazy(() => import('./pages/public/PublicBoeView').then(module => ({ default: module.PublicBoeView })));
 
 const Spinner = () => (
   <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
@@ -66,6 +67,7 @@ function App() {
         
         {/* Public Portal Route */}
         <Route path="/bill/:token" element={<PublicBillView />} />
+        <Route path="/boe/:token" element={<PublicBoeView />} />
         
         {/* Protected Routes inside App Layout */}
         <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -82,8 +84,8 @@ function App() {
             <Route index element={<ListBillsOfExchange />} />
             <Route path="issue" element={<IssueBillOfExchange />} />
             <Route path="edit/:id" element={<EditBillOfExchange />} />
-            <Route path="endorse" element={<EndorseBill />} />
-            <Route path="discount" element={<DiscountBill />} />
+            <Route path="endorse/:id" element={<EndorseBill />} />
+            <Route path="discount/:id" element={<DiscountBill />} />
           </Route>
           <Route path="payments" element={<Payments />} />
           <Route path="passbook" element={<Passbook />} />

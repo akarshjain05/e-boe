@@ -31,6 +31,8 @@ const issueFormSchema = z.object({
   due_date: z.string().min(1, "Due date is required"),
   place_of_issue: z.string().min(1, "Place of issue is required"),
   description: z.string().optional(),
+  is_negotiable: z.boolean().default(true),
+  endorsement_restricted: z.boolean().default(false),
 });
 
 export default function IssueBillOfExchange() {
@@ -74,6 +76,8 @@ export default function IssueBillOfExchange() {
       due_date: "",
       place_of_issue: myCompany?.address?.split(',')[0] || "",
       description: "For value received",
+      is_negotiable: true,
+      endorsement_restricted: false,
     }
   });
 
@@ -115,11 +119,22 @@ export default function IssueBillOfExchange() {
       setCreatedBoeId(data.id);
       setShowPreview(true);
       queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
-      toast.success("Bill of Exchange issued successfully!");
+      toast.success('Bill of Exchange issued successfully!');
     },
     onError: () => {
-      toast.error("Failed to issue Bill of Exchange.");
-    }
+      toast.error('Failed to issue Bill of Exchange.');
+    },
+  });
+
+  const sendMutation = useMutation({
+    mutationFn: (id: string) => boeService.sendForAcceptance(id),
+    onSuccess: () => {
+      toast.success("Sent to drawee successfully!");
+      navigate('/bills-of-exchange');
+    },
+    onError: () => {
+      toast.error("Failed to send Bill of Exchange.");
+    },
   });
 
   const onSubmit = (values: z.infer<typeof issueFormSchema>) => {
@@ -147,10 +162,12 @@ export default function IssueBillOfExchange() {
       drawee_phone: selectedCustomer.phone || undefined,
       drawee_email: selectedCustomer.email || undefined,
       amount: totalAmount,
-      description: values.description,
       issue_date: values.issue_date,
       due_date: values.due_date,
       place_of_issue: values.place_of_issue,
+      description: values.description,
+      is_negotiable: values.is_negotiable,
+      endorsement_restricted: values.endorsement_restricted,
       invoice_ids: selectedInvoices,
     });
   };
@@ -162,13 +179,12 @@ export default function IssueBillOfExchange() {
           <h1 className="text-2xl font-bold tracking-tight">Generated Bill of Exchange</h1>
           <div className="flex gap-4">
             <Button variant="outline" onClick={() => navigate('/bills-of-exchange')}>
-              Back to List
+              Save as Draft & Exit
             </Button>
             <Button className="gap-2" onClick={() => {
-              toast.success("Sent to drawee successfully!");
-              navigate('/bills-of-exchange');
-            }}>
-              <Send className="h-4 w-4" />
+              sendMutation.mutate(createdBoeId);
+            }} disabled={sendMutation.isPending}>
+              {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               Send to Drawee for Acceptance
             </Button>
           </div>
@@ -420,6 +436,55 @@ export default function IssueBillOfExchange() {
                     </FormItem>
                   )}
                 />
+                
+                <div className="col-span-2 space-y-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <h4 className="text-sm font-medium">Negotiability & Transfer Rules</h4>
+                  <FormField
+                    control={form.control}
+                    name="is_negotiable"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Instrument is Negotiable
+                          </FormLabel>
+                          <FormDescription>
+                            If checked, the bill can be endorsed to other parties. If unchecked, the bill is marked "Not Negotiable" and cannot be transferred.
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="endorsement_restricted"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={!form.watch("is_negotiable")}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Restrict Further Endorsements
+                          </FormLabel>
+                          <FormDescription>
+                            If checked, the drawer forbids further endorsement. No other party will be able to discount or endorse it further.
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </CardContent>
               <CardFooter className="flex justify-end pt-6 border-t">
                 <Button 

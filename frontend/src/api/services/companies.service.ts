@@ -42,6 +42,10 @@ export const companiesService = {
     const response = await api.get('/companies/me');
     return response.data;
   },
+  getNetworkCompanies: async () => {
+    const response = await api.get('/companies/network');
+    return response.data;
+  },
   updateMe: async (data: CompanyUpdate) => {
     const response = await api.put('/companies/me', data);
     return response.data;
