@@ -35,6 +35,8 @@ export interface BillOfExchange {
     bill_id: string;
   }[];
   endorsements: BOEEndorsement[];
+
+  discounting_requests?: DiscountingRequest[];
 }
 
 export interface BOEEndorsement {
@@ -75,6 +77,36 @@ export interface BillOfExchangeCreate {
   invoice_ids: string[];
 }
 
+export interface DiscountingRequest {
+  id: string;
+  bill_of_exchange_id: string;
+  requested_by_company_id: string;
+  requested_by_user_id: string;
+  face_value: number;
+  tenor_days: number;
+  bidding_start_at: string;
+  bidding_end_at?: string;
+  min_acceptable_rate_bps?: number;
+  max_acceptable_rate_bps?: number;
+  status: string;
+  selected_bid_id?: string;
+  created_at: string;
+  bids?: BillOfExchangeBid[];
+}
+
+export interface BillOfExchangeBid {
+  id: string;
+  discounting_request_id: string;
+  financier_company_id: string;
+  discount_rate_bps: number;
+  platform_fee_bps: number;
+  computed_discount_amount: number;
+  computed_net_payable: number;
+  status: string;
+  bid_submitted_at: string;
+  expires_at: string;
+}
+
 class BillsOfExchangeService {
   async getBillsOfExchange(params?: { skip?: number; limit?: number; customer_id?: string }) {
     const response = await api.get<BillOfExchange[]>('/bills-of-exchange/', { params });
@@ -98,6 +130,78 @@ class BillsOfExchangeService {
 
   async deleteBillOfExchange(id: string) {
     const response = await api.delete<BillOfExchange>(`/bills-of-exchange/${id}`);
+    return response.data;
+  }
+
+  async acceptBillOfExchange(id: string) {
+    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/accept`);
+    return response.data;
+  }
+
+  async sendForAcceptance(id: string) {
+    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/send`);
+    return response.data;
+  }
+
+  async cancelBill(id: string) {
+    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/cancel`);
+    return response.data;
+  }
+
+  async rejectBill(id: string) {
+    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/reject`);
+    return response.data;
+  }
+
+  async endorseBill(id: string, data: any) {
+    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/endorse`, data);
+    return response.data;
+  }
+
+  async disburse(id: string) {
+    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/disburse`);
+    return response.data;
+  }
+
+  async getPublicBillOfExchange(token: string) {
+    const response = await api.get<BillOfExchange>(`/public/bills-of-exchange/${token}`);
+    return response.data;
+  }
+
+  async acceptPublicBill(token: string) {
+    const response = await api.post<BillOfExchange>(`/public/bills-of-exchange/${token}/accept`);
+    return response.data;
+  }
+
+  async rejectPublicBill(token: string) {
+    const response = await api.post<BillOfExchange>(`/public/bills-of-exchange/${token}/reject`);
+    return response.data;
+  }
+
+  async createDiscountingRequest(id: string, data: { bidding_end_at: string, min_acceptable_rate_bps?: number, max_acceptable_rate_bps?: number }) {
+    const response = await api.post<DiscountingRequest>(`/bills-of-exchange/${id}/discounting-requests`, data);
+    return response.data;
+  }
+
+  async submitBid(id: string, drId: string, data: { financier_company_id: string; discount_rate_bps: number; platform_fee_bps?: number }) {
+    const response = await api.post(`/bills-of-exchange/${id}/discounting-requests/${drId}/bids`, data);
+    return response.data;
+  }
+
+  async acceptBid(id: string, drId: string, bidId: string) {
+    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/discounting-requests/${drId}/bids/${bidId}/accept`);
+    return response.data;
+  }
+
+  async listForDiscounting(id: string) {
+    // Legacy fallback, you can remove this if no longer used.
+    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/list-for-discounting`);
+    return response.data;
+  }
+
+  async openBidding(id: string) {
+    // Legacy fallback, you can remove this if no longer used.
+    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/open-bidding`);
     return response.data;
   }
 }

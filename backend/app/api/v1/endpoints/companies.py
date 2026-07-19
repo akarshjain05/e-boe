@@ -69,6 +69,19 @@ async def update_current_company(
     
     return company
 
+@router.get("/network", response_model=list[CompanyResponse])
+async def get_network_companies(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all companies in the network for endorsement/discounting"""
+    stmt = select(Company).where(
+        Company.is_active == True,
+        Company.id != current_user.company_id
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
 @router.get("/me/branches", response_model=list[BranchResponse])
 async def get_current_company_branches(
     db: AsyncSession = Depends(get_db),

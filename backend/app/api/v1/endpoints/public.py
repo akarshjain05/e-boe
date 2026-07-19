@@ -8,8 +8,12 @@ from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.models.bill import Bill
+from app.models.bill_of_exchange import BillOfExchange
 from app.schemas.bill import BillResponse
+from app.schemas.bill_of_exchange import BillOfExchangeResponse
 from app.utils.pdf_generator import BillPDFGenerator
+from app.utils.boe_pdf_generator import BOEPDFGenerator
+from app.services.bill_of_exchange import bill_of_exchange_service
 
 router = APIRouter()
 
@@ -85,5 +89,69 @@ async def get_public_bill_pdf(token: UUID, db: AsyncSession = Depends(get_db)):
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'attachment; filename="bill_{bill.bill_number}.pdf"'
+        }
+    )
+
+@router.get("/bills-of-exchange/{token}", response_model=BillOfExchangeResponse)
+async def get_public_boe(token: UUID, db: AsyncSession = Depends(get_db)):
+    stmt = select(BillOfExchange).options(selectinload(BillOfExchange.invoices)).where(BillOfExchange.public_access_token == token)
+    boe = (await db.execute(stmt)).scalar_one_or_none()
+    if not boe:
+        raise HTTPException(status_code=404, detail="Bill of exchange not found")
+    return boe
+
+@router.post("/bills-of-exchange/{token}/accept", response_model=BillOfExchangeResponse)
+async def accept_public_boe(token: UUID, db: AsyncSession = Depends(get_db)):
+    stmt = select(BillOfExchange).where(BillOfExchange.public_access_token == token)
+    boe = (await db.execute(stmt)).scalar_one_or_none()
+    if not boe:
+        raise HTTPException(status_code=404, detail="Bill of exchange not found")
+    return await bill_of_exchange_service.accept(db, db_obj=boe)
+
+@router.post("/bills-of-exchange/{token}/reject", response_model=BillOfExchangeResponse)
+async def reject_public_boe(token: UUID, db: AsyncSession = Depends(get_db)):
+    stmt = select(BillOfExchange).where(BillOfExchange.public_access_token == token)
+    boe = (await db.execute(stmt)).scalar_one_or_none()
+    if not boe:
+        raise HTTPException(status_code=404, detail="Bill of exchange not found")
+    return await bill_of_exchange_service.reject(db, db_obj=boe)
+
+@router.get("/bills-of-exchange/{token}/pdf")
+async def get_public_boe_pdf(token: UUID, db: AsyncSession = Depends(get_db)):
+    stmt = select(BillOfExchange).options(selectinload(BillOfExchange.invoices)).where(BillOfExchange.public_access_token == token)
+    boe = (await db.execute(stmt)).scalar_one_or_none()
+    if not boe:
+        raise HTTPException(status_code=404, detail="Bill of exchange not found")
+        
+    pdf_generator = BOEPDFGenerator()
+    boe_data = {
+        "drawer_name": boe.drawer_name,
+        "drawer_address": boe.drawer_address,
+        "drawee_name": boe.drawee_name,
+        "drawee_address": boe.drawee_address,
+        "amount": boe.amount,
+        "issue_date": boe.issue_date,
+        "due_date": boe.due_date,
+        "place_of_issue": boe.place_of_issue,
+        "status": boe.status,
+        "accepted_at": boe.accepted_at,
+        "description": boe.description
+    }
+    
+    # if it's endorsed, try to get endorsee name
+    if boe.endorsee_company_id:
+        from app.models.company import Company
+        stmt_comp = select(Company).where(Company.id == boe.endorsee_company_id)
+        comp = (await db.execute(stmt_comp)).scalar_one_or_none()
+        if comp:
+            boe_data["endorsee_name"] = comp.name
+
+    pdf_content = pdf_generator.generate(boe_data)
+    
+    return Response(
+        content=pdf_content.getvalue(),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="boe_{boe.id}.pdf"'
         }
     )

@@ -9,7 +9,7 @@ import { Loader2, Eye, Send } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 
 import { Checkbox } from '@/components/ui/checkbox';
@@ -69,7 +69,7 @@ export default function IssueBillOfExchange() {
   }, [billsOfExchange, myCompany]);
 
   const form = useForm<z.infer<typeof issueFormSchema>>({
-    resolver: zodResolver(issueFormSchema),
+    resolver: zodResolver(issueFormSchema) as any,
     defaultValues: {
       customer_id: "",
       issue_date: new Date().toISOString().split('T')[0],
@@ -204,7 +204,7 @@ export default function IssueBillOfExchange() {
 
       <div className="p-6 overflow-auto">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-4xl mx-auto">
+          <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-6 max-w-4xl mx-auto">
             
             <Card>
               <CardHeader>
@@ -213,7 +213,7 @@ export default function IssueBillOfExchange() {
               </CardHeader>
               <CardContent>
                 <FormField
-                  control={form.control}
+                  control={form.control as any}
                   name="customer_id"
                   render={({ field }) => (
                     <FormItem>
@@ -382,7 +382,7 @@ export default function IssueBillOfExchange() {
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-6">
                 <FormField
-                  control={form.control}
+                  control={form.control as any}
                   name="issue_date"
                   render={({ field }) => (
                     <FormItem>
@@ -396,7 +396,7 @@ export default function IssueBillOfExchange() {
                 />
                 
                 <FormField
-                  control={form.control}
+                  control={form.control as any}
                   name="due_date"
                   render={({ field }) => (
                     <FormItem>
@@ -410,7 +410,7 @@ export default function IssueBillOfExchange() {
                 />
                 
                 <FormField
-                  control={form.control}
+                  control={form.control as any}
                   name="place_of_issue"
                   render={({ field }) => (
                     <FormItem>
@@ -424,7 +424,7 @@ export default function IssueBillOfExchange() {
                 />
                 
                 <FormField
-                  control={form.control}
+                  control={form.control as any}
                   name="description"
                   render={({ field }) => (
                     <FormItem>
@@ -440,7 +440,7 @@ export default function IssueBillOfExchange() {
                 <div className="col-span-2 space-y-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                   <h4 className="text-sm font-medium">Negotiability & Transfer Rules</h4>
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="is_negotiable"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
@@ -462,7 +462,7 @@ export default function IssueBillOfExchange() {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="endorsement_restricted"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">

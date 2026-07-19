@@ -4,14 +4,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Check, ChevronsUpDown, Loader2, Banknote, Gavel, CheckCircle2, Coins } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2, CheckCircle2, Coins } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { boeService } from '@/api/services/billsOfExchange';
 import { companiesService } from '@/api/services/companies.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -21,7 +21,7 @@ import { BillOfExchangePreview } from '@/components/shared/BillOfExchangePreview
 const bidSchema = z.object({
   financier_company_id: z.string().min(1, 'Please select a financier'),
   discount_rate: z.coerce.number().min(0, 'Must be positive').max(100, 'Cannot exceed 100%'),
-  notes: z.string().optional(),
+  platform_fee: z.coerce.number().min(0).default(0),
 });
 
 export default function DiscountBill() {
@@ -44,31 +44,29 @@ export default function DiscountBill() {
   });
 
   const form = useForm<z.infer<typeof bidSchema>>({
-    resolver: zodResolver(bidSchema),
+    resolver: zodResolver(bidSchema) as any,
     defaultValues: {
       financier_company_id: '',
       discount_rate: 5.0,
-      notes: '',
+      platform_fee: 0,
     },
   });
 
-  const openBiddingMutation = useMutation({
-    mutationFn: () => boeService.openBidding(id!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
-      toast.success('Bidding opened successfully!');
-    },
-    onError: () => {
-      toast.error('Failed to open bidding.');
-    },
-  });
+  const currentDr = boe?.discounting_requests?.find(dr => !['rejected', 'expired', 'cancelled', 'withdrawn'].includes(dr.status));
 
   const submitBidMutation = useMutation({
-    mutationFn: (values: z.infer<typeof bidSchema>) => boeService.submitBid(id!, values),
+    mutationFn: (values: z.infer<typeof bidSchema>) => {
+      const payload = {
+        financier_company_id: values.financier_company_id,
+        discount_rate_bps: Math.round(values.discount_rate * 100),
+        platform_fee_bps: Math.round(values.platform_fee * 100),
+      };
+      return boeService.submitBid(id!, currentDr!.id, payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
       toast.success('Bid submitted successfully!');
-      form.reset({ financier_company_id: '', discount_rate: 5.0, notes: '' });
+      form.reset({ financier_company_id: '', discount_rate: 5.0, platform_fee: 0 });
     },
     onError: () => {
       toast.error('Failed to submit bid.');
@@ -76,7 +74,7 @@ export default function DiscountBill() {
   });
 
   const acceptBidMutation = useMutation({
-    mutationFn: (bidId: string) => boeService.acceptBid(id!, bidId),
+    mutationFn: (bidId: string) => boeService.acceptBid(id!, currentDr!.id, bidId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
       toast.success('Bid accepted successfully!');
@@ -157,16 +155,27 @@ export default function DiscountBill() {
                   </div>
                 </div>
 
-                {isListed && (
-                  <Button 
-                    className="w-full gap-2 bg-blue-600 hover:bg-blue-700" 
-                    onClick={() => openBiddingMutation.mutate()}
-                    disabled={openBiddingMutation.isPending}
-                  >
-                    {openBiddingMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gavel className="h-4 w-4" />}
-                    Open Bidding
-                  </Button>
+                {currentDr && (
+                  <div className="text-sm mt-2 border-t pt-2 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Bidding Ends:</span>
+                      <span className="font-medium">{currentDr.bidding_end_at ? new Date(currentDr.bidding_end_at).toLocaleString() : 'N/A'}</span>
+                    </div>
+                    {currentDr.min_acceptable_rate_bps && (
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">Min Rate:</span>
+                        <span className="font-medium">{currentDr.min_acceptable_rate_bps / 100}%</span>
+                      </div>
+                    )}
+                    {currentDr.max_acceptable_rate_bps && (
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">Max Rate:</span>
+                        <span className="font-medium">{currentDr.max_acceptable_rate_bps / 100}%</span>
+                      </div>
+                    )}
+                  </div>
                 )}
+                
                 {isBidAccepted && (
                   <Button 
                     className="w-full gap-2 bg-purple-600 hover:bg-purple-700" 
@@ -188,26 +197,25 @@ export default function DiscountBill() {
                   <CardDescription>Bids received from the network.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {boe.bids?.length === 0 ? (
+                  {(!currentDr?.bids || currentDr.bids.length === 0) ? (
                     <p className="text-zinc-500 text-sm italic">No bids received yet.</p>
                   ) : (
-                    boe.bids?.map(bid => {
-                      const netProceeds = boe.amount - (boe.amount * bid.discount_rate / 100);
+                    currentDr.bids.map(bid => {
                       const companyName = networkCompanies.find((c: any) => c.id === bid.financier_company_id)?.name || 'Unknown Financier';
                       return (
-                        <div key={bid.id} className={cn("p-4 border rounded-md flex justify-between items-center", bid.status === 'accepted' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20' : bid.status === 'rejected' ? 'opacity-50' : '')}>
+                        <div key={bid.id} className={cn("p-4 border rounded-md flex justify-between items-center", bid.status === 'selected' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20' : bid.status === 'rejected' ? 'opacity-50' : '')}>
                           <div>
                             <div className="font-bold">{companyName}</div>
-                            <div className="text-sm text-zinc-500">Rate: {bid.discount_rate}% &bull; Proceeds: {formatCurrency(netProceeds)}</div>
+                            <div className="text-sm text-zinc-500">Rate: {(bid.discount_rate_bps / 100).toFixed(2)}% &bull; Proceeds: {formatCurrency(bid.computed_net_payable)}</div>
                           </div>
                           <div>
-                            {bid.status === 'pending' && isBiddingOpen && (
+                            {bid.status === 'active' && isBiddingOpen && (
                               <Button size="sm" onClick={() => acceptBidMutation.mutate(bid.id)} disabled={acceptBidMutation.isPending}>
                                 Accept Bid
                               </Button>
                             )}
-                            {bid.status === 'accepted' && (
-                              <span className="text-emerald-600 font-bold flex items-center gap-1 text-sm"><CheckCircle2 className="w-4 h-4" /> Accepted</span>
+                            {bid.status === 'selected' && (
+                              <span className="text-emerald-600 font-bold flex items-center gap-1 text-sm"><CheckCircle2 className="w-4 h-4" /> Selected</span>
                             )}
                             {bid.status === 'rejected' && (
                               <span className="text-red-500 font-bold text-sm">Rejected</span>
@@ -229,10 +237,10 @@ export default function DiscountBill() {
                   <CardDescription>Simulate a financier submitting a bid on this platform.</CardDescription>
                 </CardHeader>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmitBid)} className="flex flex-col flex-1">
+                  <form onSubmit={form.handleSubmit(onSubmitBid as any)} className="flex flex-col flex-1">
                     <CardContent className="space-y-4">
                       <FormField
-                        control={form.control}
+                        control={form.control as any}
                         name="financier_company_id"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
@@ -277,7 +285,7 @@ export default function DiscountBill() {
                       />
 
                       <FormField
-                        control={form.control}
+                        control={form.control as any}
                         name="discount_rate"
                         render={({ field }) => (
                           <FormItem>

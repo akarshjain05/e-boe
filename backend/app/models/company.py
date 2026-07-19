@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Numeric
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
@@ -12,6 +12,7 @@ from app.models.base import AuditMixin, Base
 class Company(Base, AuditMixin):
     __tablename__ = "companies"
     name: Mapped[str] = mapped_column(String(100))
+    company_type: Mapped[str] = mapped_column(String(50), default="tenant")
     legal_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     registration_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
     organization_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -42,6 +43,19 @@ class Company(Base, AuditMixin):
     branches = relationship("Branch", back_populates="company")
     customers = relationship("Customer", back_populates="company")
     creditors = relationship("Creditor", back_populates="company")
+    financier_profile = relationship("FinancierProfile", back_populates="company", uselist=False)
+
+class FinancierProfile(Base, AuditMixin):
+    __tablename__ = "financier_profiles"
+    company_id: Mapped[UUID] = mapped_column(ForeignKey("companies.id"), unique=True, index=True)
+    license_number: Mapped[str] = mapped_column(String(100))
+    license_type: Mapped[str] = mapped_column(String(50)) # bank, nbfc_factor, fi
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    min_rate_bps: Mapped[int] = mapped_column(default=0)
+    max_exposure_limit: Mapped[float | None] = mapped_column(Numeric(15, 2), nullable=True)
+    settlement_bank_account_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    
+    company = relationship("Company", back_populates="financier_profile")
 
 class Branch(Base, AuditMixin):
     __tablename__ = "branches"

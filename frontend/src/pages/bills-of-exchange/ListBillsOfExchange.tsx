@@ -25,6 +25,12 @@ export default function ListBillsOfExchange() {
 
   const [search, setSearch] = useState('');
   const [selectedBoeId, setSelectedBoeId] = useState<string | null>(null);
+  const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
+  const [discountingBoeId, setDiscountingBoeId] = useState<string | null>(null);
+  const [biddingEndAt, setBiddingEndAt] = useState<string>('');
+  const [minRateBps, setMinRateBps] = useState<string>('');
+  const [maxRateBps, setMaxRateBps] = useState<string>('');
+  
   const [activeTab, setActiveTab] = useState<'issued_by_me' | 'issued_against_me'>('issued_by_me');
 
   const { data: bills = [], isLoading } = useQuery({
@@ -66,7 +72,7 @@ export default function ListBillsOfExchange() {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: boeService.cancelBill,
+    mutationFn: (id: string) => boeService.cancelBill(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
       toast.success('Bill of Exchange cancelled successfully');
@@ -77,15 +83,32 @@ export default function ListBillsOfExchange() {
   });
 
   const listForDiscountingMutation = useMutation({
-    mutationFn: boeService.listForDiscounting,
+    mutationFn: (data: { id: string; bidding_end_at: string; min_acceptable_rate_bps?: number; max_acceptable_rate_bps?: number }) => 
+      boeService.createDiscountingRequest(data.id, {
+        bidding_end_at: data.bidding_end_at,
+        min_acceptable_rate_bps: data.min_acceptable_rate_bps,
+        max_acceptable_rate_bps: data.max_acceptable_rate_bps
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
       toast.success('Bill listed for discounting successfully');
+      setDiscountDialogOpen(false);
+      setDiscountingBoeId(null);
     },
     onError: () => {
       toast.error('Failed to list bill for discounting');
     }
   });
+
+  const handleDiscountSubmit = () => {
+    if (!discountingBoeId || !biddingEndAt) return;
+    listForDiscountingMutation.mutate({
+      id: discountingBoeId,
+      bidding_end_at: new Date(biddingEndAt).toISOString(),
+      min_acceptable_rate_bps: minRateBps ? parseInt(minRateBps) : undefined,
+      max_acceptable_rate_bps: maxRateBps ? parseInt(maxRateBps) : undefined
+    });
+  };
 
   const filteredBills = bills.filter(b => {
     const matchesSearch = b.drawee_name.toLowerCase().includes(search.toLowerCase()) || 
@@ -253,10 +276,10 @@ export default function ListBillsOfExchange() {
                                   <ArrowRightLeft className="mr-2 h-4 w-4" />
                                   <span>Endorse Bill</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => {
-                                  e.stopPropagation();
-                                  listForDiscountingMutation.mutate(bill.id);
-                                }} disabled={listForDiscountingMutation.isPending}>
+                                <DropdownMenuItem onClick={() => {
+                                  setDiscountingBoeId(bill.id);
+                                  setDiscountDialogOpen(true);
+                                }}>
                                   <Banknote className="mr-2 h-4 w-4" />
                                   <span>List for Discounting</span>
                                 </DropdownMenuItem>
@@ -295,6 +318,35 @@ export default function ListBillsOfExchange() {
             <div className="mx-auto w-fit pb-8">
               {selectedBoeId && <BillOfExchangePreview id={selectedBoeId} />}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={discountDialogOpen} onOpenChange={setDiscountDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>List for Discounting</DialogTitle>
+            <DialogDescription>Create a factoring unit to invite bids from financiers.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Bidding End Date & Time *</label>
+              <Input type="datetime-local" value={biddingEndAt} onChange={(e) => setBiddingEndAt(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Min Acceptable Rate (BPS)</label>
+              <Input type="number" placeholder="e.g. 500 (5%)" value={minRateBps} onChange={(e) => setMinRateBps(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Max Acceptable Rate (BPS)</label>
+              <Input type="number" placeholder="e.g. 1500 (15%)" value={maxRateBps} onChange={(e) => setMaxRateBps(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDiscountDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleDiscountSubmit} disabled={!biddingEndAt || listForDiscountingMutation.isPending}>
+              List Bill
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
