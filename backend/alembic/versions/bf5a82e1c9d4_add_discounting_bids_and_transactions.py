@@ -23,7 +23,7 @@ def upgrade() -> None:
     # We must explicitly add the new fk column to discounting_requests to allow selected_bid
     # But wait, discounting_requests already had selected_bid_id referencing boe_bids. 
     # We need to drop that constraint before dropping boe_bids.
-    op.drop_constraint('discounting_requests_selected_bid_id_fkey', 'discounting_requests', type_='foreignkey')
+    op.drop_constraint('fk_discounting_requests_selected_bid_id_boe_bids', 'discounting_requests', type_='foreignkey')
     
     op.drop_table('boe_bids')
 
