@@ -167,6 +167,19 @@ class DiscountingTransactionResponse(BaseModel):
         from_attributes = True
 
 
+class BillOfExchangeStatusHistoryResponse(BaseModel):
+    id: UUID
+    bill_of_exchange_id: UUID
+    from_status: str
+    to_status: str
+    changed_by: UUID | None = None
+    changed_at: datetime
+    comments: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
 class BillOfExchangeInvoiceResponse(BaseModel):
     id: UUID
     bill_of_exchange_id: UUID
@@ -192,7 +205,7 @@ class BillOfExchangeResponse(BillOfExchangeBase):
     
     invoices: list[BillOfExchangeInvoiceResponse] = []
     status_history: list[BillOfExchangeStatusHistoryResponse] = []
-    endorsements: list[BillOfExchangeEndorsementResponse] = []
+    endorsements: list[BOEEndorsementResponse] = []
     discounting_requests: list[DiscountingRequestResponse] = []
 
     class Config:
