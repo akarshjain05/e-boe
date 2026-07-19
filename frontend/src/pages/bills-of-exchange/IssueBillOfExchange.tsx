@@ -54,6 +54,18 @@ export default function IssueBillOfExchange() {
     queryFn: () => customerService.getCustomers()
   });
 
+  const { data: billsOfExchange = [] } = useQuery({
+    queryKey: ['bills-of-exchange'],
+    queryFn: () => boeService.getBillsOfExchange()
+  });
+
+  const recentBoeCustomerIds = useMemo(() => {
+    const customerIds = billsOfExchange
+      .filter(boe => boe.company_id === myCompany?.id)
+      .map(boe => boe.customer_id);
+    return Array.from(new Set(customerIds)).slice(0, 5);
+  }, [billsOfExchange, myCompany]);
+
   const form = useForm<z.infer<typeof issueFormSchema>>({
     resolver: zodResolver(issueFormSchema),
     defaultValues: {
@@ -221,36 +233,47 @@ export default function IssueBillOfExchange() {
                                 <p className="text-zinc-500">No customer found.</p>
                               </CommandEmpty>
                               <CommandGroup>
-                                {customers.map((customer) => {
-                                  const searchValue = `${customer.name} ${customer.phone || ''} ${customer.gst_number || ''}`;
+                                {(() => {
+                                  let filtered = customers;
+                                  if (!customerSearchQuery) {
+                                    filtered = filtered.filter(c => recentBoeCustomerIds.includes(c.id));
+                                  }
                                   
-                                  return (
-                                    <CommandItem
-                                      key={customer.id}
-                                      value={searchValue}
-                                      onSelect={() => {
-                                        field.onChange(customer.id);
-                                        setSelectedInvoices([]); // Reset selected invoices
-                                        setOpenCustomerCombobox(false);
-                                      }}
-                                    >
-                                      <div className="flex w-full items-center justify-between">
-                                        <div className="flex items-center">
-                                          <Check
-                                            className={cn(
-                                              "mr-2 h-4 w-4",
-                                              customer.id === field.value ? "opacity-100" : "opacity-0"
-                                            )}
-                                          />
-                                          <span>{customer.name}</span>
+                                  if (filtered.length === 0 && !customerSearchQuery) {
+                                    return <p className="text-sm text-zinc-500 text-center py-4">Search to find a customer...</p>;
+                                  }
+
+                                  return filtered.map((customer) => {
+                                    const searchValue = `${customer.name} ${customer.phone || ''} ${customer.gst_number || ''}`;
+                                    
+                                    return (
+                                      <CommandItem
+                                        key={customer.id}
+                                        value={searchValue}
+                                        onSelect={() => {
+                                          field.onChange(customer.id);
+                                          setSelectedInvoices([]); // Reset selected invoices
+                                          setOpenCustomerCombobox(false);
+                                        }}
+                                      >
+                                        <div className="flex w-full items-center justify-between">
+                                          <div className="flex items-center">
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                customer.id === field.value ? "opacity-100" : "opacity-0"
+                                              )}
+                                            />
+                                            <span>{customer.name}</span>
+                                          </div>
+                                          <span className="text-xs italic text-zinc-400 dark:text-zinc-500 ml-4">
+                                            {customer.customer_type === 'B2B' ? customer.gst_number : customer.phone}
+                                          </span>
                                         </div>
-                                        <span className="text-xs italic text-zinc-400 dark:text-zinc-500 ml-4">
-                                          {customer.customer_type === 'B2B' ? customer.gst_number : customer.phone}
-                                        </span>
-                                      </div>
-                                    </CommandItem>
-                                  );
-                                })}
+                                      </CommandItem>
+                                    );
+                                  });
+                                })()}
                               </CommandGroup>
                             </CommandList>
                           </Command>
