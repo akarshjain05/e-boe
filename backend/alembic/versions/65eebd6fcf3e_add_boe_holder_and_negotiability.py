@@ -23,8 +23,8 @@ def upgrade() -> None:
     op.add_column('bills_of_exchange', sa.Column('rejected_at', sa.DateTime(timezone=True), nullable=True))
     op.add_column('bills_of_exchange', sa.Column('rejected_reason', sa.Text(), nullable=True))
     op.add_column('bills_of_exchange', sa.Column('current_holder_company_id', sa.Uuid(), nullable=True))
-    op.add_column('bills_of_exchange', sa.Column('is_negotiable', sa.Boolean(), nullable=False))
-    op.add_column('bills_of_exchange', sa.Column('endorsement_restricted', sa.Boolean(), nullable=False))
+    op.add_column('bills_of_exchange', sa.Column('is_negotiable', sa.Boolean(), server_default='true', nullable=False))
+    op.add_column('bills_of_exchange', sa.Column('endorsement_restricted', sa.Boolean(), server_default='false', nullable=False))
     op.create_foreign_key(op.f('fk_bills_of_exchange_current_holder_company_id_companies'), 'bills_of_exchange', 'companies', ['current_holder_company_id'], ['id'])
     # ### end Alembic commands ###
 
