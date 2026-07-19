@@ -1,0 +1,5 @@
+# Database Migrations
+
+* **Nullable Constraints:** Always strictly audit auto-generated Alembic migrations for `nullable=False` constraints on columns being added to existing tables. Because production databases have populated rows, adding a `nullable=False` column without a default value will cause a `NotNullViolation` error. Always ensure such columns include a `server_default` (e.g., `server_default='true'`, `server_default='tenant'`) if the table already has data.
+* **AuditMixin Verification:** Manually verify model definitions and migration scripts to ensure `AuditMixin` columns (`deleted_at`, `created_by`, `updated_by`, `is_deleted`) are explicitly included in `op.create_table()` statements when the corresponding SQLAlchemy model inherits from `AuditMixin`.
+* **Foreign Key Alignment:** Always cross-check table references in foreign keys across models, especially when tables are dropped and replaced, to avoid SQLAlchemy mapper configuration errors during app startup. Do not rely solely on an empty local test database to validate these configurations.
