@@ -305,7 +305,7 @@ export default function CreateBill() {
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-[300px] p-0" align="start">
-                          <Command>
+                          <Command shouldFilter={false}>
                             <CommandInput 
                               placeholder={searchCustomerType === 'B2B' ? "Search by org name or GST..." : "Search by name or phone..."}
                               value={customerSearchQuery}
@@ -320,6 +320,13 @@ export default function CreateBill() {
                                   let filtered = customers.filter(c => c.customer_type === searchCustomerType);
                                   if (!customerSearchQuery) {
                                     filtered = filtered.filter(c => recentBilledCustomerIds.includes(c.id));
+                                  } else {
+                                    const q = customerSearchQuery.toLowerCase();
+                                    filtered = filtered.filter(c => 
+                                      c.name.toLowerCase().includes(q) || 
+                                      (c.phone && c.phone.toLowerCase().includes(q)) || 
+                                      (c.gst_number && c.gst_number.toLowerCase().includes(q))
+                                    );
                                   }
                                   return filtered.map((customer) => {
                                     // We use this value for search filtering internally

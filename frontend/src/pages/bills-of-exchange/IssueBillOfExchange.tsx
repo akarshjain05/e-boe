@@ -222,7 +222,7 @@ export default function IssueBillOfExchange() {
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-full p-0" align="start">
-                          <Command>
+                          <Command shouldFilter={false}>
                             <CommandInput 
                               placeholder="Search by name, phone, or GST..."
                               value={customerSearchQuery}
@@ -237,6 +237,13 @@ export default function IssueBillOfExchange() {
                                   let filtered = customers;
                                   if (!customerSearchQuery) {
                                     filtered = filtered.filter(c => recentBoeCustomerIds.includes(c.id));
+                                  } else {
+                                    const q = customerSearchQuery.toLowerCase();
+                                    filtered = filtered.filter(c => 
+                                      c.name.toLowerCase().includes(q) || 
+                                      (c.phone && c.phone.toLowerCase().includes(q)) || 
+                                      (c.gst_number && c.gst_number.toLowerCase().includes(q))
+                                    );
                                   }
                                   
                                   if (filtered.length === 0 && !customerSearchQuery) {
