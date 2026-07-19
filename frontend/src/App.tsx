@@ -17,6 +17,7 @@ const EditBill = lazy(() => import('./pages/bills/EditBill'));
 const BillDetails = lazy(() => import('./pages/bills/BillDetails'));
 const ListBillsOfExchange = lazy(() => import('./pages/bills-of-exchange/ListBillsOfExchange'));
 const IssueBillOfExchange = lazy(() => import('./pages/bills-of-exchange/IssueBillOfExchange'));
+const EditBillOfExchange = lazy(() => import('./pages/bills-of-exchange/EditBillOfExchange'));
 const EndorseBill = lazy(() => import('./pages/bills-of-exchange/EndorseBill'));
 const DiscountBill = lazy(() => import('./pages/bills-of-exchange/DiscountBill'));
 const BillsOfExchangeLayout = lazy(() => import('./pages/bills-of-exchange/Layout'));
@@ -80,6 +81,7 @@ function App() {
           <Route path="bills-of-exchange" element={<BillsOfExchangeLayout />}>
             <Route index element={<ListBillsOfExchange />} />
             <Route path="issue" element={<IssueBillOfExchange />} />
+            <Route path="edit/:id" element={<EditBillOfExchange />} />
             <Route path="endorse" element={<EndorseBill />} />
             <Route path="discount" element={<DiscountBill />} />
           </Route>

@@ -30,6 +30,23 @@ class BillOfExchangeUpdate(BaseModel):
     status: Optional[str] = None
     boe_pdf_url: Optional[str] = None
     accepted_at: Optional[datetime] = None
+    
+    customer_id: Optional[UUID] = None
+    drawer_name: Optional[str] = None
+    drawer_address: Optional[str] = None
+    drawer_phone: Optional[str] = None
+    drawer_email: Optional[str] = None
+    drawee_name: Optional[str] = None
+    drawee_address: Optional[str] = None
+    drawee_phone: Optional[str] = None
+    drawee_email: Optional[str] = None
+    amount: Optional[float] = None
+    description: Optional[str] = None
+    issue_date: Optional[date] = None
+    due_date: Optional[date] = None
+    place_of_issue: Optional[str] = None
+    
+    invoice_ids: Optional[List[UUID]] = None
 
 
 class BillOfExchangeInvoiceResponse(BaseModel):

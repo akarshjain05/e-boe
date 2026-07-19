@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ScrollText, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -21,6 +21,7 @@ export default function ListBillsOfExchange() {
   const { user } = useAuth();
   const companyId = user?.company_id;
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
   const [selectedBoeId, setSelectedBoeId] = useState<string | null>(null);
@@ -166,7 +167,7 @@ export default function ListBillsOfExchange() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation();
-                              toast.info('Edit functionality coming soon');
+                              navigate('/bills-of-exchange/edit/' + bill.id);
                             }}>
                               <Edit className="mr-2 h-4 w-4" />
                               <span>Edit</span>

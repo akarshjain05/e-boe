@@ -122,13 +122,47 @@ class BillOfExchangeService:
         self, db: AsyncSession, *, db_obj: BillOfExchange, obj_in: BillOfExchangeUpdate
     ) -> BillOfExchange:
         update_data = obj_in.model_dump(exclude_unset=True)
+        
+        invoice_ids = update_data.pop("invoice_ids", None)
+
+        # Update basic fields
         for field, value in update_data.items():
             setattr(db_obj, field, value)
             
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
-        return db_obj
+
+        if invoice_ids is not None:
+            # Check for duplicates on other BOEs
+            stmt = select(BillOfExchangeInvoice).join(BillOfExchange).where(
+                BillOfExchangeInvoice.bill_id.in_(invoice_ids),
+                BillOfExchange.id != db_obj.id,
+                BillOfExchange.status.notin_(["cancelled", "rejected"]),
+                BillOfExchange.is_deleted == False
+            )
+            existing = (await db.execute(stmt)).scalars().first()
+            if existing:
+                raise HTTPException(status_code=400, detail="One or more selected bills are already associated with an active Bill of Exchange")
+
+            # Remove existing links
+            stmt_del = select(BillOfExchangeInvoice).where(BillOfExchangeInvoice.bill_of_exchange_id == db_obj.id)
+            existing_links = (await db.execute(stmt_del)).scalars().all()
+            for link in existing_links:
+                await db.delete(link)
+
+            # Add new links
+            for invoice_id in invoice_ids:
+                new_link = BillOfExchangeInvoice(
+                    bill_of_exchange_id=db_obj.id,
+                    bill_id=invoice_id,
+                    created_by=db_obj.created_by
+                )
+                db.add(new_link)
+                
+            await db.commit()
+
+        return await self.get(db, id=db_obj.id)
 
     async def remove(self, db: AsyncSession, *, id: UUID) -> BillOfExchange:
         obj = await self.get(db, id=id)
