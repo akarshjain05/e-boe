@@ -127,7 +127,7 @@ class DiscountingRequest(Base, AuditMixin):
     max_acceptable_rate_bps: Mapped[int | None] = mapped_column(nullable=True)
     
     status: Mapped[str] = mapped_column(String(50), default="open") # open, bid_selected, disbursed, expired, cancelled, withdrawn
-    selected_bid_id: Mapped[UUID | None] = mapped_column(ForeignKey("boe_bids.id"), nullable=True)
+    selected_bid_id: Mapped[UUID | None] = mapped_column(ForeignKey("discounting_bids.id"), nullable=True)
     
     bill_of_exchange = relationship("BillOfExchange", back_populates="discounting_requests")
     bids = relationship("DiscountingBid", back_populates="discounting_request", cascade="all, delete-orphan", foreign_keys="[DiscountingBid.discounting_request_id]")

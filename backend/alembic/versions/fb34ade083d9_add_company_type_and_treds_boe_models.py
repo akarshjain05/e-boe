@@ -65,7 +65,7 @@ def upgrade() -> None:
     op.add_column('bills_of_exchange', sa.Column('endorsee_company_id', sa.Uuid(), nullable=True))
     op.create_index(op.f('ix_bills_of_exchange_public_access_token'), 'bills_of_exchange', ['public_access_token'], unique=True)
     op.create_foreign_key(op.f('fk_bills_of_exchange_endorsee_company_id_companies'), 'bills_of_exchange', 'companies', ['endorsee_company_id'], ['id'])
-    op.add_column('companies', sa.Column('company_type', sa.String(length=50), nullable=False))
+    op.add_column('companies', sa.Column('company_type', sa.String(length=50), server_default='tenant', nullable=False))
     # ### end Alembic commands ###
 
 

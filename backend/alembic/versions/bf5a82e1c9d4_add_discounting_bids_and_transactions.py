@@ -41,6 +41,10 @@ def upgrade() -> None:
         sa.Column('status', sa.String(length=50), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('created_by', sa.Uuid(), nullable=True),
+        sa.Column('updated_by', sa.Uuid(), nullable=True),
+        sa.Column('is_deleted', sa.Boolean(), nullable=False, server_default=sa.text('false')),
         
         sa.ForeignKeyConstraint(['discounting_request_id'], ['discounting_requests.id'], ),
         sa.ForeignKeyConstraint(['financier_company_id'], ['companies.id'], ),
@@ -65,6 +69,10 @@ def upgrade() -> None:
         
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('created_by', sa.Uuid(), nullable=True),
+        sa.Column('updated_by', sa.Uuid(), nullable=True),
+        sa.Column('is_deleted', sa.Boolean(), nullable=False, server_default=sa.text('false')),
         
         sa.ForeignKeyConstraint(['discounting_request_id'], ['discounting_requests.id'], ),
         sa.ForeignKeyConstraint(['bid_id'], ['discounting_bids.id'], ),
