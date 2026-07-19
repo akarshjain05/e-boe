@@ -1,8 +1,24 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, Navigate, useLocation } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
+import { companiesService } from '@/api/services/companies.service'
 
 export function AppLayout() {
+  const location = useLocation()
+  
+  const { data: company, isLoading } = useQuery({
+    queryKey: ['company', 'me'],
+    queryFn: companiesService.getMe
+  })
+
+  // If user is a financier and hasn't completed onboarding, force them there
+  if (!isLoading && company?.company_type === 'financier' && !company?.financier_profile) {
+    if (location.pathname !== '/financier/onboarding') {
+      return <Navigate to="/financier/onboarding" replace />
+    }
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       <Sidebar />

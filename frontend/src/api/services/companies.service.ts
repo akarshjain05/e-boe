@@ -37,6 +37,27 @@ export interface Branch {
   is_head_office?: boolean;
 }
 
+export interface FinancierProfile {
+  id: string;
+  company_id: string;
+  license_number: string;
+  license_type: string;
+  is_verified: boolean;
+  min_rate_bps: number;
+  max_exposure_limit?: number;
+  settlement_bank_account_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FinancierProfileCreate {
+  license_number: string;
+  license_type: string;
+  min_rate_bps?: number;
+  max_exposure_limit?: number;
+  settlement_bank_account_id?: string;
+}
+
 export const companiesService = {
   getMe: async () => {
     const response = await api.get('/companies/me');
@@ -62,4 +83,19 @@ export const companiesService = {
     const response = await api.get(`/companies/lookup/${gstin}`);
     return response.data;
   },
+};
+
+export const financiersService = {
+  getProfile: async (): Promise<FinancierProfile> => {
+    const response = await api.get('/financiers/profile');
+    return response.data;
+  },
+  createProfile: async (data: FinancierProfileCreate): Promise<FinancierProfile> => {
+    const response = await api.post('/financiers/profile', data);
+    return response.data;
+  },
+  updateProfile: async (data: Partial<FinancierProfileCreate>): Promise<FinancierProfile> => {
+    const response = await api.patch('/financiers/profile', data);
+    return response.data;
+  }
 };

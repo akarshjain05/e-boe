@@ -24,7 +24,8 @@ async def get_current_company(
             detail="User is not associated with any company"
         )
         
-    stmt = select(Company).where(Company.id == current_user.company_id)
+    from sqlalchemy.orm import selectinload
+    stmt = select(Company).options(selectinload(Company.financier_profile)).where(Company.id == current_user.company_id)
     result = await db.execute(stmt)
     company = result.scalar_one_or_none()
     

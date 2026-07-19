@@ -23,6 +23,7 @@ const DiscountBill = lazy(() => import('./pages/bills-of-exchange/DiscountBill')
 const BillsOfExchangeLayout = lazy(() => import('./pages/bills-of-exchange/Layout'));
 const Payments = lazy(() => import('./pages/payments'));
 const Passbook = lazy(() => import('./pages/passbook'));
+const FinancierOnboarding = lazy(() => import('./pages/financier/FinancierOnboarding'));
 const Reports = lazy(() => import('./pages/reports'));
 const Settings = lazy(() => import('./pages/settings'));
 const NotFound = lazy(() => import('./pages/errors/NotFound'));
@@ -72,6 +73,7 @@ function App() {
         {/* Protected Routes inside App Layout */}
         <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
+          <Route path="financier/onboarding" element={<FinancierOnboarding />} />
           <Route path="customers" element={<Customers />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="bills">
