@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     dashboard,
     documents,
     financiers,
+    discounting,
     bills_of_exchange,
     notifications,
     payments,
@@ -31,6 +32,7 @@ api_router.include_router(products.router, prefix="/products", tags=["products"]
 api_router.include_router(creditors.router, prefix="/creditors", tags=["creditors"])
 api_router.include_router(bills.router, prefix="/bills", tags=["bills"])
 api_router.include_router(bills_of_exchange.router, prefix="/bills-of-exchange", tags=["bills_of_exchange"])
+api_router.include_router(discounting.router, tags=["discounting"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])

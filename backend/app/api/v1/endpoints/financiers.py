@@ -9,7 +9,8 @@ from app.api.dependencies.auth import get_current_user
 from app.core.database import get_db
 from app.models.company import FinancierProfile, Company
 from app.models.user import User
-from app.schemas.company import FinancierProfileCreate, FinancierProfileUpdate, FinancierProfileResponse
+from app.schemas.company import FinancierProfileCreate, FinancierProfileUpdate, FinancierProfileResponse, CompanyResponse
+from typing import List
 
 router = APIRouter()
 
@@ -95,3 +96,20 @@ async def update_financier_profile(
     await db.refresh(profile)
 
     return profile
+
+@router.post("/register", response_model=FinancierProfileResponse)
+async def register_financier(
+    data: FinancierProfileCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Alias for profile creation as requested by API catalogue."""
+    return await create_financier_profile(data=data, db=db, current_user=current_user)
+
+@router.get("/", response_model=List[CompanyResponse])
+async def list_verified_financiers(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    stmt = select(Company).where(Company.company_type == "financier", Company.is_verified == True)
+    return (await db.execute(stmt)).scalars().all()
