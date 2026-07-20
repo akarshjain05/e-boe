@@ -49,6 +49,17 @@ export default function ListBillsOfExchange() {
     }
   });
 
+  const rejectMutation = useMutation({
+    mutationFn: (id: string) => boeService.rejectBill(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
+      toast.success('Bill of Exchange rejected');
+    },
+    onError: () => {
+      toast.error('Failed to reject Bill of Exchange');
+    }
+  });
+
   const sendMutation = useMutation({
     mutationFn: (id: string) => boeService.sendForAcceptance(id),
     onSuccess: () => {
@@ -200,18 +211,33 @@ export default function ListBillsOfExchange() {
                       </td>
                       <td className="p-4 align-middle text-right space-x-2" onClick={(e) => e.stopPropagation()}>
                         {activeTab === 'issued_against_me' && ['issued', 'sent'].includes(bill.status) && (
-                          <Button 
-                            variant="default" 
-                            size="sm" 
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              acceptMutation.mutate(bill.id);
-                            }}
-                            disabled={acceptMutation.isPending}
-                          >
-                            Accept
-                          </Button>
+                          <>
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                acceptMutation.mutate(bill.id);
+                              }}
+                              disabled={acceptMutation.isPending || rejectMutation.isPending}
+                            >
+                              Accept
+                            </Button>
+                            <Button 
+                              variant="destructive" 
+                              size="sm" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Are you sure you want to reject this bill?')) {
+                                  rejectMutation.mutate(bill.id);
+                                }
+                              }}
+                              disabled={acceptMutation.isPending || rejectMutation.isPending}
+                            >
+                              Reject
+                            </Button>
+                          </>
                         )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

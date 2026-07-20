@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils'
 import { dashboardService, DashboardSummary } from '@/api/services/dashboard'
 import { BillAcceptanceWidget } from '@/components/dashboard/BillAcceptanceWidget'
+import { BoeAcceptanceWidget } from '@/components/dashboard/BoeAcceptanceWidget'
 import { PaymentAcceptanceWidget } from '@/components/dashboard/PaymentAcceptanceWidget'
 
 const StatCard = ({ title, value, icon: Icon, delay, textColor, iconBgColor }: any) => (
@@ -126,7 +127,9 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-[400px]">
+
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-[400px]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -143,6 +146,15 @@ export default function Dashboard() {
           className="h-full"
         >
           <PaymentAcceptanceWidget />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+          className="h-full"
+        >
+          <BoeAcceptanceWidget />
         </motion.div>
       </div>
 

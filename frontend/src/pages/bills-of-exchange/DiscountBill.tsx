@@ -8,6 +8,7 @@ import { Check, ChevronsUpDown, Loader2, CheckCircle2, Coins } from 'lucide-reac
 import { toast } from 'sonner';
 
 import { boeService } from '@/api/services/billsOfExchange';
+import { discountingService } from '@/api/services/discounting';
 import { companiesService } from '@/api/services/companies.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,7 +62,7 @@ export default function DiscountBill() {
         discount_rate_bps: Math.round(values.discount_rate * 100),
         platform_fee_bps: Math.round(values.platform_fee * 100),
       };
-      return boeService.submitBid(id!, currentDr!.id, payload);
+      return discountingService.submitBid(currentDr!.id, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
@@ -74,7 +75,7 @@ export default function DiscountBill() {
   });
 
   const acceptBidMutation = useMutation({
-    mutationFn: (bidId: string) => boeService.acceptBid(id!, currentDr!.id, bidId),
+    mutationFn: (bidId: string) => discountingService.selectBid(currentDr!.id, bidId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
       toast.success('Bid accepted successfully!');
@@ -85,7 +86,7 @@ export default function DiscountBill() {
   });
 
   const disburseMutation = useMutation({
-    mutationFn: () => boeService.disburse(id!),
+    mutationFn: () => discountingService.disburse(currentDr!.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bills-of-exchange'] });
       toast.success('Funds disbursed successfully!');

@@ -87,15 +87,15 @@ export const companiesService = {
 
 export const financiersService = {
   getProfile: async (): Promise<FinancierProfile> => {
-    const response = await api.get('/financiers/profile');
+    const response = await api.get('/financiers/me');
     return response.data;
   },
   createProfile: async (data: FinancierProfileCreate): Promise<FinancierProfile> => {
-    const response = await api.post('/financiers/profile', data);
+    const response = await api.post('/financiers/register', data);
     return response.data;
   },
   updateProfile: async (data: Partial<FinancierProfileCreate>): Promise<FinancierProfile> => {
-    const response = await api.patch('/financiers/profile', data);
+    const response = await api.patch('/financiers/me', data);
     return response.data;
   }
 };

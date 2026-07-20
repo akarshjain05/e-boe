@@ -24,6 +24,14 @@ const endorseSchema = z.object({
   remarks: z.string().optional(),
 });
 
+const ENDORSEMENT_EXPLAINERS: Record<string, string> = {
+  blank: "Endorser signs without specifying an endorsee, making the bill payable to the bearer.",
+  special: "Endorser specifies the exact party to whom payment must be made.",
+  restrictive: "Endorser prohibits any further negotiation or transfer of the bill.",
+  conditional: "Endorser adds a condition that must be fulfilled for payment.",
+  sans_recourse: "Endorser transfers title but refuses any liability if the drawee defaults."
+};
+
 export default function EndorseBill() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -204,6 +212,9 @@ export default function EndorseBill() {
                             <option value="sans_recourse">Sans Recourse (Without liability)</option>
                           </select>
                         </FormControl>
+                        <p className="text-[0.8rem] text-muted-foreground mt-2">
+                          {ENDORSEMENT_EXPLAINERS[field.value as string]}
+                        </p>
                         <FormMessage />
                       </FormItem>
                     )}

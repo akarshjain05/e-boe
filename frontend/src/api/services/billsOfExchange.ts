@@ -158,10 +158,6 @@ class BillsOfExchangeService {
     return response.data;
   }
 
-  async disburse(id: string) {
-    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/disburse`);
-    return response.data;
-  }
 
   async getPublicBillOfExchange(token: string) {
     const response = await api.get<BillOfExchange>(`/public/bills-of-exchange/${token}`);
@@ -180,28 +176,6 @@ class BillsOfExchangeService {
 
   async createDiscountingRequest(id: string, data: { bidding_end_at: string, min_acceptable_rate_bps?: number, max_acceptable_rate_bps?: number }) {
     const response = await api.post<DiscountingRequest>(`/bills-of-exchange/${id}/discounting-requests`, data);
-    return response.data;
-  }
-
-  async submitBid(id: string, drId: string, data: { financier_company_id: string; discount_rate_bps: number; platform_fee_bps?: number }) {
-    const response = await api.post(`/bills-of-exchange/${id}/discounting-requests/${drId}/bids`, data);
-    return response.data;
-  }
-
-  async acceptBid(id: string, drId: string, bidId: string) {
-    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/discounting-requests/${drId}/bids/${bidId}/accept`);
-    return response.data;
-  }
-
-  async listForDiscounting(id: string) {
-    // Legacy fallback, you can remove this if no longer used.
-    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/list-for-discounting`);
-    return response.data;
-  }
-
-  async openBidding(id: string) {
-    // Legacy fallback, you can remove this if no longer used.
-    const response = await api.post<BillOfExchange>(`/bills-of-exchange/${id}/open-bidding`);
     return response.data;
   }
 }
