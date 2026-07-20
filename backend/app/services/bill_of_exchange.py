@@ -611,6 +611,17 @@ class BillOfExchangeService:
             
         # TReDS terminology: if discounted, it is 'settled', else 'paid'
         new_status = "settled" if db_obj.status == "discounted" else "paid"
+        
+        if db_obj.status == "discounted":
+            from app.models.bill_of_exchange import DiscountingRequest, DiscountingTransaction
+            stmt = select(DiscountingTransaction).join(DiscountingRequest).where(
+                DiscountingRequest.bill_of_exchange_id == db_obj.id,
+                DiscountingTransaction.maturity_settlement_status == "pending"
+            )
+            tx = (await db.execute(stmt)).scalar_one_or_none()
+            if tx:
+                tx.maturity_settlement_status = "settled"
+                
         await self.change_status(db, db_obj=db_obj, new_status=new_status, user_id=user_id, comments="Bill settled/paid")
         return db_obj
 
@@ -620,6 +631,16 @@ class BillOfExchangeService:
         if db_obj.status not in ["matured", "discounted"]:
             raise HTTPException(status_code=400, detail="Only matured or discounted bills can default")
             
+        if db_obj.status == "discounted":
+            from app.models.bill_of_exchange import DiscountingRequest, DiscountingTransaction
+            stmt = select(DiscountingTransaction).join(DiscountingRequest).where(
+                DiscountingRequest.bill_of_exchange_id == db_obj.id,
+                DiscountingTransaction.maturity_settlement_status == "pending"
+            )
+            tx = (await db.execute(stmt)).scalar_one_or_none()
+            if tx:
+                tx.maturity_settlement_status = "defaulted"
+                
         await self.change_status(db, db_obj=db_obj, new_status="defaulted", user_id=user_id, comments="Drawee defaulted on payment")
         return db_obj
 

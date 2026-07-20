@@ -10,7 +10,8 @@ celery_app = Celery(
         "app.tasks.email_tasks",
         "app.tasks.notification_tasks",
         "app.tasks.report_tasks",
-        "app.tasks.cleanup_tasks"
+        "app.tasks.cleanup_tasks",
+        "app.tasks.settlement_tasks"
     ]
 )
 
@@ -30,6 +31,10 @@ celery_app.conf.update(
         },
         'daily-session-cleanup': {
             'task': 'app.tasks.cleanup_tasks.cleanup_expired_sessions',
+            'schedule': 86400.0, # Every 24 hours
+        },
+        'daily-settlement-check': {
+            'task': 'app.tasks.settlement_tasks.process_maturity_and_settlement',
             'schedule': 86400.0, # Every 24 hours
         }
     }
