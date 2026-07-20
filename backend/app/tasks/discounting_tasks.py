@@ -6,7 +6,7 @@ from app.core.celery_app import celery_app
 from app.core.database import SessionLocal
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from app.models.bill_of_exchange import DiscountingRequest, BillOfExchange, BillOfExchangeBid
+from app.models.bill_of_exchange import DiscountingRequest, BillOfExchange, DiscountingBid
 from app.models.notification import Notification
 
 logger = logging.getLogger("eboe")

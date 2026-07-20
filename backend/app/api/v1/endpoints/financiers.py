@@ -111,5 +111,8 @@ async def list_verified_financiers(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = select(Company).where(Company.company_type == "financier", Company.is_verified == True)
+    stmt = select(Company).join(FinancierProfile).where(
+        Company.company_type == "financier", 
+        FinancierProfile.is_verified == True
+    )
     return (await db.execute(stmt)).scalars().all()
