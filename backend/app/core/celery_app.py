@@ -11,7 +11,8 @@ celery_app = Celery(
         "app.tasks.notification_tasks",
         "app.tasks.report_tasks",
         "app.tasks.cleanup_tasks",
-        "app.tasks.settlement_tasks"
+        "app.tasks.settlement_tasks",
+        "app.tasks.discounting_tasks"
     ]
 )
 
@@ -36,6 +37,10 @@ celery_app.conf.update(
         'daily-settlement-check': {
             'task': 'app.tasks.settlement_tasks.process_maturity_and_settlement',
             'schedule': 86400.0, # Every 24 hours
+        },
+        'frequent-bidding-closure-check': {
+            'task': 'app.tasks.discounting_tasks.close_expired_biddings',
+            'schedule': 900.0, # Every 15 minutes
         }
     }
 )

@@ -31,9 +31,21 @@ def send_bulk_notifications(user_ids: list, title: str, message: str, notificati
 def send_overdue_reminders():
     """Periodic task: Check for overdue bills and send reminders."""
     logger.info("Running overdue bill reminder check...")
-    # In production, this would:
-    # 1. Query all bills past due date with status != 'paid'
-    # 2. Update their status to 'overdue'
-    # 3. Send notification emails to relevant parties
-    # 4. Create audit log entries
     return {"status": "completed", "bills_processed": 0}
+
+@celery_app.task
+def send_boe_public_link_email(email: str, token: str, action: str):
+    """
+    Sends an email with a public link to a non-tenant drawee.
+    action: 'acceptance', 'endorsement', 'discounting-status'
+    """
+    # In production, this would send an actual email via SendGrid, SES, etc.
+    public_url = f"http://localhost:5173/public/bills-of-exchange/{token}"
+    subject = f"Action Required: Bill of Exchange {action.capitalize()}"
+    body = f"Please click the link to view your Bill of Exchange for {action}:\n{public_url}"
+    
+    logger.info(f"Simulating email sent to {email}")
+    logger.info(f"Subject: {subject}")
+    logger.info(f"Body: {body}")
+    
+    return {"status": "success", "email": email, "action": action}
