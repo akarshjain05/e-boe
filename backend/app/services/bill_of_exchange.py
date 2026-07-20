@@ -86,7 +86,6 @@ class BillOfExchangeService:
         query = select(BillOfExchange).options(
             selectinload(BillOfExchange.invoices),
             selectinload(BillOfExchange.discounting_requests),
-            selectinload(BillOfExchange.bids),
             selectinload(BillOfExchange.endorsements),
             selectinload(BillOfExchange.status_history)
         ).where(
@@ -117,7 +116,6 @@ class BillOfExchangeService:
         query = select(BillOfExchange).options(
             selectinload(BillOfExchange.invoices),
             selectinload(BillOfExchange.discounting_requests),
-            selectinload(BillOfExchange.bids),
             selectinload(BillOfExchange.endorsements),
             selectinload(BillOfExchange.status_history)
         ).where(
@@ -424,10 +422,13 @@ class BillOfExchangeService:
         await self.change_status(db, db_obj=db_obj, new_status="bidding_open", user_id=user_id, comments="Factoring unit created and bidding opened")
         
         # Broadcast notification to all verified financiers
-        from app.models.company import Company
+        from app.models.company import Company, FinancierProfile
         from app.models.notification import Notification
         
-        stmt = select(Company).where(Company.company_type == "financier", Company.is_verified == True)
+        stmt = select(Company).join(FinancierProfile).where(
+            Company.company_type == "financier", 
+            FinancierProfile.is_verified == True
+        )
         financiers = (await db.execute(stmt)).scalars().all()
         for fin in financiers:
             notification = Notification(

@@ -12,7 +12,8 @@ from app.models.base import AuditMixin, Base
 class Notification(Base, AuditMixin):
     __tablename__ = "notifications"
     company_id: Mapped[UUID] = mapped_column(ForeignKey("companies.id"))
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    link: Mapped[str | None] = mapped_column(String(255), nullable=True)
     
     type: Mapped[str] = mapped_column(String(50))
     title: Mapped[str] = mapped_column(String(255))

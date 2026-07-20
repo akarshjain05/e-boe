@@ -17,7 +17,7 @@ async def async_close_expired_biddings():
         
         stmt = select(DiscountingRequest).options(
             selectinload(DiscountingRequest.bids),
-            selectinload(DiscountingRequest.bill)
+            selectinload(DiscountingRequest.bill_of_exchange)
         ).where(
             DiscountingRequest.status == "open",
             DiscountingRequest.bidding_end_at <= now
@@ -32,8 +32,8 @@ async def async_close_expired_biddings():
             if not valid_bids:
                 # No bids, expire the request
                 req.status = "expired"
-                if req.bill:
-                    req.bill.status = "endorsed" # Revert status so it can be listed again
+                if req.bill_of_exchange:
+                    req.bill_of_exchange.status = "endorsed" # Revert status so it can be listed again
                 
                 notif = Notification(
                     company_id=req.requested_by_company_id,
