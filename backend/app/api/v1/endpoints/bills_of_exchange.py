@@ -146,6 +146,9 @@ async def accept_bill_of_exchange(
     if not boe:
         raise HTTPException(status_code=404, detail="Bill of exchange not found")
         
+    if boe.network_drawee_company_id != current_user.company_id:
+        raise HTTPException(status_code=403, detail="Only the designated drawee company can accept this bill")
+        
     return await bill_of_exchange_service.accept(db, db_obj=boe, user_id=current_user.id)
 
 @router.post("/{id}/reject", response_model=BillOfExchangeResponse)
@@ -161,6 +164,9 @@ async def reject_bill_of_exchange(
     boe = await bill_of_exchange_service.get(db, id=id, company_id=current_user.company_id)
     if not boe:
         raise HTTPException(status_code=404, detail="Bill of exchange not found")
+        
+    if boe.network_drawee_company_id != current_user.company_id:
+        raise HTTPException(status_code=403, detail="Only the designated drawee company can reject this bill")
         
     return await bill_of_exchange_service.reject(db, db_obj=boe, user_id=current_user.id)
 

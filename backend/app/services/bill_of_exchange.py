@@ -220,6 +220,26 @@ class BillOfExchangeService:
             db_obj.public_access_token = uuid.uuid4()
             
         await self.change_status(db, db_obj=db_obj, new_status="issued", user_id=user_id, comments="Issued and sent to drawee")
+        
+        from app.models.notification import Notification
+        from app.tasks.email_tasks import send_boe_notification_email
+        from app.core.config import settings
+
+        if db_obj.network_drawee_company_id:
+            notification = Notification(
+                company_id=db_obj.network_drawee_company_id,
+                title="Action Required: Accept Bill of Exchange",
+                message=f"A new Bill of Exchange requires your acceptance.",
+                type="action_required",
+                link=f"/bills-of-exchange/{db_obj.id}"
+            )
+            db.add(notification)
+            await db.commit()
+        else:
+            if db_obj.drawee_email:
+                public_url = f"{settings.FRONTEND_URL}/boe/{db_obj.public_access_token}"
+                send_boe_notification_email.delay(str(db_obj.id), db_obj.drawee_email, "issued", public_url)
+
         return db_obj
 
     async def cancel(
@@ -240,6 +260,17 @@ class BillOfExchangeService:
             
         db_obj.accepted_at = datetime.utcnow()
         await self.change_status(db, db_obj=db_obj, new_status="accepted", user_id=user_id, comments="Accepted by drawee")
+        
+        from app.models.notification import Notification
+        notification = Notification(
+            company_id=db_obj.company_id,
+            title="Bill of Exchange Accepted",
+            message=f"Your Bill of Exchange to {db_obj.drawee_name} has been accepted.",
+            type="success",
+            link=f"/bills-of-exchange/{db_obj.id}"
+        )
+        db.add(notification)
+        await db.commit()
         return db_obj
 
     async def reject(
@@ -253,6 +284,17 @@ class BillOfExchangeService:
             db_obj.rejected_reason = reason
             
         await self.change_status(db, db_obj=db_obj, new_status="rejected", user_id=user_id, comments=reason or "Rejected by drawee")
+
+        from app.models.notification import Notification
+        notification = Notification(
+            company_id=db_obj.company_id,
+            title="Bill of Exchange Rejected",
+            message=f"Your Bill of Exchange to {db_obj.drawee_name} has been rejected.",
+            type="error",
+            link=f"/bills-of-exchange/{db_obj.id}"
+        )
+        db.add(notification)
+        await db.commit()
         return db_obj
 
     async def endorse(

@@ -67,3 +67,32 @@ def send_bill_notification_email(bill_id: str, recipient_email: str, notificatio
     body_html = template["body"].format(bill_id=bill_id, action_button=action_button)
 
     return send_email_task.delay(recipient_email, template["subject"], body_html)
+
+@celery_app.task
+def send_boe_notification_email(boe_id: str, recipient_email: str, notification_type: str, public_url: str = None):
+    """Send Bill of Exchange related notification emails (issued, accepted, rejected, etc.)."""
+    
+    action_button = ""
+    if public_url:
+        action_button = f'<p style="margin-top: 20px;"><a href="{public_url}" style="background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Bill of Exchange</a></p>'
+        
+    templates = {
+        "issued": {
+            "subject": "Action Required: Accept Bill of Exchange",
+            "body": "<h2>A Bill of Exchange requires your acceptance</h2><p>BoE ID: {boe_id}</p><p>Please review and accept or reject the bill of exchange.</p>{action_button}"
+        },
+        "accepted": {
+            "subject": "Bill of Exchange Accepted",
+            "body": "<h2>Your Bill of Exchange has been accepted</h2><p>BoE ID: {boe_id}</p>{action_button}"
+        },
+        "rejected": {
+            "subject": "Bill of Exchange Rejected",
+            "body": "<h2>Your Bill of Exchange has been rejected</h2><p>BoE ID: {boe_id}</p>{action_button}"
+        },
+    }
+
+    template = templates.get(notification_type, templates["issued"])
+    body_html = template["body"].format(boe_id=boe_id, action_button=action_button)
+
+    return send_email_task.delay(recipient_email, template["subject"], body_html)
+
