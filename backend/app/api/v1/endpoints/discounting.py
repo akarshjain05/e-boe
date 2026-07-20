@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.api.dependencies.auth import get_current_user
+from app.api.dependencies.auth import get_current_user, require_permission, require_financier
 from app.core.database import get_db
 from app.models.user import User
 from app.models.company import Company
@@ -68,7 +68,8 @@ async def submit_bid(
     id: UUID,
     obj_in: DiscountingBidCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_financier),
+    _perm: User = Depends(require_permission("discounting.bid")),
 ) -> Any:
     stmt = select(DiscountingRequest).where(DiscountingRequest.id == id)
     dr = (await db.execute(stmt)).scalar_one_or_none()
@@ -78,10 +79,6 @@ async def submit_bid(
     boe = await db.get(BillOfExchange, dr.bill_of_exchange_id)
     if not boe:
         raise HTTPException(status_code=404, detail="Bill of exchange not found")
-
-    company = await db.get(Company, current_user.company_id)
-    if not company or company.company_type != "financier" or not company.is_verified:
-        raise HTTPException(status_code=403, detail="Only verified financiers can submit bids")
 
     if obj_in.financier_company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Cannot bid on behalf of another company")
@@ -93,7 +90,8 @@ async def withdraw_bid(
     id: UUID,
     bid_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_financier),
+    _perm: User = Depends(require_permission("discounting.bid")),
 ) -> Any:
     stmt = select(DiscountingBid).where(DiscountingBid.id == bid_id, DiscountingBid.discounting_request_id == id)
     bid = (await db.execute(stmt)).scalar_one_or_none()
@@ -122,7 +120,7 @@ async def select_bid(
     id: UUID,
     data: SelectBidRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("discounting.manage")),
 ) -> Any:
     stmt = select(DiscountingRequest).where(DiscountingRequest.id == id)
     dr = (await db.execute(stmt)).scalar_one_or_none()
@@ -142,7 +140,8 @@ async def select_bid(
 async def disburse(
     id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_financier),
+    _perm: User = Depends(require_permission("discounting.bid")),
 ) -> Any:
     stmt = select(DiscountingRequest).where(DiscountingRequest.id == id, DiscountingRequest.status == "bid_selected")
     dr = (await db.execute(stmt)).scalar_one_or_none()
@@ -181,7 +180,7 @@ async def get_discounting_transactions(
 async def manual_settle_transaction(
     id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("discounting.manage")),
 ) -> Any:
     stmt = select(DiscountingTransaction).where(DiscountingTransaction.id == id)
     tx = (await db.execute(stmt)).scalar_one_or_none()
