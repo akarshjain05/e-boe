@@ -16,6 +16,13 @@ class FinancierProfileBase(BaseModel):
 class FinancierProfileCreate(FinancierProfileBase):
     pass
 
+class FinancierProfileUpdate(BaseModel):
+    license_number: Optional[str] = None
+    license_type: Optional[str] = None
+    min_rate_bps: Optional[int] = None
+    max_exposure_limit: Optional[float] = None
+    settlement_bank_account_id: Optional[UUID] = None
+
 
 class FinancierProfileResponse(FinancierProfileBase):
     id: UUID
