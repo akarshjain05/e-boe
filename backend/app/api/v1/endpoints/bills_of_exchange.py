@@ -42,7 +42,7 @@ async def create_bill_of_exchange(
     *,
     db: AsyncSession = Depends(get_db),
     obj_in: BillOfExchangeCreate,
-    current_user: User = Depends(require_permission("discounting.manage")),
+    current_user: User = Depends(require_permission("bills.manage")),
 ) -> Any:
     """
     Create new bill of exchange.
@@ -74,7 +74,7 @@ async def update_bill_of_exchange(
     db: AsyncSession = Depends(get_db),
     id: UUID,
     obj_in: BillOfExchangeUpdate,
-    current_user: User = Depends(require_permission("discounting.manage")),
+    current_user: User = Depends(require_permission("bills.manage")),
 ) -> Any:
     """
     Update a bill of exchange.
@@ -91,7 +91,7 @@ async def delete_bill_of_exchange(
     *,
     db: AsyncSession = Depends(get_db),
     id: UUID,
-    current_user: User = Depends(require_permission("discounting.manage")),
+    current_user: User = Depends(require_permission("bills.manage")),
 ) -> Any:
     """
     Delete a bill of exchange.
@@ -107,7 +107,7 @@ async def send_bill_of_exchange(
     *,
     db: AsyncSession = Depends(get_db),
     id: UUID,
-    current_user: User = Depends(require_permission("discounting.manage")),
+    current_user: User = Depends(require_permission("bills.manage")),
 ) -> Any:
     """
     Issue and send a bill of exchange for acceptance.
@@ -123,7 +123,7 @@ async def cancel_bill_of_exchange(
     *,
     db: AsyncSession = Depends(get_db),
     id: UUID,
-    current_user: User = Depends(require_permission("discounting.manage")),
+    current_user: User = Depends(require_permission("bills.manage")),
 ) -> Any:
     """Cancel a bill of exchange."""
     boe = await bill_of_exchange_service.get(db, id=id, company_id=current_user.company_id)
@@ -136,7 +136,7 @@ async def accept_bill_of_exchange(
     *,
     db: AsyncSession = Depends(get_db),
     id: UUID,
-    current_user: User = Depends(require_permission("discounting.manage")),
+    current_user: User = Depends(require_permission("bills.manage")),
 ) -> Any:
     """
     Accept a bill of exchange as the drawee.
@@ -155,7 +155,7 @@ async def reject_bill_of_exchange(
     *,
     db: AsyncSession = Depends(get_db),
     id: UUID,
-    current_user: User = Depends(require_permission("discounting.manage")),
+    current_user: User = Depends(require_permission("bills.manage")),
 ) -> Any:
     """
     Reject a bill of exchange as the drawee.
@@ -175,7 +175,7 @@ async def endorse_bill_of_exchange(
     db: AsyncSession = Depends(get_db),
     id: UUID,
     obj_in: BillOfExchangeEndorse,
-    current_user: User = Depends(require_permission("discounting.manage")),
+    current_user: User = Depends(require_permission("bills.manage")),
 ) -> Any:
     """
     Endorse a bill of exchange to another company.
@@ -233,7 +233,7 @@ async def mature(
     *,
     db: AsyncSession = Depends(get_db),
     id: UUID,
-    current_user: User = Depends(require_permission("discounting.manage")),
+    current_user: User = Depends(require_permission("bills.manage")),
 ) -> Any:
     boe = await bill_of_exchange_service.get(db, id=id, company_id=current_user.company_id)
     if not boe:
@@ -245,7 +245,7 @@ async def settle(
     *,
     db: AsyncSession = Depends(get_db),
     id: UUID,
-    current_user: User = Depends(require_permission("discounting.manage")),
+    current_user: User = Depends(require_permission("bills.manage")),
 ) -> Any:
     boe = await bill_of_exchange_service.get(db, id=id, company_id=current_user.company_id)
     if not boe:
