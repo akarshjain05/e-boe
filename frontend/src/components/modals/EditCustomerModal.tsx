@@ -19,24 +19,13 @@ import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { customerService } from '@/api/services/customers'
 
-const baseSchema = z.object({
-  customer_type: z.enum(['B2B', 'B2C']),
+const customerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().min(1, 'Email is required').email('Invalid email'),
   phone: z.string().min(1, 'Phone is required'),
-  gst_number: z.string().optional().or(z.literal('')),
+  gst_number: z.string().min(1, 'GST Number is required'),
   credit_limit: z.coerce.number().min(0, 'Credit limit must be a positive number').optional(),
 })
-
-const customerSchema = baseSchema.refine((data) => {
-  if (data.customer_type === 'B2B' && (!data.gst_number || data.gst_number.trim() === '')) {
-    return false;
-  }
-  return true;
-}, {
-  message: "GST Number is required for B2B customers",
-  path: ["gst_number"],
-});
 
 type CustomerFormValues = z.infer<typeof customerSchema>
 
@@ -52,7 +41,6 @@ export function EditCustomerModal({ open, onOpenChange, customer }: EditCustomer
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema) as any,
     defaultValues: {
-      customer_type: customer?.customer_type || 'B2B',
       name: customer?.name || '',
       email: customer?.email || '',
       phone: customer?.phone || '',
@@ -64,7 +52,6 @@ export function EditCustomerModal({ open, onOpenChange, customer }: EditCustomer
   useEffect(() => {
     if (customer) {
       form.reset({
-        customer_type: customer.customer_type || 'B2B',
         name: customer.name || '',
         email: customer.email || '',
         phone: customer.phone || '',
@@ -73,8 +60,6 @@ export function EditCustomerModal({ open, onOpenChange, customer }: EditCustomer
       })
     }
   }, [customer, form])
-
-  const customerType = form.watch('customer_type')
 
   const mutation = useMutation({
     mutationFn: (data: Partial<any>) => customerService.updateCustomer(customer.id, data),
@@ -93,7 +78,7 @@ export function EditCustomerModal({ open, onOpenChange, customer }: EditCustomer
       name: data.name,
       email: data.email,
       phone: data.phone,
-      gst_number: data.customer_type === 'B2B' ? data.gst_number : undefined,
+      gst_number: data.gst_number,
       credit_limit: data.credit_limit
     })
   }
@@ -104,20 +89,34 @@ export function EditCustomerModal({ open, onOpenChange, customer }: EditCustomer
         <DialogHeader>
           <DialogTitle>Edit Customer</DialogTitle>
           <DialogDescription>
-            Update details for {customer?.name}.
+            Update the customer details below.
           </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <FormField
+              control={form.control}
+              name="gst_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>GST Number *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="27AAACA1234A1Z5" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{customerType === 'B2B' ? 'Organization Name *' : 'Name *'}</FormLabel>
+                  <FormLabel>Organization Name *</FormLabel>
                   <FormControl>
-                    <Input placeholder={customerType === 'B2B' ? "Acme Corp" : "John Doe"} {...field} />
+                    <Input placeholder="Acme Corp" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -153,28 +152,12 @@ export function EditCustomerModal({ open, onOpenChange, customer }: EditCustomer
               />
             </div>
 
-            {customerType === 'B2B' && (
-              <FormField
-                control={form.control}
-                name="gst_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>GST Number *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="27AAACA1234A1Z5" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
             <FormField
               control={form.control}
               name="credit_limit"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Credit Limit</FormLabel>
+                  <FormLabel>Credit Limit (Optional)</FormLabel>
                   <FormControl>
                     <Input type="number" min="0" step="0.01" placeholder="e.g. 50000" {...field} />
                   </FormControl>
