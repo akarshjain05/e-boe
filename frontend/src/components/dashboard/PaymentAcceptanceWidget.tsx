@@ -117,12 +117,12 @@ export function PaymentAcceptanceWidget() {
 
   return (
     <Card className="border-none shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 flex flex-col h-full bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl">
-      <CardHeader className="pb-3 border-b border-zinc-200 dark:border-zinc-800 flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-lg font-bold flex items-center gap-2 text-zinc-900 dark:text-zinc-50">
+      <CardHeader className="pb-3 border-b border-zinc-200 dark:border-zinc-800 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3 space-y-0">
+        <CardTitle className="text-lg font-bold flex items-center gap-2 text-zinc-900 dark:text-zinc-50 shrink-0">
           <CheckSquare className="h-5 w-5 text-indigo-600" />
           Payment Acceptance
         </CardTitle>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2 w-full xl:w-auto xl:justify-end">
           <div className="flex items-center gap-2 mr-2">
             <Checkbox 
               id="selectAllPayments" 
