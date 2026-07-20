@@ -306,6 +306,14 @@ class BillOfExchangeService:
         if not db_obj.is_negotiable or db_obj.endorsement_restricted:
             raise HTTPException(status_code=400, detail="This Bill of Exchange is marked as not negotiable or endorsement restricted.")
 
+        valid_types = ["blank", "special", "restrictive", "conditional", "sans_recourse"]
+        if obj_in.endorsement_type not in valid_types:
+            raise HTTPException(status_code=400, detail="Invalid endorsement type")
+
+        if obj_in.endorsement_type == "restrictive":
+            db_obj.is_negotiable = False
+            db_obj.endorsement_restricted = True
+
         # Get company for endorser snapshot
         from app.models.company import Company
         endorser_company = await db.get(Company, endorser_company_id)
@@ -343,6 +351,38 @@ class BillOfExchangeService:
         db_obj.endorsee_company_id = obj_in.endorsee_company_id
         db_obj.current_holder_company_id = obj_in.endorsee_company_id
         await self.change_status(db, db_obj=db_obj, new_status="endorsed", user_id=user_id, comments=f"Endorsed to {obj_in.endorsee_name}")
+        
+        # Notifications
+        from app.models.notification import Notification
+        from app.tasks.email_tasks import send_boe_notification_email
+        from app.core.config import settings
+
+        # Notify old holder
+        notification_old = Notification(
+            company_id=endorser_company_id,
+            title="Bill of Exchange Endorsed",
+            message=f"You have successfully endorsed the bill to {obj_in.endorsee_name}.",
+            type="success",
+            link=f"/bills-of-exchange/{db_obj.id}"
+        )
+        db.add(notification_old)
+
+        # Notify new holder
+        if obj_in.endorsee_company_id:
+            notification_new = Notification(
+                company_id=obj_in.endorsee_company_id,
+                title="Bill of Exchange Received",
+                message=f"A Bill of Exchange has been endorsed to you by {endorser_company.name if endorser_company else 'Unknown'}.",
+                type="info",
+                link=f"/bills-of-exchange/{db_obj.id}"
+            )
+            db.add(notification_new)
+        else:
+            if obj_in.endorsee_email:
+                public_url = f"{settings.FRONTEND_URL}/boe/{db_obj.public_access_token}"
+                send_boe_notification_email.delay(str(db_obj.id), obj_in.endorsee_email, "endorsed", public_url)
+
+        await db.commit()
         return db_obj
 
     async def list_for_discounting(

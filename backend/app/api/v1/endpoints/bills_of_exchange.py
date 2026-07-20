@@ -15,7 +15,8 @@ from app.schemas.bill_of_exchange import (
     DiscountingBidCreate,
     DiscountingBidResponse,
     DiscountingRequestCreate,
-    DiscountingRequestResponse
+    DiscountingRequestResponse,
+    BOEEndorsementResponse
 )
 from app.services.bill_of_exchange import bill_of_exchange_service
 
@@ -185,12 +186,31 @@ async def endorse_bill_of_exchange(
     if not boe:
         raise HTTPException(status_code=404, detail="Bill of exchange not found")
         
+    if boe.current_holder_company_id != current_user.company_id:
+        raise HTTPException(status_code=403, detail="Only the current holder can endorse this bill")
+        
     return await bill_of_exchange_service.endorse(
         db, db_obj=boe,
         endorser_company_id=current_user.company_id,
         user_id=current_user.id,
         obj_in=obj_in
     )
+
+@router.get("/{id}/endorsements", response_model=List[BOEEndorsementResponse])
+async def get_bill_endorsements(
+    *,
+    db: AsyncSession = Depends(get_db),
+    id: UUID,
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Get the endorsement chain of a bill of exchange.
+    """
+    boe = await bill_of_exchange_service.get(db, id=id, company_id=current_user.company_id)
+    if not boe:
+        raise HTTPException(status_code=404, detail="Bill of exchange not found")
+        
+    return boe.endorsements
 
 @router.post("/{id}/discounting-requests", response_model=DiscountingRequestResponse)
 async def create_discounting_request(

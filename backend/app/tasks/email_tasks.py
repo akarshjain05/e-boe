@@ -89,6 +89,10 @@ def send_boe_notification_email(boe_id: str, recipient_email: str, notification_
             "subject": "Bill of Exchange Rejected",
             "body": "<h2>Your Bill of Exchange has been rejected</h2><p>BoE ID: {boe_id}</p>{action_button}"
         },
+        "endorsed": {
+            "subject": "Bill of Exchange Endorsed to You",
+            "body": "<h2>A Bill of Exchange has been endorsed to you</h2><p>BoE ID: {boe_id}</p><p>You are now the current holder of this bill. Please review its details.</p>{action_button}"
+        },
     }
 
     template = templates.get(notification_type, templates["issued"])
