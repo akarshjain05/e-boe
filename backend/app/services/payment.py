@@ -336,12 +336,12 @@ class PaymentService:
                     data_json={"bill_id": str(bill.id), "payment_id": str(payment.id)}
                 ))
 
-        # --- B2C Email Notifications ---
+        # --- Email Notifications ---
         if bill.bill_type == "receivable" and bill.customer_id:
             from app.models.customer import Customer
             stmt_c = select(Customer).where(Customer.id == bill.customer_id)
             c = (await self.db.execute(stmt_c)).scalar_one_or_none()
-            if c and c.customer_type == "B2C" and c.email:
+            if c and c.email:
                 public_url = f"{settings.FRONTEND_URL}/bill/{bill.public_access_token}"
                 send_bill_notification_email.delay(str(bill.id), c.email, "payment_received", public_url)
 

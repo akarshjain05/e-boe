@@ -17,7 +17,6 @@ class Customer(Base, AuditMixin):
     legal_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     business_type: Mapped[str] = mapped_column(String(50))
     
-    customer_type: Mapped[str] = mapped_column(String(50), default="B2B")
     
     gst_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
     pan_number: Mapped[str | None] = mapped_column(String(50), nullable=True)

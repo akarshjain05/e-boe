@@ -59,7 +59,7 @@ async def accept_public_bill(token: UUID, db: AsyncSession = Depends(get_db)):
             # Send Email
             from app.core.config import settings
             from app.tasks.email_tasks import send_bill_notification_email
-            if customer.customer_type == "B2C" and customer.email:
+            if customer.email:
                 public_url = f"{settings.FRONTEND_URL}/bill/{bill.public_access_token}"
                 send_bill_notification_email.delay(str(bill.id), customer.email, "accepted", public_url)
     

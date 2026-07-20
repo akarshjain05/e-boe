@@ -310,8 +310,8 @@ class BillService:
         await self.db.commit()
         await self.db.refresh(bill)
         
-        # Notify B2C customers
-        if data.bill_type == "receivable" and 'customer' in locals() and customer and customer.customer_type == "B2C" and customer.email:
+        # Notify customers
+        if data.bill_type == "receivable" and 'customer' in locals() and customer and customer.email:
             public_url = f"{settings.FRONTEND_URL}/bill/{bill.public_access_token}"
             send_bill_notification_email.delay(str(bill.id), customer.email, "created", public_url)
         
@@ -393,12 +393,12 @@ class BillService:
                     data_json={"bill_id": str(bill.id)}
                 ))
                 
-        # --- B2C Email Notifications ---
+        # --- Email Notifications ---
         if status_val in ["accepted", "overdue"] and bill.bill_type == "receivable" and bill.customer_id:
             from app.models.customer import Customer
             stmt_c = select(Customer).where(Customer.id == bill.customer_id)
             c = (await self.db.execute(stmt_c)).scalar_one_or_none()
-            if c and c.customer_type == "B2C" and c.email:
+            if c and c.email:
                 public_url = f"{settings.FRONTEND_URL}/bill/{bill.public_access_token}"
                 send_bill_notification_email.delay(str(bill.id), c.email, status_val, public_url)
         

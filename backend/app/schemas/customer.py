@@ -5,7 +5,6 @@ from pydantic import BaseModel, EmailStr
 
 
 class CustomerBase(BaseModel):
-    customer_type: str = "B2B"
     customer_code: str
     name: str
     legal_name: str | None = None
@@ -23,14 +22,10 @@ class CustomerBase(BaseModel):
     notes: str | None = None
 
 class CustomerCreate(CustomerBase):
-    @property
-    def is_b2b(self) -> bool:
-        return self.customer_type == "B2B"
-
     def __init__(self, **data):
         super().__init__(**data)
-        if self.is_b2b and not self.gst_number:
-            raise ValueError("GST number is required for B2B customers")
+        if not self.gst_number:
+            raise ValueError("GST number is required for customers")
 
 class CustomerUpdate(CustomerBase):
     customer_code: str | None = None
