@@ -8,8 +8,8 @@ import { Check, ChevronsUpDown, Loader2, ArrowRightLeft, Plus } from 'lucide-rea
 import { toast } from 'sonner';
 
 import { boeService } from '@/api/services/billsOfExchange';
-import { customerService } from '@/api/services/customers.service';
-import AddCustomerModal from '@/components/customers/AddCustomerModal';
+import { customerService } from '@/api/services/customers';
+import { AddCustomerModal } from '@/components/modals/AddCustomerModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -39,8 +39,9 @@ export default function EndorseBill() {
   const queryClient = useQueryClient();
 
   const [openCombobox, setOpenCombobox] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
-  const [searchCustomerType, setSearchCustomerType] = useState<'B2B' | 'B2C'>('B2B');
+  const [searchCustomerType] = useState<'B2B' | 'B2C'>('B2B');
 
   const { data: boe, isLoading: isLoadingBoe } = useQuery({
     queryKey: ['bills-of-exchange', id],
@@ -83,7 +84,7 @@ export default function EndorseBill() {
       ...values,
       endorsee_company_id: null,
       endorsee_name: selectedCustomer?.name || 'Unknown',
-      endorsee_address: selectedCustomer?.address_line1 || selectedCustomer?.city || '',
+      endorsee_address: selectedCustomer?.address || '',
       endorsee_phone: selectedCustomer?.phone,
       endorsee_email: selectedCustomer?.email
     };
@@ -117,22 +118,29 @@ export default function EndorseBill() {
             <p className="text-zinc-500">Transfer the title of this bill to another party.</p>
           </div>
           <Button variant="outline" onClick={() => navigate('/bills-of-exchange')}>
-            Cancel
+            Back to List
           </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="flex flex-col">
-            <CardHeader>
-              <CardTitle>Endorsement Details</CardTitle>
-              <CardDescription>Select the company you wish to endorse this bill to.</CardDescription>
-            </CardHeader>
+          <Card>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1">
-                <CardContent className="space-y-6 flex-1">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-4 rounded-md text-sm">
-                    <strong>Current Amount:</strong> {formatCurrency(boe.amount)} <br/>
-                    <strong>Drawn on:</strong> {boe.drawee_name}
+              <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+                <CardHeader>
+                  <CardTitle>Endorsement Details</CardTitle>
+                  <CardDescription>Select the company you wish to endorse this bill to.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 space-y-6">
+                  
+                  <div className="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-md text-sm border space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500 font-medium">Current Amount:</span>
+                      <span className="font-bold">{formatCurrency(boe.amount)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500 font-medium">Drawn on:</span>
+                      <span className="font-bold">{boe.drawee_name}</span>
+                    </div>
                   </div>
 
                   <FormField
@@ -293,8 +301,8 @@ export default function EndorseBill() {
       <AddCustomerModal 
         open={isAddCustomerModalOpen} 
         onOpenChange={setIsAddCustomerModalOpen}
-        defaultType={searchCustomerType}
-        onSuccess={(customerId) => {
+        initialCustomerType={searchCustomerType}
+        onSuccessAction={(customerId: string) => {
           setIsAddCustomerModalOpen(false);
           // Wait for the queries to invalidate and the new customer to appear
           setTimeout(() => {
