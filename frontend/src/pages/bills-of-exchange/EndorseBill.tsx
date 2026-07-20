@@ -155,35 +155,46 @@ export default function EndorseBill() {
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-[400px] p-0">
-                            <Command>
+                            <Command shouldFilter={false}>
                               <CommandInput 
-                                placeholder="Search companies..." 
+                                placeholder="Search companies by name or GST..." 
                                 value={searchQuery}
                                 onValueChange={setSearchQuery}
                               />
                               <CommandList>
                                 <CommandEmpty>No company found.</CommandEmpty>
                                 <CommandGroup>
-                                  {networkCompanies.map((company: any) => (
-                                    <CommandItem
-                                      value={company.name}
-                                      key={company.id}
-                                      onSelect={() => {
-                                        form.setValue("endorsee_company_id", company.id);
-                                        setOpenCombobox(false);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          company.id === field.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
-                                      {company.name} ({company.gst_number})
-                                    </CommandItem>
-                                  ))}
+                                  {(() => {
+                                    let filtered = networkCompanies;
+                                    if (searchQuery) {
+                                      const q = searchQuery.toLowerCase();
+                                      filtered = filtered.filter((c: any) => 
+                                        c.name?.toLowerCase().includes(q) || 
+                                        c.gst_number?.toLowerCase().includes(q) ||
+                                        c.phone?.toLowerCase().includes(q)
+                                      );
+                                    }
+                                    return filtered.map((company: any) => (
+                                      <CommandItem
+                                        value={company.id}
+                                        key={company.id}
+                                        onSelect={() => {
+                                          form.setValue("endorsee_company_id", company.id);
+                                          setOpenCombobox(false);
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            company.id === field.value
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                        {company.name} {company.gst_number ? `(${company.gst_number})` : ''}
+                                      </CommandItem>
+                                    ));
+                                  })()}
                                 </CommandGroup>
                               </CommandList>
                             </Command>
