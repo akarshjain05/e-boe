@@ -134,8 +134,7 @@ export default function DiscountBill() {
             Back to List
           </Button>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <div className="flex flex-col space-y-6">
             
             {/* Status Card */}
