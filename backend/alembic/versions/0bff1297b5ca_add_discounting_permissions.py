@@ -25,10 +25,10 @@ def upgrade() -> None:
     # Insert permissions
     op.execute(
         """
-        INSERT INTO permissions (id, name, resource, action, description, created_at, updated_at)
+        INSERT INTO permissions (id, name, resource, action, description, created_at, updated_at, is_deleted)
         VALUES 
-        ('""" + str(uuid.uuid4()) + """', 'discounting.manage', 'discounting', 'manage', 'Can manage discounting requests', NOW(), NOW()),
-        ('""" + str(uuid.uuid4()) + """', 'discounting.bid', 'discounting', 'bid', 'Can submit bids as a financier', NOW(), NOW())
+        ('""" + str(uuid.uuid4()) + """', 'discounting.manage', 'discounting', 'manage', 'Can manage discounting requests', NOW(), NOW(), false),
+        ('""" + str(uuid.uuid4()) + """', 'discounting.bid', 'discounting', 'bid', 'Can submit bids as a financier', NOW(), NOW(), false)
         ON CONFLICT (name) DO NOTHING;
         """
     )
