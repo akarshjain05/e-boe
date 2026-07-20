@@ -37,12 +37,10 @@ export default function BillsOfExchangeLayout() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[
           { id: 'all', title: 'All Bills', description: 'View all bills of exchange', icon: '📄', path: '/bills-of-exchange' },
-          { id: 'issue', title: 'Issue Bill', description: 'Create and send a new bill', icon: '✍️', path: '/bills-of-exchange/issue' },
-          { id: 'endorse', title: 'Endorse Bill', description: 'Transfer a bill to someone else', icon: '🤝', path: '/bills-of-exchange/endorse' },
-          { id: 'discount', title: 'Discount Bill', description: 'Get early payment from a bank', icon: '💰', path: '/bills-of-exchange/discount' }
+          { id: 'issue', title: 'Issue Bill', description: 'Create and send a new bill', icon: '✍️', path: '/bills-of-exchange/issue' }
         ].map((tab) => (
           <div 
             key={tab.id}
