@@ -24,12 +24,6 @@ jobs:
             cd ~/e-boe
             git pull origin main
             
-            # Force cleanup of any stuck containers from previous failed deployments
-            sudo docker stop $(sudo docker ps -aq --filter "name=e-boe") 2>/dev/null || true
-            sudo docker rm -f $(sudo docker ps -aq --filter "name=e-boe") 2>/dev/null || true
-            sudo docker network rm e-boe_eboe_network 2>/dev/null || true
-            sudo docker network prune -f
-            
             sudo docker compose -f docker-compose.prod.yml down --remove-orphans
             sudo docker volume rm e-boe_frontend_dist || true
             sudo docker compose -f docker-compose.prod.yml up -d --build
