@@ -4,11 +4,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Check, ChevronsUpDown, Loader2, ArrowRightLeft } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2, ArrowRightLeft, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { boeService } from '@/api/services/billsOfExchange';
-import { companiesService } from '@/api/services/companies.service';
+import { customerService } from '@/api/services/customers.service';
+import AddCustomerModal from '@/components/customers/AddCustomerModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -38,7 +39,8 @@ export default function EndorseBill() {
   const queryClient = useQueryClient();
 
   const [openCombobox, setOpenCombobox] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
+  const [searchCustomerType, setSearchCustomerType] = useState<'B2B' | 'B2C'>('B2B');
 
   const { data: boe, isLoading: isLoadingBoe } = useQuery({
     queryKey: ['bills-of-exchange', id],
@@ -46,9 +48,9 @@ export default function EndorseBill() {
     enabled: !!id,
   });
 
-  const { data: networkCompanies = [], isLoading: isLoadingCompanies } = useQuery({
-    queryKey: ['network-companies'],
-    queryFn: () => companiesService.getNetworkCompanies(),
+  const { data: customers = [], isLoading: isLoadingCompanies } = useQuery({
+    queryKey: ['customers-dropdown'],
+    queryFn: () => customerService.getCustomers({})
   });
 
   const form = useForm<z.infer<typeof endorseSchema>>({
@@ -74,14 +76,19 @@ export default function EndorseBill() {
   });
 
   const onSubmit = (values: z.infer<typeof endorseSchema>) => {
-    const selectedCompany = networkCompanies.find((c: any) => c.id === values.endorsee_company_id);
-    endorseMutation.mutate({
+    const selectedCustomer = customers.find((c: any) => c.id === values.endorsee_company_id);
+    
+    // We send endorsee_company_id as null because it's a Customer, not a Network Company
+    const payload = {
       ...values,
-      endorsee_name: selectedCompany?.name || 'Unknown',
-      endorsee_address: selectedCompany?.address_line1,
-      endorsee_phone: selectedCompany?.phone,
-      endorsee_email: selectedCompany?.email
-    } as any);
+      endorsee_company_id: null,
+      endorsee_name: selectedCustomer?.name || 'Unknown',
+      endorsee_address: selectedCustomer?.address_line1 || selectedCustomer?.city || '',
+      endorsee_phone: selectedCustomer?.phone,
+      endorsee_email: selectedCustomer?.email
+    };
+    
+    endorseMutation.mutate(payload as any);
   };
 
   if (isLoadingBoe || isLoadingCompanies) {
@@ -146,7 +153,7 @@ export default function EndorseBill() {
                                 )}
                               >
                                 {field.value
-                                  ? networkCompanies.find(
+                                  ? customers.find(
                                       (c: any) => c.id === field.value
                                     )?.name
                                   : "Select a company..."}
@@ -165,7 +172,7 @@ export default function EndorseBill() {
                                 <CommandEmpty>No company found.</CommandEmpty>
                                 <CommandGroup>
                                   {(() => {
-                                    let filtered = networkCompanies;
+                                    let filtered = customers;
                                     if (searchQuery) {
                                       const q = searchQuery.toLowerCase();
                                       filtered = filtered.filter((c: any) => 
@@ -196,6 +203,21 @@ export default function EndorseBill() {
                                     ));
                                   })()}
                                 </CommandGroup>
+                                <div className="p-1 border-t border-zinc-200 dark:border-zinc-800">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="w-full gap-2 justify-start text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setOpenCombobox(false);
+                                      setIsAddCustomerModalOpen(true);
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                    Add Company / Customer
+                                  </Button>
+                                </div>
                               </CommandList>
                             </Command>
                           </PopoverContent>
@@ -267,6 +289,19 @@ export default function EndorseBill() {
           </Card>
         </div>
       </div>
+
+      <AddCustomerModal 
+        open={isAddCustomerModalOpen} 
+        onOpenChange={setIsAddCustomerModalOpen}
+        defaultType={searchCustomerType}
+        onSuccess={(customerId) => {
+          setIsAddCustomerModalOpen(false);
+          // Wait for the queries to invalidate and the new customer to appear
+          setTimeout(() => {
+            form.setValue('endorsee_company_id', customerId);
+          }, 500);
+        }}
+      />
     </div>
   );
 }
