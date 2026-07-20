@@ -223,6 +223,10 @@ async def create_discounting_request(
     boe = await bill_of_exchange_service.get(db, id=id, company_id=current_user.company_id)
     if not boe:
         raise HTTPException(status_code=404, detail="Bill of exchange not found")
+        
+    if boe.current_holder_company_id != current_user.company_id:
+        raise HTTPException(status_code=403, detail="Only the current holder can list the bill for discounting")
+        
     return await bill_of_exchange_service.list_for_discounting(db, db_obj=boe, user_id=current_user.id, company_id=current_user.company_id, obj_in=obj_in)
 
 @router.post("/{id}/discounting-requests/{dr_id}/bids", response_model=DiscountingBidResponse)
@@ -244,6 +248,11 @@ async def submit_bid(
     dr = (await db.execute(stmt)).scalar_one_or_none()
     if not dr:
         raise HTTPException(status_code=404, detail="Discounting request not found")
+
+    from app.models.company import Company
+    company = await db.get(Company, current_user.company_id)
+    if not company or company.company_type != "financier" or not company.is_verified:
+        raise HTTPException(status_code=403, detail="Only verified financiers can submit bids")
 
     if obj_in.financier_company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Cannot bid on behalf of another company")
@@ -283,11 +292,16 @@ async def disburse(
         raise HTTPException(status_code=404, detail="Bill of exchange not found")
         
     from sqlalchemy import select
-    from app.models.bill_of_exchange import DiscountingRequest
+    from app.models.bill_of_exchange import DiscountingRequest, DiscountingBid
     stmt = select(DiscountingRequest).where(DiscountingRequest.bill_of_exchange_id == id, DiscountingRequest.status == "bid_selected")
     dr = (await db.execute(stmt)).scalar_one_or_none()
     if not dr:
         raise HTTPException(status_code=400, detail="No selected bid found for disbursement")
+        
+    stmt_bid = select(DiscountingBid).where(DiscountingBid.id == dr.selected_bid_id)
+    selected_bid = (await db.execute(stmt_bid)).scalar_one_or_none()
+    if not selected_bid or selected_bid.financier_company_id != current_user.company_id:
+        raise HTTPException(status_code=403, detail="Only the winning financier can disburse funds")
         
     return await bill_of_exchange_service.disburse(db, db_obj=boe, discounting_request=dr, user_id=current_user.id)
 

@@ -422,6 +422,23 @@ class BillOfExchangeService:
         db.add(dr)
         
         await self.change_status(db, db_obj=db_obj, new_status="bidding_open", user_id=user_id, comments="Factoring unit created and bidding opened")
+        
+        # Broadcast notification to all verified financiers
+        from app.models.company import Company
+        from app.models.notification import Notification
+        
+        stmt = select(Company).where(Company.company_type == "financier", Company.is_verified == True)
+        financiers = (await db.execute(stmt)).scalars().all()
+        for fin in financiers:
+            notification = Notification(
+                company_id=fin.id,
+                title="New Bill Available for Discounting",
+                message=f"A new bill of exchange (Face Value: {db_obj.amount}) is available for bidding.",
+                type="info",
+                link=f"/bills-of-exchange/{db_obj.id}"
+            )
+            db.add(notification)
+            
         await db.commit()
         await db.refresh(dr)
         return dr
@@ -437,20 +454,39 @@ class BillOfExchangeService:
             await db.commit()
             raise HTTPException(status_code=400, detail="Bidding window has closed")
             
+        if discounting_request.min_acceptable_rate_bps and obj_in.discount_rate_bps < discounting_request.min_acceptable_rate_bps:
+            raise HTTPException(status_code=400, detail=f"Bid rate is below the minimum acceptable rate ({discounting_request.min_acceptable_rate_bps} bps)")
+        if discounting_request.max_acceptable_rate_bps and obj_in.discount_rate_bps > discounting_request.max_acceptable_rate_bps:
+            raise HTTPException(status_code=400, detail=f"Bid rate is above the maximum acceptable rate ({discounting_request.max_acceptable_rate_bps} bps)")
+
         # Calculate discount based on 365 days
         discount_amount = (discounting_request.face_value * obj_in.discount_rate_bps * discounting_request.tenor_days) / (365 * 10000)
         net_payable = discounting_request.face_value - discount_amount
             
-        bid = DiscountingBid(
-            discounting_request_id=discounting_request.id,
-            financier_company_id=obj_in.financier_company_id,
-            discount_rate_bps=obj_in.discount_rate_bps,
-            platform_fee_bps=obj_in.platform_fee_bps,
-            computed_discount_amount=discount_amount,
-            computed_net_payable=net_payable,
-            expires_at=discounting_request.bidding_end_at  # basic default
+        # Upsert: check if a bid from this financier already exists
+        stmt = select(DiscountingBid).where(
+            DiscountingBid.discounting_request_id == discounting_request.id,
+            DiscountingBid.financier_company_id == obj_in.financier_company_id
         )
-        db.add(bid)
+        bid = (await db.execute(stmt)).scalar_one_or_none()
+        
+        if bid:
+            bid.discount_rate_bps = obj_in.discount_rate_bps
+            bid.platform_fee_bps = obj_in.platform_fee_bps
+            bid.computed_discount_amount = discount_amount
+            bid.computed_net_payable = net_payable
+        else:
+            bid = DiscountingBid(
+                discounting_request_id=discounting_request.id,
+                financier_company_id=obj_in.financier_company_id,
+                discount_rate_bps=obj_in.discount_rate_bps,
+                platform_fee_bps=obj_in.platform_fee_bps,
+                computed_discount_amount=discount_amount,
+                computed_net_payable=net_payable,
+                expires_at=discounting_request.bidding_end_at
+            )
+            db.add(bid)
+            
         await db.commit()
         await db.refresh(bid)
         return bid
@@ -488,6 +524,42 @@ class BillOfExchangeService:
             other_bid.status = "rejected"
             
         await self.change_status(db, db_obj=db_obj, new_status="bid_accepted", user_id=user_id, comments=f"Bid accepted at {bid.discount_rate_bps / 100}%")
+        
+        # Notifications
+        from app.models.notification import Notification
+        
+        # Winning financier
+        notif_win = Notification(
+            company_id=bid.financier_company_id,
+            title="Bid Accepted",
+            message=f"Your bid for Bill {db_obj.id} was accepted. Please proceed with disbursement.",
+            type="success",
+            link=f"/bills-of-exchange/{db_obj.id}"
+        )
+        db.add(notif_win)
+        
+        # Seller
+        notif_seller = Notification(
+            company_id=discounting_request.requested_by_company_id,
+            title="Discounting Bid Selected",
+            message=f"You have selected a bid for Bill {db_obj.id}. The financier will disburse funds shortly.",
+            type="info",
+            link=f"/bills-of-exchange/{db_obj.id}"
+        )
+        db.add(notif_seller)
+        
+        # Losing financiers
+        for other_bid in other_bids:
+            notif_loss = Notification(
+                company_id=other_bid.financier_company_id,
+                title="Bid Rejected",
+                message=f"Your bid for Bill {db_obj.id} was not selected.",
+                type="info",
+                link=f"/bills-of-exchange/{db_obj.id}"
+            )
+            db.add(notif_loss)
+            
+        await db.commit()
         return db_obj
 
     async def disburse(
