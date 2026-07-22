@@ -21,7 +21,7 @@ export default function BillDetails() {
     enabled: !!id
   })
 
-  const isB2B = bill?.customer?.customer_type === 'B2B' || bill?.creditor?.creditor_type === 'B2B' || !!bill?.customer?.gst_number || bill?.bill_type === 'payable';
+  const isB2B = bill?.creditor?.creditor_type === 'B2B' || !!bill?.customer?.gst_number || bill?.bill_type === 'payable';
   const taxLabel = bill?.transaction_type === 'intra_state' ? 'CGST + SGST' : 'IGST';
 
   const statusMutation = useMutation({

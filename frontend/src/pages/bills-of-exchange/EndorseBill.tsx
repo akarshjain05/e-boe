@@ -41,7 +41,7 @@ export default function EndorseBill() {
   const [openCombobox, setOpenCombobox] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
-  const [searchCustomerType] = useState<'B2B' | 'B2C'>('B2B');
+
 
   const { data: boe, isLoading: isLoadingBoe } = useQuery({
     queryKey: ['bills-of-exchange', id],
@@ -301,7 +301,7 @@ export default function EndorseBill() {
       <AddCustomerModal 
         open={isAddCustomerModalOpen} 
         onOpenChange={setIsAddCustomerModalOpen}
-        initialCustomerType={searchCustomerType}
+
         onSuccessAction={(customerId: string) => {
           setIsAddCustomerModalOpen(false);
           // Wait for the queries to invalidate and the new customer to appear

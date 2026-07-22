@@ -55,7 +55,7 @@ export default function Customers() {
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['customers', debouncedSearch, sortField, sortOrder, filterStatus, filterHasOutstanding],
     queryFn: () => customerService.getCustomers({ 
-      customer_type: 'B2B',
+
       search: debouncedSearch || undefined, 
       sort_by: sortField, 
       sort_order: sortOrder,

@@ -12,11 +12,9 @@ export interface Customer {
   outstanding_balance: number;
   is_active: boolean;
   status: string;
-  customer_type: string;
 }
 
 export interface CustomerCreate {
-  customer_type: 'B2B' | 'B2C';
   customer_code: string;
   business_type: string;
   name: string;
@@ -28,7 +26,7 @@ export interface CustomerCreate {
 }
 
 export const customerService = {
-  getCustomers: async (params?: { search?: string; sort_by?: string; sort_order?: 'asc' | 'desc'; status?: string; has_outstanding?: boolean; customer_type?: string }): Promise<Customer[]> => {
+  getCustomers: async (params?: { search?: string; sort_by?: string; sort_order?: 'asc' | 'desc'; status?: string; has_outstanding?: boolean }): Promise<Customer[]> => {
     const response = await api.get('/customers', { params });
     return response.data;
   },

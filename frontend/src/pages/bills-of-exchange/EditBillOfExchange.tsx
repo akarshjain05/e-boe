@@ -268,7 +268,7 @@ export default function EditBillOfExchange() {
                                             <span>{customer.name}</span>
                                           </div>
                                           <span className="text-xs italic text-zinc-400 dark:text-zinc-500 ml-4">
-                                            {customer.customer_type === 'B2B' ? customer.gst_number : customer.phone}
+                                            {customer.gst_number || customer.phone}
                                           </span>
                                         </div>
                                       </CommandItem>

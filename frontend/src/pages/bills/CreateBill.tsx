@@ -11,8 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
+
+
 import { AddCustomerModal } from '@/components/modals/AddCustomerModal'
 import { ProductSearch } from '@/components/shared/ProductSearch'
 import { cn } from '@/lib/utils'
@@ -62,7 +62,6 @@ export default function CreateBill() {
   const [openCustomerCombobox, setOpenCustomerCombobox] = useState(false)
   const [customerSearchQuery, setCustomerSearchQuery] = useState('')
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false)
-  const [searchCustomerType, setSearchCustomerType] = useState<'B2B' | 'B2C'>('B2B')
 
   const queryClient = useQueryClient()
 
@@ -256,30 +255,6 @@ export default function CreateBill() {
                     <FormItem className="flex flex-col mt-2">
                       <div className="flex items-center justify-between mb-2">
                         <FormLabel>Customer (Drawee)</FormLabel>
-                        <RadioGroup
-                          defaultValue="B2B"
-                          value={searchCustomerType}
-                          onValueChange={(val: 'B2B' | 'B2C') => {
-                            setSearchCustomerType(val)
-                            setCustomerSearchQuery('')
-                            // Clear selected customer if it doesn't match the new type
-                            const current = customers.find(c => c.id === field.value)
-                            if (current && current.customer_type !== val) {
-                              field.onChange('')
-                              form.setValue('drawee_name', '')
-                            }
-                          }}
-                          className="flex items-center gap-4"
-                        >
-                          <div className="flex items-center space-x-1.5">
-                            <RadioGroupItem value="B2B" id="type-b2b" />
-                            <Label htmlFor="type-b2b" className="text-xs font-normal">B2B</Label>
-                          </div>
-                          <div className="flex items-center space-x-1.5">
-                            <RadioGroupItem value="B2C" id="type-b2c" />
-                            <Label htmlFor="type-b2c" className="text-xs font-normal">B2C</Label>
-                          </div>
-                        </RadioGroup>
                       </div>
                       <Popover open={openCustomerCombobox} onOpenChange={setOpenCustomerCombobox}>
                         <PopoverTrigger asChild>
@@ -297,17 +272,17 @@ export default function CreateBill() {
                               {field.value
                                 ? (() => {
                                     const c = customers.find((c) => c.id === field.value);
-                                    if (!c) return searchCustomerType === 'B2B' ? "Search by org name or GST..." : "Search by name or phone...";
+                                    if (!c) return "Search by org name or GST...";
                                     return c.name;
                                   })()
-                                : (searchCustomerType === 'B2B' ? "Search by org name or GST..." : "Search by name or phone...")}
+                                : "Search by org name or GST..."}
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-[300px] p-0" align="start">
                           <Command shouldFilter={false}>
                             <CommandInput 
-                              placeholder={searchCustomerType === 'B2B' ? "Search by org name or GST..." : "Search by name or phone..."}
+                              placeholder="Search by org name or GST..."
                               value={customerSearchQuery}
                               onValueChange={setCustomerSearchQuery}
                             />
@@ -317,7 +292,7 @@ export default function CreateBill() {
                               </CommandEmpty>
                               <CommandGroup>
                                 {(() => {
-                                  let filtered = customers.filter(c => c.customer_type === searchCustomerType);
+                                  let filtered = customers;
                                   if (!customerSearchQuery) {
                                     filtered = filtered.filter(c => recentBilledCustomerIds.includes(c.id));
                                   } else {
@@ -330,13 +305,11 @@ export default function CreateBill() {
                                   }
                                   return filtered.map((customer) => {
                                     // We use this value for search filtering internally
-                                    const searchValue = customer.customer_type === 'B2C' && customer.phone
-                                      ? `${customer.name} ${customer.phone}`
-                                      : customer.customer_type === 'B2B' && customer.gst_number 
+                                    const searchValue = customer.gst_number 
                                         ? `${customer.name} ${customer.gst_number}`
                                         : customer.name;
                                       
-                                  const subText = customer.customer_type === 'B2B' ? customer.gst_number : customer.phone;
+                                  const subText = customer.gst_number || customer.phone;
 
                                   return (
                                     <CommandItem
@@ -642,7 +615,6 @@ export default function CreateBill() {
         open={isAddCustomerModalOpen} 
         onOpenChange={setIsAddCustomerModalOpen}
         initialSearchTerm={customerSearchQuery}
-        initialCustomerType={searchCustomerType}
         onSuccessAction={(customerId) => {
           form.setValue('customer_id', customerId, { shouldValidate: true })
           const selectedCustomer = customers.find(c => c.id === customerId)
